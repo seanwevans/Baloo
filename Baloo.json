@@ -165,7 +165,7 @@
     "name": "date",
     "description": "Sets or displays the date and time",
     "glyph": "📅",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "dd",
