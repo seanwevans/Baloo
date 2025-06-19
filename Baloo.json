@@ -261,7 +261,7 @@
     "name": "fmt",
     "description": "Simple optimal text formatter",
     "glyph": "📐",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "fold",

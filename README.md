@@ -70,7 +70,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`false`](src/false.asm) ✅ Does nothing, but exits unsuccessfully
 - [`file`](src/file.asm) ✅ Determine file type
 - [`find`](src/find.asm) Find files
-- [`fmt`](src/fmt.asm) Simple optimal text formatter
+- [`fmt`](src/fmt.asm) ✅ Simple optimal text formatter
 - [`fold`](src/fold.asm) ✅ Wraps each input line to fit in specified width
 - [`gencat`](src/gencat.asm) ✅ Generate a formatted message catalog
 - [`getconf`](src/getconf.asm) Get configuration values
