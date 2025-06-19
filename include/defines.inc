@@ -52,6 +52,7 @@
 
 %define SYS_CHROOT      161
 %define SYS_SYNC        162
+%define SYS_SETXATTR    188
 
 %define SYS_TIME        201
 

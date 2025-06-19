@@ -48,6 +48,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
 }
 
+@test "chcon — sets security context" {
+  touch "$TMP/ctxfile"
+  run "$BIN/chcon" "dummy_u:dummy_r:dummy_t:s0" "$TMP/ctxfile"
+  assert_success
+}
+
 @test "chgrp — changes group ownership" {  
   touch "$TMP/testfile"    
   current_group=$(id -g)    

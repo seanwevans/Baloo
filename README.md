@@ -41,7 +41,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`bc`](src/bc.asm) Arbitrary-precision arithmetic language
 - [`cat`](src/cat.asm) ✅ Concatenates and prints files
 - [`cd`](src/cd.asm) ✅ Changes the working directory
-- [`chcon`](src/chcon.asm) Changes file security context
+- [`chcon`](src/chcon.asm) ✅ Changes file security context
 - [`chgrp`](src/chgrp.asm) ✅ Changes file group ownership
 - [`chmod`](src/chmod.asm) ✅ Changes the permissions of a file or directory
 - [`chown`](src/chown.asm) ✅ Changes file ownership
