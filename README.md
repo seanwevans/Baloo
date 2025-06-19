@@ -63,7 +63,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`du`](src/du.asm) ✅ Shows disk usage on file systems
 - [`echo`](src/echo.asm) ✅ Displays a specified line of text
 - [`ed`](src/ed.asm) The standard text editor
-- [`env`](src/env.asm) Run a program in a modified environment
+- [`env`](src/env.asm) ✅ Run a program in a modified environment
 - [`expand`](src/expand.asm) ✅ Converts tabs to spaces
 - [`expr`](src/expr.asm) ✅ Evaluates expressions
 - [`factor`](src/factor.asm) ✅ Factors numbers

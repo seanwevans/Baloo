@@ -231,6 +231,16 @@ teardown(){ rm -rf "$TMP"; }
   assert_output "$PATH"
 }
 
+@test "env — prints environment" {
+  run "$BIN/env"
+  [[ "$output" == *"PATH="* ]]
+}
+
+@test "env — executes command" {
+  run "$BIN/env" "$BIN/true"
+  assert_success
+}
+
 @test "pwd — matches $(pwd)" {
   pushd "$TMP" >/dev/null
   run "$BIN/pwd"
