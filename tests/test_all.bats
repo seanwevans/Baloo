@@ -111,6 +111,11 @@ teardown(){ rm -rf "$TMP"; }
   assert_output 'a       b'
 }
 
+@test "expr — basic arithmetic" {
+  run "$BIN/expr" 3 + 2
+  assert_output '5'
+}
+
 @test "factor — factors 77" {
   run "$BIN/factor" 77
   assert_output "77: 7 11"

@@ -231,7 +231,7 @@
     "name": "expr",
     "description": "Evaluates expressions",
     "glyph": "📊",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "factor",
