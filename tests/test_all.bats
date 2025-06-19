@@ -19,6 +19,18 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
   assert_output 'aGk='
 }
+@test "batch — runs stdin script" {
+  echo "echo hi" | run "$BIN/batch"
+  assert_success
+  assert_output "hi"
+}
+
+
+@test "base32 — encodes stdin" {
+  printf 'hello' | run "$BIN/base32"
+  assert_success
+  assert_output 'NBSWY3DP'
+}
 
 @test "basename — strips directories" {
   run "$BIN/basename" "/usr/local/bin/foo"
@@ -77,6 +89,11 @@ teardown(){ rm -rf "$TMP"; }
   assert [ -f "$TMP/dst" ]
   assert_equal "$(cat "$TMP/dst")" "copy"
 }
+@test "df — prints available bytes" {
+  run "$BIN/df"
+  assert_success
+  [[ "$output" =~ ^[0-9]+$ ]]
+}
 
 @test "cut — first 3 chars" {
   printf "abcdef\n" >"$TMP/cutfile"
@@ -97,6 +114,11 @@ teardown(){ rm -rf "$TMP"; }
   printf 'a\tb\n' >"$TMP/t"
   run "$BIN/expand" "$TMP/t"
   assert_output 'a       b'
+}
+
+@test "expr — basic arithmetic" {
+  run "$BIN/expr" 3 + 2
+  assert_output '5'
 }
 
 @test "factor — factors 77" {
@@ -212,6 +234,16 @@ teardown(){ rm -rf "$TMP"; }
 @test "printenv — returns PATH value" {
   run "$BIN/printenv" PATH
   assert_output "$PATH"
+}
+
+@test "env — prints environment" {
+  run "$BIN/env"
+  [[ "$output" == *"PATH="* ]]
+}
+
+@test "env — executes command" {
+  run "$BIN/env" "$BIN/true"
+  assert_success
 }
 
 @test "pwd — matches $(pwd)" {
@@ -356,4 +388,9 @@ teardown(){ rm -rf "$TMP"; }
   run bash -c "\"$BIN/yes\" | head -n 3"
   assert_success
   [ "$(echo \"$output\" | wc -l)" -eq 3 ]
+}
+
+@test "logger — logs message" {
+  run "$BIN/logger" "hello"
+  assert_success
 }
