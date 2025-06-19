@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-58%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-59%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -28,16 +28,16 @@ python3 scripts/asmfmt.py src/example.asm
 
 ## Catalog
 - [`alias`](src/alias.asm) Defines or displays aliases
-- [`ar`](src/ar.asm) Creates and maintains libraries
+- [`ar`](src/ar.asm) ✅ Creates and maintains libraries
 - [`arch`](src/arch.asm) ✅ Prints machine hardware name
 - [`at`](src/at.asm) Executes commands at a later time
 - [`awk`](src/awk.asm) Pattern scanning and processing language
 - [`b2sum`](src/b2sum.asm) Computes and checks BLAKE2b message digest
-- [`base32`](src/base32.asm) Encodes or decodes Base32, and prints result to standard output
+- [`base32`](src/base32.asm) ✅ Encodes or decodes Base32, and prints result to standard output
 - [`base64`](src/base64.asm) ✅ Prints a file's contents in Base64 to standard output
 - [`basename`](src/basename.asm) ✅ Removes the path prefix from a given pathname
 - [`basenc`](src/basenc.asm) Encodes or decodes various encodings and prints result to standard output
-- [`batch`](src/batch.asm) Schedules commands to be executed in a batch queue
+- [`batch`](src/batch.asm) Schedules commands to be executed in a batch queue ✅
 - [`bc`](src/bc.asm) Arbitrary-precision arithmetic language
 - [`cat`](src/cat.asm) ✅ Concatenates and prints files
 - [`cd`](src/cd.asm) ✅ Changes the working directory
@@ -53,26 +53,26 @@ python3 scripts/asmfmt.py src/example.asm
 - [`cp`](src/cp.asm) ✅ Copy files/directories
 - [`crontab`](src/crontab.asm) Schedule periodic background work
 - [`csplit`](src/csplit.asm) Splits a file into sections determined by context lines
-- [`cut`](src/cut.asm) Removes sections from each line of files
-- [`date`](src/date.asm) Sets or displays the date and time
+- [`cut`](src/cut.asm) ✅ Removes sections from each line of files
+- [`date`](src/date.asm) ✅ Sets or displays the date and time
 - [`dd`](src/dd.asm) Copies and converts a file
-- [`df`](src/df.asm) Shows disk free space on file systems
+- [`df`](src/df.asm) ✅ Shows disk free space on file systems
 - [`diff`](src/diff.asm) Compare two files; see also cmp
 - [`dircolors`](src/dircolors.asm) Set up color for ls
 - [`dirname`](src/dirname.asm) ✅ Strips non-directory suffix from file name
-- [`du`](src/du.asm) Shows disk usage on file systems
+- [`du`](src/du.asm) ✅ Shows disk usage on file systems
 - [`echo`](src/echo.asm) ✅ Displays a specified line of text
 - [`ed`](src/ed.asm) The standard text editor
-- [`env`](src/env.asm) Run a program in a modified environment
+- [`env`](src/env.asm) ✅ Run a program in a modified environment
 - [`expand`](src/expand.asm) ✅ Converts tabs to spaces
-- [`expr`](src/expr.asm) Evaluates expressions
+- [`expr`](src/expr.asm) ✅ Evaluates expressions
 - [`factor`](src/factor.asm) ✅ Factors numbers
 - [`false`](src/false.asm) ✅ Does nothing, but exits unsuccessfully
 - [`file`](src/file.asm) ✅ Determine file type
 - [`find`](src/find.asm) ✅ Find files
-- [`fmt`](src/fmt.asm) Simple optimal text formatter
+- [`fmt`](src/fmt.asm) ✅ Simple optimal text formatter
 - [`fold`](src/fold.asm) ✅ Wraps each input line to fit in specified width
-- [`gencat`](src/gencat.asm) Generate a formatted message catalog
+- [`gencat`](src/gencat.asm) ✅ Generate a formatted message catalog
 - [`getconf`](src/getconf.asm) Get configuration values
 - [`getopts`](src/getopts.asm) Parse utility options
 - [`gettext`](src/gettext.asm) Retrieve text string from messages object
@@ -84,11 +84,11 @@ python3 scripts/asmfmt.py src/example.asm
 - [`iconv`](src/iconv.asm) Codeset conversion
 - [`id`](src/id.asm) ✅ Prints real or effective UID and GID
 - [`install`](src/install.asm) Copies files and set attributes
-- [`join`](src/join.asm) Merges two sorted text files based on the presence of a common field
+- [`join`](src/join.asm) ✅ Merges two sorted text files based on the presence of a common field
 - [`kill`](src/kill.asm) ✅ Terminate or signal processes
 - [`link`](src/link.asm) ✅ Creates a link to a file
 - [`ln`](src/ln.asm) ✅ Creates a link to a file
-- [`locale`](src/locale.asm) Get locale-specific information
+- [`locale`](src/locale.asm) ✅ Get locale-specific information
 - [`localedef`](src/localedef.asm) Define locale environment
 - [`logger`](src/logger.asm) Log messages
 - [`logname`](src/logname.asm) ✅ Print the user's login name
@@ -112,7 +112,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`nohup`](src/nohup.asm) Allows a command to continue running after logging out
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors
 - [`numfmt`](src/numfmt.asm) Reformat numbers
-- [`od`](src/od.asm) Dumps files in octal and other formats
+- [`od`](src/od.asm) ✅ Dumps files in octal and other formats
 - [`paste`](src/paste.asm) Merge corresponding or subsequent lines of files
 - [`patch`](src/patch.asm) Apply changes to files
 - [`pathchk`](src/pathchk.asm) Checks whether file names are valid or portable
