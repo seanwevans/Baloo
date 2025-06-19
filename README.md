@@ -28,7 +28,7 @@ python3 scripts/asmfmt.py src/example.asm
 
 ## Catalog
 - [`alias`](src/alias.asm) Defines or displays aliases
-- [`ar`](src/ar.asm) Creates and maintains libraries
+- [`ar`](src/ar.asm) ✅ Creates and maintains libraries
 - [`arch`](src/arch.asm) ✅ Prints machine hardware name
 - [`at`](src/at.asm) Executes commands at a later time
 - [`awk`](src/awk.asm) Pattern scanning and processing language
