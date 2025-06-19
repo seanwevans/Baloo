@@ -19,6 +19,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
   assert_output 'aGk='
 }
+@test "batch — runs stdin script" {
+  echo "echo hi" | run "$BIN/batch"
+  assert_success
+  assert_output "hi"
+}
+
 
 @test "base32 — encodes stdin" {
   printf 'hello' | run "$BIN/base32"

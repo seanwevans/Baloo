@@ -37,7 +37,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`base64`](src/base64.asm) ✅ Prints a file's contents in Base64 to standard output
 - [`basename`](src/basename.asm) ✅ Removes the path prefix from a given pathname
 - [`basenc`](src/basenc.asm) Encodes or decodes various encodings and prints result to standard output
-- [`batch`](src/batch.asm) Schedules commands to be executed in a batch queue
+- [`batch`](src/batch.asm) Schedules commands to be executed in a batch queue ✅
 - [`bc`](src/bc.asm) Arbitrary-precision arithmetic language
 - [`cat`](src/cat.asm) ✅ Concatenates and prints files
 - [`cd`](src/cd.asm) ✅ Changes the working directory

@@ -63,7 +63,7 @@
     "name": "batch",
     "description": "Schedules commands to be executed in a batch queue",
     "glyph": "📚",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "bc",
