@@ -95,6 +95,11 @@ teardown(){ rm -rf "$TMP"; }
   [[ "$output" =~ ^[0-9]+$ ]]
 }
 
+@test "cut — first 3 chars" {
+  printf "abcdef\n" >"$TMP/cutfile"
+  run "$BIN/cut" -c 3 "$TMP/cutfile"
+  assert_output "abc\n"
+}
 @test "dirname — keeps directory portion" {
   run "$BIN/dirname" "/etc/ssl/certs"
   assert_output "/etc/ssl"

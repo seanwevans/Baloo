@@ -159,7 +159,7 @@
     "name": "cut",
     "description": "Removes sections from each line of files",
     "glyph": "✂️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "date",
