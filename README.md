@@ -60,7 +60,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`diff`](src/diff.asm) Compare two files; see also cmp
 - [`dircolors`](src/dircolors.asm) Set up color for ls
 - [`dirname`](src/dirname.asm) ✅ Strips non-directory suffix from file name
-- [`du`](src/du.asm) Shows disk usage on file systems
+- [`du`](src/du.asm) ✅ Shows disk usage on file systems
 - [`echo`](src/echo.asm) ✅ Displays a specified line of text
 - [`ed`](src/ed.asm) The standard text editor
 - [`env`](src/env.asm) Run a program in a modified environment
