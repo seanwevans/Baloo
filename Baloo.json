@@ -177,7 +177,7 @@
     "name": "df",
     "description": "Shows disk free space on file systems",
     "glyph": "💽",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "diff",

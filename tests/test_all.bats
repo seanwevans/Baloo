@@ -83,6 +83,11 @@ teardown(){ rm -rf "$TMP"; }
   assert [ -f "$TMP/dst" ]
   assert_equal "$(cat "$TMP/dst")" "copy"
 }
+@test "df — prints available bytes" {
+  run "$BIN/df"
+  assert_success
+  [[ "$output" =~ ^[0-9]+$ ]]
+}
 
 @test "dirname — keeps directory portion" {
   run "$BIN/dirname" "/etc/ssl/certs"
