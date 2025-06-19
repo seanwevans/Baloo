@@ -285,7 +285,7 @@
     "name": "getopts",
     "description": "Parse utility options",
     "glyph": "🔣",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "gettext",
