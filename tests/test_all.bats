@@ -166,6 +166,12 @@ teardown(){ rm -rf "$TMP"; }
   [[ "$output" =~ ^[0-9a-f]{8}$ ]]
 }
 
+@test "hash — prints fnv1a hex" {
+  printf 'hello' | run "$BIN/hash"
+  assert_success
+  [[ "$output" =~ ^[0-9a-f]{16}$ ]]
+}
+
 @test "id — prints uid" {
   run "$BIN/id" -u
   assert_output "$(id -u)"

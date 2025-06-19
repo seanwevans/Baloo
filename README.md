@@ -78,7 +78,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`gettext`](src/gettext.asm) Retrieve text string from messages object
 - [`grep`](src/grep.asm) Search text for a pattern
 - [`groups`](src/groups.asm) ✅ Prints the groups of which the user is a member
-- [`hash`](src/hash.asm) Hash database access method
+- [`hash`](src/hash.asm) ✅ Hash database access method
 - [`head`](src/head.asm) ✅ Output the beginning of files
 - [`hostid`](src/hostid.asm) ✅ Prints the numeric identifier for the current host
 - [`iconv`](src/iconv.asm) Codeset conversion

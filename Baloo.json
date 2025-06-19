@@ -306,10 +306,10 @@
     "isDone": false
   },
   {
-    "name": "hash",
-    "description": "Hash database access method",
-    "glyph": "🔐",
-    "isDone": false
+  "name": "hash",
+  "description": "Hash database access method",
+  "glyph": "🔐",
+  "isDone": true
   },
   {
     "name": "head",
