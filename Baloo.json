@@ -273,7 +273,7 @@
     "name": "gencat",
     "description": "Generate a formatted message catalog",
     "glyph": "😺",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "getconf",

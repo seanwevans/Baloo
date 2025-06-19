@@ -72,7 +72,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`find`](src/find.asm) Find files
 - [`fmt`](src/fmt.asm) Simple optimal text formatter
 - [`fold`](src/fold.asm) ✅ Wraps each input line to fit in specified width
-- [`gencat`](src/gencat.asm) Generate a formatted message catalog
+- [`gencat`](src/gencat.asm) ✅ Generate a formatted message catalog
 - [`getconf`](src/getconf.asm) Get configuration values
 - [`getopts`](src/getopts.asm) Parse utility options
 - [`gettext`](src/gettext.asm) Retrieve text string from messages object
