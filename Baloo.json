@@ -255,7 +255,7 @@
     "name": "find",
     "description": "Find files",
     "glyph": "🔎",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "fmt",
