@@ -135,7 +135,7 @@
     "name": "command",
     "description": "Executes a simple command",
     "glyph": "⚡",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "cp",
