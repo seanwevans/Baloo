@@ -262,6 +262,11 @@ teardown(){ rm -rf "$TMP"; }
   [[ "$output" -ge 1 ]]
 }
 
+@test "nice — executes command" {
+  run "$BIN/nice" "$BIN/true"
+  assert_success
+}
+
 @test "printenv — returns PATH value" {
   run "$BIN/printenv" PATH
   assert_output "$PATH"

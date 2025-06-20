@@ -107,7 +107,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`mv`](src/mv.asm) ✅ Moves files or rename files
 - [`newgrp`](src/newgrp.asm) ✅ Change to a new group
 - [`ngettext`](src/ngettext.asm) Retrieve text string from messages object with plural form
-- [`nice`](src/nice.asm) Modifies scheduling priority
+- [`nice`](src/nice.asm) ✅ Modifies scheduling priority
 - [`nl`](src/nl.asm) Numbers lines of files
 - [`nohup`](src/nohup.asm) ✅ Allows a command to continue running after logging out
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors

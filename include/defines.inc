@@ -12,6 +12,10 @@
 %define SYS_IOCTL       16
 
 %define SYS_ACCESS      21
+%define SYS_NICE       34
+%define SYS_GETPRIORITY 140
+%define SYS_SETPRIORITY 141
+
 
 %define SYS_DUP2        33
 
