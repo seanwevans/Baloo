@@ -83,7 +83,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`hostid`](src/hostid.asm) ✅ Prints the numeric identifier for the current host
 - [`iconv`](src/iconv.asm) Codeset conversion
 - [`id`](src/id.asm) ✅ Prints real or effective UID and GID
-- [`install`](src/install.asm) Copies files and set attributes
+- [`install`](src/install.asm) ✅ Copies files and set attributes
 - [`join`](src/join.asm) ✅ Merges two sorted text files based on the presence of a common field
 - [`kill`](src/kill.asm) ✅ Terminate or signal processes
 - [`link`](src/link.asm) ✅ Creates a link to a file
