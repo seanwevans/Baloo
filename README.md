@@ -101,7 +101,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`mesg`](src/mesg.asm) ✅ Permit or deny messages
 - [`mkdir`](src/mkdir.asm) ✅ Creates directories
 - [`mkfifo`](src/mkfifo.asm) ✅ Makes named pipes (FIFOs)
-- [`mknod`](src/mknod.asm) Makes block or character special files
+- [`mknod`](src/mknod.asm) ✅ Makes block or character special files
 - [`mktemp`](src/mktemp.asm) ✅ Creates a temporary file or directory
 - [`msgfmt`](src/msgfmt.asm) Create messages objects from messages object files
 - [`mv`](src/mv.asm) ✅ Moves files or rename files

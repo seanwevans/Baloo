@@ -88,6 +88,8 @@
 %define O_APPEND        1024    ; Open for appending
 
 %define S_IFIFO       0o010000  ; FIFO file type
+%define S_IFCHR       0o020000  ; Character device file type
+%define S_IFBLK       0o060000  ; Block device file type
 %define S_IRUSR       0o0400    ; Read permission for owner
 %define S_IWUSR       0o0200    ; Write permission for owner
 %define S_IRGRP       0o0040    ; Read permission for group

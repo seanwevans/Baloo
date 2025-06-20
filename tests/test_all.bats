@@ -230,6 +230,12 @@ teardown(){ rm -rf "$TMP"; }
   assert [ -p "$TMP/p" ]
 }
 
+@test "mknod — creates fifo" {
+  run "$BIN/mknod" "$TMP/nod" p
+  assert_success
+  assert [ -p "$TMP/nod" ]
+}
+
 @test "mktemp — returns unique path" {
   run "$BIN/mktemp" -u
   assert_success
