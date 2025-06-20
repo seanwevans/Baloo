@@ -19,6 +19,18 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
   assert_output 'aGk='
 }
+@test "batch — runs stdin script" {
+  echo "echo hi" | run "$BIN/batch"
+  assert_success
+  assert_output "hi"
+}
+
+
+@test "base32 — encodes stdin" {
+  printf 'hello' | run "$BIN/base32"
+  assert_success
+  assert_output 'NBSWY3DP'
+}
 
 @test "basename — strips directories" {
   run "$BIN/basename" "/usr/local/bin/foo"
@@ -33,6 +45,12 @@ teardown(){ rm -rf "$TMP"; }
 
 @test "cd — exits success when directory exists" {
   run "$BIN/cd" /
+  assert_success
+}
+
+@test "chcon — sets security context" {
+  touch "$TMP/ctxfile"
+  run "$BIN/chcon" "dummy_u:dummy_r:dummy_t:s0" "$TMP/ctxfile"
   assert_success
 }
 
@@ -77,7 +95,17 @@ teardown(){ rm -rf "$TMP"; }
   assert [ -f "$TMP/dst" ]
   assert_equal "$(cat "$TMP/dst")" "copy"
 }
+@test "df — prints available bytes" {
+  run "$BIN/df"
+  assert_success
+  [[ "$output" =~ ^[0-9]+$ ]]
+}
 
+@test "cut — first 3 chars" {
+  printf "abcdef\n" >"$TMP/cutfile"
+  run "$BIN/cut" -c 3 "$TMP/cutfile"
+  assert_output "abc\n"
+}
 @test "dirname — keeps directory portion" {
   run "$BIN/dirname" "/etc/ssl/certs"
   assert_output "/etc/ssl"
@@ -92,6 +120,11 @@ teardown(){ rm -rf "$TMP"; }
   printf 'a\tb\n' >"$TMP/t"
   run "$BIN/expand" "$TMP/t"
   assert_output 'a       b'
+}
+
+@test "expr — basic arithmetic" {
+  run "$BIN/expr" 3 + 2
+  assert_output '5'
 }
 
 @test "factor — factors 77" {
@@ -131,6 +164,12 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/hostid"
   assert_success
   [[ "$output" =~ ^[0-9a-f]{8}$ ]]
+}
+
+@test "hash — prints fnv1a hex" {
+  printf 'hello' | run "$BIN/hash"
+  assert_success
+  [[ "$output" =~ ^[0-9a-f]{16}$ ]]
 }
 
 @test "id — prints uid" {
@@ -173,6 +212,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output --partial "zzz"
 }
 
+@test "md5sum — digests stdin" {
+  printf 'hi' | run "$BIN/md5sum"
+  assert_success
+  assert_output '49f68a5c8493ec2c0bf489821c21fc3b'
+}
+
 @test "mkdir — creates directory" {
   run "$BIN/mkdir" "$TMP/dir"
   assert_success
@@ -183,6 +228,12 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/mkfifo" "$TMP/p"
   assert_success
   assert [ -p "$TMP/p" ]
+}
+
+@test "mknod — creates fifo" {
+  run "$BIN/mknod" "$TMP/nod" p
+  assert_success
+  assert [ -p "$TMP/nod" ]
 }
 
 @test "mktemp — returns unique path" {
@@ -198,15 +249,37 @@ teardown(){ rm -rf "$TMP"; }
   assert_equal "$(cat "$TMP/n")" "move"
 }
 
+@test "newgrp — executes command with new gid" {
+  gid=$(id -g)
+  run "$BIN/newgrp" "$gid" "$BIN/id" -g
+  assert_success
+  assert_output "$gid"
+}
+
 @test "nproc — ≥ 1" {
   run "$BIN/nproc"
   assert_success
   [[ "$output" -ge 1 ]]
 }
 
+@test "nice — executes command" {
+  run "$BIN/nice" "$BIN/true"
+  assert_success
+}
+
 @test "printenv — returns PATH value" {
   run "$BIN/printenv" PATH
   assert_output "$PATH"
+}
+
+@test "env — prints environment" {
+  run "$BIN/env"
+  [[ "$output" == *"PATH="* ]]
+}
+
+@test "env — executes command" {
+  run "$BIN/env" "$BIN/true"
+  assert_success
 }
 
 @test "pwd — matches $(pwd)" {
@@ -351,4 +424,14 @@ teardown(){ rm -rf "$TMP"; }
   run bash -c "\"$BIN/yes\" | head -n 3"
   assert_success
   [ "$(echo \"$output\" | wc -l)" -eq 3 ]
+}
+
+@test "grep — matches lines containing pattern" {
+  printf 'foo\nbar\n' >"$TMP/g"
+  run "$BIN/grep" foo "$TMP/g"
+  assert_output 'foo'
+
+@test "logger — logs message" {
+  run "$BIN/logger" "hello"
+  assert_success
 }
