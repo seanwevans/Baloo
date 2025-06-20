@@ -57,7 +57,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`date`](src/date.asm) ✅ Sets or displays the date and time
 - [`dd`](src/dd.asm) Copies and converts a file
 - [`df`](src/df.asm) ✅ Shows disk free space on file systems
-- [`diff`](src/diff.asm) Compare two files; see also cmp
+- [`diff`](src/diff.asm) ✅ Compare two files; see also cmp
 - [`dircolors`](src/dircolors.asm) Set up color for ls
 - [`dirname`](src/dirname.asm) ✅ Strips non-directory suffix from file name
 - [`du`](src/du.asm) ✅ Shows disk usage on file systems
