@@ -46,11 +46,13 @@
 %define SYS_GETGROUPS   115
 
 %define SYS_MKNOD       133
+%define SYS_STATFS      137
 
 %define SYS_GETHOSTID   142
 
 %define SYS_CHROOT      161
 %define SYS_SYNC        162
+%define SYS_SETXATTR    188
 
 %define SYS_TIME        201
 
@@ -62,6 +64,7 @@
 %define SYS_GETRANDOM   318
 
 %define BASE64_TABLE   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+%define BASE32_TABLE   "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
 %define AT_FDCWD       -100
 %define SEEK_SET        0
