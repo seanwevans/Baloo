@@ -94,7 +94,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`logname`](src/logname.asm) ✅ Print the user's login name
  - [`lp`](src/lp.asm) ✅ Send files to a printer
 - [`ls`](src/ls.asm) ✅ List directory contents with formatting
-- [`m4`](src/m4.asm) Macro processor
+- [`m4`](src/m4.asm) ✅ Macro processor
 - [`mailx`](src/mailx.asm) Process messages
 - [`man`](src/man.asm) Display system documentation
 - [`md5sum`](src/md5sum.asm) Computes and checks MD5 message digest

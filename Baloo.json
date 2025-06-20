@@ -405,7 +405,7 @@
     "name": "m4",
     "description": "Macro processor",
     "glyph": "🔁",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mailx",
