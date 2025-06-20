@@ -402,6 +402,11 @@ teardown(){ rm -rf "$TMP"; }
   [ "$(echo \"$output\" | wc -l)" -eq 3 ]
 }
 
+@test "grep — matches lines containing pattern" {
+  printf 'foo\nbar\n' >"$TMP/g"
+  run "$BIN/grep" foo "$TMP/g"
+  assert_output 'foo'
+
 @test "logger — logs message" {
   run "$BIN/logger" "hello"
   assert_success

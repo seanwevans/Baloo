@@ -297,7 +297,7 @@
     "name": "grep",
     "description": "Search text for a pattern",
     "glyph": "🔦",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "groups",
