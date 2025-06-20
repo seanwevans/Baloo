@@ -75,7 +75,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`gencat`](src/gencat.asm) ✅ Generate a formatted message catalog
 - [`getconf`](src/getconf.asm) Get configuration values
 - [`getopts`](src/getopts.asm) ✅ Parse utility options
-- [`gettext`](src/gettext.asm) Retrieve text string from messages object
+- [`gettext`](src/gettext.asm) ✅ Retrieve text string from messages object
 - [`grep`](src/grep.asm) ✅ Search text for a pattern
 - [`groups`](src/groups.asm) ✅ Prints the groups of which the user is a member
 - [`hash`](src/hash.asm) ✅ Hash database access method
