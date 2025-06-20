@@ -6,73 +6,58 @@
 
 section .bss
     buffer      resb BUFFER_SIZE
-    num_buffer  resb 32
+    hex_output  resb 16
 
 section .data
     fnv_offset  dq 0xcbf29ce484222325
     fnv_prime   dq 0x100000001b3
-    decimal_base dq 10
+    hex_chars   db "0123456789abcdef"
     newline     db WHITESPACE_NL
 
 section .text
     global _start
 
 _start:
-    mov rbx, [fnv_offset]        ; initial hash value
+    mov     rbx, [fnv_offset]            ; initial hash value
 
-read_loop:
-    mov rax, SYS_READ
-    mov rdi, STDIN_FILENO
-    mov rsi, buffer
-    mov rdx, BUFFER_SIZE
+.read_loop:
+    mov     rax, SYS_READ
+    mov     rdi, STDIN_FILENO
+    mov     rsi, buffer
+    mov     rdx, BUFFER_SIZE
     syscall
-    cmp rax, 0
-    jle  print_result
-    mov rcx, rax
-    mov rsi, buffer
+    cmp     rax, 0
+    jle     .finish
+    mov     rcx, rax
+    mov     rsi, buffer
 .byte_loop:
-    mov al, [rsi]
-    xor bl, al
-    mov rax, rbx
-    mul qword [fnv_prime]
-    mov rbx, rax
-    inc rsi
-    dec rcx
-    jnz .byte_loop
-    jmp read_loop
+    mov     al, [rsi]
+    xor     bl, al
+    mov     rax, rbx
+    mul     qword [fnv_prime]
+    mov     rbx, rax
+    inc     rsi
+    dec     rcx
+    jnz     .byte_loop
+    jmp     .read_loop
 
-print_result:
-    mov rax, rbx
-    call print_int
-    write STDOUT_FILENO, newline, 1
-    exit 0
+.finish:
+    mov     rax, rbx
+    call    print_hex
+    exit    0
 
-print_int:
-    mov rbx, num_buffer
-    add rbx, 31
-    mov byte [rbx], 0
-    dec rbx
-    mov rcx, 0
-    cmp rax, 0
-    jge .convert_digits
-    neg rax
-    mov rcx, 1
-.convert_digits:
-    mov rdx, 0
-    div qword [decimal_base]
-    add dl, '0'
-    mov [rbx], dl
-    dec rbx
-    test rax, rax
-    jnz .convert_digits
-    cmp rcx, 1
-    jne .print_digits
-    mov byte [rbx], '-'
-    dec rbx
-.print_digits:
-    inc rbx
-    mov rdx, num_buffer
-    add rdx, 31
-    sub rdx, rbx
-    write STDOUT_FILENO, rbx, rdx
+; Convert rax to 16-character lowercase hexadecimal string
+print_hex:
+    mov     rsi, hex_output
+    mov     rcx, 16
+.convert_loop:
+    mov     rdx, rax
+    and     rdx, 0x0F
+    mov     dl, [hex_chars + rdx]
+    mov     [rsi + rcx - 1], dl
+    shr     rax, 4
+    dec     rcx
+    jnz     .convert_loop
+    write   STDOUT_FILENO, hex_output, 16
+    write   STDOUT_FILENO, newline, 1
     ret
