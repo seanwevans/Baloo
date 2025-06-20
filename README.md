@@ -105,7 +105,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`mktemp`](src/mktemp.asm) ✅ Creates a temporary file or directory
 - [`msgfmt`](src/msgfmt.asm) Create messages objects from messages object files
 - [`mv`](src/mv.asm) ✅ Moves files or rename files
-- [`newgrp`](src/newgrp.asm) Change to a new group
+- [`newgrp`](src/newgrp.asm) ✅ Change to a new group
 - [`ngettext`](src/ngettext.asm) Retrieve text string from messages object with plural form
 - [`nice`](src/nice.asm) Modifies scheduling priority
 - [`nl`](src/nl.asm) Numbers lines of files

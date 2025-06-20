@@ -249,6 +249,13 @@ teardown(){ rm -rf "$TMP"; }
   assert_equal "$(cat "$TMP/n")" "move"
 }
 
+@test "newgrp — executes command with new gid" {
+  gid=$(id -g)
+  run "$BIN/newgrp" "$gid" "$BIN/id" -g
+  assert_success
+  assert_output "$gid"
+}
+
 @test "nproc — ≥ 1" {
   run "$BIN/nproc"
   assert_success
