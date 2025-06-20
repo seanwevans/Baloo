@@ -7,12 +7,23 @@
 %define SYS_STAT        4
 %define SYS_LSEEK       8
 %define SYS_MMAP        9
+%define SYS_RT_SIGACTION 13
 
 %define SYS_IOCTL       16
 
 %define SYS_ACCESS      21
+%define SYS_NICE       34
+%define SYS_GETPRIORITY 140
+%define SYS_SETPRIORITY 141
+
+
+%define SYS_DUP2        33
 
 %define SYS_GETPID      39
+
+%define SYS_SOCKET      41
+%define SYS_ACCEPT      43
+%define SYS_BIND        49
 
 %define SYS_EXECVE      59
 
@@ -41,16 +52,19 @@
 
 %define SYS_GETUID      102
 %define SYS_GETGID      104
+%define SYS_SETGID      106
 %define SYS_GETEUID     107
 
 %define SYS_GETGROUPS   115
 
 %define SYS_MKNOD       133
+%define SYS_STATFS      137
 
 %define SYS_GETHOSTID   142
 
 %define SYS_CHROOT      161
 %define SYS_SYNC        162
+%define SYS_SETXATTR    188
 
 %define SYS_TIME        201
 
@@ -62,6 +76,7 @@
 %define SYS_GETRANDOM   318
 
 %define BASE64_TABLE   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+%define BASE32_TABLE   "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
 %define AT_FDCWD       -100
 %define SEEK_SET        0
@@ -81,6 +96,8 @@
 %define O_APPEND        1024    ; Open for appending
 
 %define S_IFIFO       0o010000  ; FIFO file type
+%define S_IFCHR       0o020000  ; Character device file type
+%define S_IFBLK       0o060000  ; Block device file type
 %define S_IRUSR       0o0400    ; Read permission for owner
 %define S_IWUSR       0o0200    ; Write permission for owner
 %define S_IRGRP       0o0040    ; Read permission for group
@@ -125,6 +142,12 @@
 
 %define EEXIST          17      ; Error number for "File exists"
 
+%define SIGHUP          1       ; Hangup signal number
+%define SIG_IGN         1       ; Ignore handler
+
 %define WHITESPACE_TAB  9       ; '\t'
 %define WHITESPACE_NL   10      ; '\n'
 %define WHITESPACE_SPACE 32     ; ' '
+
+%define AF_ALG          38
+%define SOCK_SEQPACKET  5
