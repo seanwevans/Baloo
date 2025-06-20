@@ -92,7 +92,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`localedef`](src/localedef.asm) Define locale environment
 - [`logger`](src/logger.asm) Log messages
 - [`logname`](src/logname.asm) ✅ Print the user's login name
- - [`lp`](src/lp.asm) ✅ Send files to a printer
+- [`lp`](src/lp.asm) ✅ Send files to a printer
 - [`ls`](src/ls.asm) ✅ List directory contents with formatting
 - [`m4`](src/m4.asm) ✅ Macro processor
 - [`mailx`](src/mailx.asm) Process messages
@@ -111,7 +111,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`nl`](src/nl.asm) ✅ Numbers lines of files
 - [`nohup`](src/nohup.asm) ✅ Allows a command to continue running after logging out
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors
-- [`numfmt`](src/numfmt.asm) Reformat numbers
+- [`numfmt`](src/numfmt.asm) ✅ Reformat numbers
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats
 - [`paste`](src/paste.asm) Merge corresponding or subsequent lines of files
 - [`patch`](src/patch.asm) Apply changes to files

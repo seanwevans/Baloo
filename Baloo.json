@@ -507,7 +507,7 @@
     "name": "numfmt",
     "description": "Reformat numbers",
     "glyph": "🔣",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "od",
