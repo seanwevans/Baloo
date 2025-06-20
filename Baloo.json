@@ -189,7 +189,7 @@
     "name": "dircolors",
     "description": "Set up color for ls",
     "glyph": "🎨",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "dirname",
