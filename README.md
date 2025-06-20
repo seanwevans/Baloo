@@ -55,7 +55,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`csplit`](src/csplit.asm) Splits a file into sections determined by context lines
 - [`cut`](src/cut.asm) ✅ Removes sections from each line of files
 - [`date`](src/date.asm) ✅ Sets or displays the date and time
-- [`dd`](src/dd.asm) Copies and converts a file
+- [`dd`](src/dd.asm) ✅ Copies and converts a file
 - [`df`](src/df.asm) ✅ Shows disk free space on file systems
 - [`diff`](src/diff.asm) ✅ Compare two files; see also cmp
 - [`dircolors`](src/dircolors.asm) ✅ Set up color for ls
