@@ -7,10 +7,13 @@
 %define SYS_STAT        4
 %define SYS_LSEEK       8
 %define SYS_MMAP        9
+%define SYS_RT_SIGACTION 13
 
 %define SYS_IOCTL       16
 
 %define SYS_ACCESS      21
+
+%define SYS_DUP2        33
 
 %define SYS_GETPID      39
 
@@ -133,6 +136,9 @@
 %define ACCOUNTING      9
 
 %define EEXIST          17      ; Error number for "File exists"
+
+%define SIGHUP          1       ; Hangup signal number
+%define SIG_IGN         1       ; Ignore handler
 
 %define WHITESPACE_TAB  9       ; '\t'
 %define WHITESPACE_NL   10      ; '\n'

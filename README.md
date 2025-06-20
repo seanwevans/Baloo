@@ -109,7 +109,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`ngettext`](src/ngettext.asm) Retrieve text string from messages object with plural form
 - [`nice`](src/nice.asm) Modifies scheduling priority
 - [`nl`](src/nl.asm) Numbers lines of files
-- [`nohup`](src/nohup.asm) Allows a command to continue running after logging out
+- [`nohup`](src/nohup.asm) ✅ Allows a command to continue running after logging out
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors
 - [`numfmt`](src/numfmt.asm) Reformat numbers
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats

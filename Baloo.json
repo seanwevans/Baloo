@@ -495,7 +495,7 @@
     "name": "nohup",
     "description": "Allows a command to continue running after logging out",
     "glyph": "🏃",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "nproc",
