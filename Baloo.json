@@ -3,13 +3,13 @@
     "name": "alias",
     "description": "Defines or displays aliases",
     "glyph": "🏷️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "ar",
     "description": "Creates and maintains libraries",
     "glyph": "🗄️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "arch",
@@ -39,7 +39,7 @@
     "name": "base32",
     "description": "Encodes or decodes Base32, and prints result to standard output",
     "glyph": "3️⃣",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "base64",
@@ -63,7 +63,7 @@
     "name": "batch",
     "description": "Schedules commands to be executed in a batch queue",
     "glyph": "📚",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "bc",
@@ -159,13 +159,13 @@
     "name": "cut",
     "description": "Removes sections from each line of files",
     "glyph": "✂️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "date",
     "description": "Sets or displays the date and time",
     "glyph": "📅",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "dd",
@@ -177,7 +177,7 @@
     "name": "df",
     "description": "Shows disk free space on file systems",
     "glyph": "💽",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "diff",
@@ -231,7 +231,7 @@
     "name": "expr",
     "description": "Evaluates expressions",
     "glyph": "📊",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "factor",
@@ -255,13 +255,13 @@
     "name": "find",
     "description": "Find files",
     "glyph": "🔎",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "fmt",
     "description": "Simple optimal text formatter",
     "glyph": "📐",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "fold",
@@ -273,19 +273,19 @@
     "name": "gencat",
     "description": "Generate a formatted message catalog",
     "glyph": "😺",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "getconf",
     "description": "Get configuration values",
     "glyph": "⚙️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "getopts",
     "description": "Parse utility options",
     "glyph": "🔣",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "gettext",
@@ -297,7 +297,7 @@
     "name": "grep",
     "description": "Search text for a pattern",
     "glyph": "🔦",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "groups",
@@ -306,10 +306,10 @@
     "isDone": false
   },
   {
-    "name": "hash",
-    "description": "Hash database access method",
-    "glyph": "🔐",
-    "isDone": false
+  "name": "hash",
+  "description": "Hash database access method",
+  "glyph": "🔐",
+  "isDone": true
   },
   {
     "name": "head",
@@ -345,7 +345,7 @@
     "name": "join",
     "description": "Merges two sorted text files based on the presence of a common field",
     "glyph": "🔗",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "kill",
@@ -369,7 +369,7 @@
     "name": "locale",
     "description": "Get locale-specific information",
     "glyph": "🌍",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "localedef",
@@ -381,7 +381,7 @@
     "name": "logger",
     "description": "Log messages",
     "glyph": "📓",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "logname",
@@ -405,7 +405,7 @@
     "name": "m4",
     "description": "Macro processor",
     "glyph": "🔁",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mailx",
@@ -423,7 +423,7 @@
     "name": "md5sum",
     "description": "Computes and checks MD5 message digest",
     "glyph": "🔑",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mesg",
@@ -495,7 +495,7 @@
     "name": "nohup",
     "description": "Allows a command to continue running after logging out",
     "glyph": "🏃",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "nproc",
