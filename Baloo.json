@@ -423,7 +423,7 @@
     "name": "md5sum",
     "description": "Computes and checks MD5 message digest",
     "glyph": "🔑",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mesg",

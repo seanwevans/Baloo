@@ -14,6 +14,10 @@
 
 %define SYS_GETPID      39
 
+%define SYS_SOCKET      41
+%define SYS_ACCEPT      43
+%define SYS_BIND        49
+
 %define SYS_EXECVE      59
 
 %define SYS_EXIT        60
@@ -131,3 +135,6 @@
 %define WHITESPACE_TAB  9       ; '\t'
 %define WHITESPACE_NL   10      ; '\n'
 %define WHITESPACE_SPACE 32     ; ' '
+
+%define AF_ALG          38
+%define SOCK_SEQPACKET  5

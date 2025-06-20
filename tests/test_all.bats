@@ -212,6 +212,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output --partial "zzz"
 }
 
+@test "md5sum — digests stdin" {
+  printf 'hi' | run "$BIN/md5sum"
+  assert_success
+  assert_output '49f68a5c8493ec2c0bf489821c21fc3b'
+}
+
 @test "mkdir — creates directory" {
   run "$BIN/mkdir" "$TMP/dir"
   assert_success
