@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
-load 'test_helper/bats-support/load'
-load 'test_helper/bats-assert/load'
+load '/usr/lib/bats/bats-support/load'
+load '/usr/lib/bats/bats-assert/load'
 
 # Directory with Baloo binaries ------------------------------------------------
 setup()  { BIN="${BATS_TEST_DIRNAME}/../bin"; TMP=$(mktemp -d); }
@@ -436,6 +436,7 @@ teardown(){ rm -rf "$TMP"; }
   printf 'foo\nbar\n' >"$TMP/g"
   run "$BIN/grep" foo "$TMP/g"
   assert_output 'foo'
+}
 
 @test "logger — logs message" {
   run "$BIN/logger" "hello"

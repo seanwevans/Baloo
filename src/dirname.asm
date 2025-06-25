@@ -41,7 +41,6 @@ _start:
     jmp         .print
 
 .found:
-    inc         rcx
     mov         byte [rsi + rcx], 0
     mov         rbx, rcx
     jmp         .print
