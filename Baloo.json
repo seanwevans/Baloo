@@ -39,7 +39,7 @@
     "name": "base32",
     "description": "Encodes or decodes Base32, and prints result to standard output",
     "glyph": "3️⃣",
-    "isDone": true
+    "isDone": false
   },
   {
     "name": "base64",
@@ -63,7 +63,7 @@
     "name": "batch",
     "description": "Schedules commands to be executed in a batch queue",
     "glyph": "📚",
-    "isDone": true
+    "isDone": false
   },
   {
     "name": "bc",
@@ -87,7 +87,7 @@
     "name": "chcon",
     "description": "Changes file security context",
     "glyph": "🛡️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "chgrp",
@@ -105,13 +105,13 @@
     "name": "chown",
     "description": "Changes file ownership",
     "glyph": "🔐",
-    "isDone": true
+    "isDone": false
   },
   {
     "name": "chroot",
     "description": "Changes the root directory",
     "glyph": "🌱",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "cksum",
@@ -159,7 +159,7 @@
     "name": "cut",
     "description": "Removes sections from each line of files",
     "glyph": "✂️",
-    "isDone": true
+    "isDone": false
   },
   {
     "name": "date",
@@ -225,7 +225,7 @@
     "name": "expand",
     "description": "Converts tabs to spaces",
     "glyph": "➡️",
-    "isDone": true
+    "isDone": false
   },
   {
     "name": "expr",
