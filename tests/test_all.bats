@@ -15,19 +15,19 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "base64 — encodes stdin" {
-  printf 'hi' | run "$BIN/base64"
+  run bash -c "printf 'hi' | \"$BIN/base64\""
   assert_success
   assert_output 'aGk='
 }
 @test "batch — runs stdin script" {
-  echo "echo hi" | run "$BIN/batch"
+  run bash -c "echo 'echo hi' | \"$BIN/batch\""
   assert_success
   assert_output "hi"
 }
 
 
 @test "base32 — encodes stdin" {
-  printf 'hello' | run "$BIN/base32"
+  run bash -c "printf 'hello' | \"$BIN/base32\""
   assert_success
   assert_output 'NBSWY3DP'
 }
@@ -167,7 +167,7 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "hash — prints fnv1a hex" {
-  printf 'hello' | run "$BIN/hash"
+  run bash -c "printf 'hello' | \"$BIN/hash\""
   assert_success
   [[ "$output" =~ ^[0-9a-f]{16}$ ]]
 }
@@ -213,7 +213,7 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "md5sum — digests stdin" {
-  printf 'hi' | run "$BIN/md5sum"
+  run bash -c "printf 'hi' | \"$BIN/md5sum\""
   assert_success
   assert_output '49f68a5c8493ec2c0bf489821c21fc3b'
 }
@@ -349,7 +349,7 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "tr — character translation" {
-  printf 'abc' | run "$BIN/tr" 'a-c' 'A-C'
+  run bash -c "printf 'abc' | \"$BIN/tr\" 'a-c' 'A-C'"
   assert_output 'ABC'
 }
 
@@ -388,7 +388,7 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "uniq — removes duplicate lines" {
-  printf 'x\nx\ny\n' | run "$BIN/uniq"
+  run bash -c "printf 'x\nx\ny\n' | \"$BIN/uniq\""
   assert_output $'x\ny'
 }
 

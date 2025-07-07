@@ -14,12 +14,32 @@ section .data
 section .text
     global      _start
 
+
 _start:
+    pop         rax                     ; argc
+    mov         rbx, rsp                ; argv pointer
     mov         qword [col_pos], 0
+
+    cmp         rax, 1                  ; any filename argument?
+    jle         use_stdin
+
+    mov         rdi, [rbx + 8]          ; argv[1]
+    mov         rax, SYS_OPEN
+    mov         rsi, O_RDONLY
+    xor         rdx, rdx
+    syscall
+    cmp         rax, 0
+    jl          exit_program            ; if open fails, just exit
+    mov         r14, rax                ; file descriptor
+    jmp         process_input
+
+use_stdin:
+    mov         r14, STDIN_FILENO
+    jmp         process_input
 
 process_input:
     mov         rax, SYS_READ
-    mov         rdi, STDIN_FILENO
+    mov         rdi, r14
     mov         rsi, in_buffer
     mov         rdx, buffer_size
     syscall
@@ -88,4 +108,10 @@ write_output:
     jmp         process_input
     
 exit_program:
+    cmp         r14, STDIN_FILENO
+    je          .done
+    mov         rax, SYS_CLOSE
+    mov         rdi, r14
+    syscall
+.done:
     exit        0
