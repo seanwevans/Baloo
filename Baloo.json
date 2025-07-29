@@ -789,7 +789,7 @@
     "name": "tput",
     "description": "Change terminal characteristics",
     "glyph": "🎮",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "tr",
