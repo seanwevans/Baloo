@@ -139,7 +139,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`sha256sum`](src/sha256sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`sha384sum`](src/sha384sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`sha512sum`](src/sha512sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- [`shred`](src/shred.asm) ⛔️ Overwrites a file to hide its contents, and optionally deletes it
+- [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
 - [`shuf`](src/shuf.asm) ⛔️ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
 - [`sort`](src/sort.asm) ⛔️ Sorts lines of text files

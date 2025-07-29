@@ -675,7 +675,7 @@
     "name": "shred",
     "description": "Overwrites a file to hide its contents, and optionally deletes it",
     "glyph": "🔪",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "shuf",
