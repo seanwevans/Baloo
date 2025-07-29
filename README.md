@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-66%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -30,30 +30,31 @@ python3 scripts/asmfmt.py src/example.asm
 - [`alias`](src/alias.asm) ✅ Defines or displays aliases
 - [`ar`](src/ar.asm) ✅ Creates and maintains libraries
 - [`arch`](src/arch.asm) ✅ Prints machine hardware name
-- [`at`](src/at.asm) ⛔️ Executes commands at a later time
+- [`at`](src/at.asm) ✅ Executes commands at a later time
 - [`awk`](src/awk.asm) ⛔️ Pattern scanning and processing language
-- [`b2sum`](src/b2sum.asm) ⛔️ Computes and checks BLAKE2b message digest
- - [`base32`](src/base32.asm) ⛔️ Encodes or decodes Base32, and prints result to standard output
+- [`b2sum`](src/b2sum.asm) ✅ Computes and checks BLAKE2b message digest
+- [`base32`](src/base32.asm) ⛔️ Encodes or decodes Base32, and prints result to standard output
 - [`base64`](src/base64.asm) ⛔️ Prints a file's contents in Base64 to standard output
 - [`basename`](src/basename.asm) ✅ Removes the path prefix from a given pathname
-- [`basenc`](src/basenc.asm) ⛔️ Encodes or decodes various encodings and prints result to standard output
- - [`batch`](src/batch.asm) ⛔️ Schedules commands to be executed in a batch queue
+- [`baseenc`](src/baseenc.asm) ✅ Encodes or decodes various encodings and prints result to standard output
+- [`batch`](src/batch.asm) ⛔️ Schedules commands to be executed in a batch queue
 - [`bc`](src/bc.asm) ✅ Arbitrary-precision arithmetic language
 - [`cat`](src/cat.asm) ✅ Concatenates and prints files
 - [`cd`](src/cd.asm) ✅ Changes the working directory
- - [`chcon`](src/chcon.asm) ✅ Changes file security context
+- [`chcon`](src/chcon.asm) ✅ Changes file security context
 - [`chgrp`](src/chgrp.asm) ⛔️ Changes file group ownership
 - [`chmod`](src/chmod.asm) ⛔️ Changes the permissions of a file or directory
- - [`chown`](src/chown.asm) ⛔️ Changes file ownership
- - [`chroot`](src/chroot.asm) ✅ Changes the root directory
+- [`chown`](src/chown.asm) ⛔️ Changes file ownership
+- [`chroot`](src/chroot.asm) ✅ Changes the root directory
 - [`cksum`](src/cksum.asm) ⛔️ Checksums (IEEE Ethernet CRC-32) and count the bytes in a file
 - [`cmp`](src/cmp.asm) ⛔️ Compares two files; see also diff
 - [`comm`](src/comm.asm) ⛔️ Compares two sorted files line by line
 - [`command`](src/command.asm) ✅ Executes a simple command
 - [`cp`](src/cp.asm) ✅ Copy files/directories
+- [`crontab`](src/crontab.asm) ✅ Schedule periodic background work
+- [`csplit`](src/csplit.asm) ✅ Splits a file into sections determined by context lines
 - [`crontab`](src/crontab.asm) ⛔️ Schedule periodic background work
-- [`csplit`](src/csplit.asm) ⛔️ Splits a file into sections determined by context lines
- - [`cut`](src/cut.asm) ⛔️ Removes sections from each line of files
+- [`cut`](src/cut.asm) ⛔️ Removes sections from each line of files
 - [`date`](src/date.asm) ✅ Sets or displays the date and time
 - [`dd`](src/dd.asm) ⛔️ Copies and converts a file
 - [`df`](src/df.asm) ✅ Shows disk free space on file systems
@@ -64,7 +65,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`echo`](src/echo.asm) ✅ Displays a specified line of text
 - [`ed`](src/ed.asm) ⛔️ The standard text editor
 - [`env`](src/env.asm) ⛔️ Run a program in a modified environment
- - [`expand`](src/expand.asm) ⛔️ Converts tabs to spaces
+- [`expand`](src/expand.asm) ⛔️ Converts tabs to spaces
 - [`expr`](src/expr.asm) ✅ Evaluates expressions
 - [`factor`](src/factor.asm) ✅ Factors numbers
 - [`false`](src/false.asm) ✅ Does nothing, but exits unsuccessfully
@@ -127,7 +128,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`read`](src/read.asm) ⛔️ Read a line from standard input
 - [`readlink`](src/readlink.asm) ⛔️ Print destination of a symbolic link
 - [`realpath`](src/realpath.asm) ⛔️ Returns the resolved absolute or relative path for a file
-- [`renice`](src/renice.asm) ⛔️ Set nice values of running processes
+- [`renice`](src/renice.asm) ✅ Set nice values of running processes
 - [`rm`](src/rm.asm) ⛔️ Removes files/directories
 - [`rmdir`](src/rmdir.asm) ✅ Removes empty directories
 - [`runcon`](src/runcon.asm) ⛔️ Run command with specified security context
@@ -139,42 +140,42 @@ python3 scripts/asmfmt.py src/example.asm
 - [`sha256sum`](src/sha256sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`sha384sum`](src/sha384sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`sha512sum`](src/sha512sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- [`shred`](src/shred.asm) ⛔️ Overwrites a file to hide its contents, and optionally deletes it
+- [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
 - [`shuf`](src/shuf.asm) ⛔️ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
 - [`sort`](src/sort.asm) ⛔️ Sorts lines of text files
-- [`split`](src/split.asm) ⛔️ Splits a file into pieces
+- [`split`](src/split.asm) ✅ Splits a file into pieces
 - [`stat`](src/stat.asm) ⛔️ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ⛔️ Controls buffering for commands that use stdio
-- [`strings`](src/strings.asm) ⛔️ Find printable strings in files
+- [`strings`](src/strings.asm) ✅ Find printable strings in files
 - [`stty`](src/stty.asm) ⛔️ Changes and prints terminal line settings
-- [`sum`](src/sum.asm) ⛔️ Checksums and counts the blocks in a file
+- [`sum`](src/sum.asm) ✅ Checksums and counts the blocks in a file
 - [`sync`](src/sync.asm) ✅ Flushes file system buffers
-- [`tabs`](src/tabs.asm) ⛔️ Set terminal tabs
-- [`tac`](src/tac.asm) ⛔️ Concatenates and prints files in reverse order line by line
+- [`tabs`](src/tabs.asm) ✅ Set terminal tabs
+- [`tac`](src/tac.asm) ✅ Concatenates and prints files in reverse order line by line
 - [`tail`](src/tail.asm) ✅ Output the end of files
 - [`tee`](src/tee.asm) ✅ Sends output to multiple files
-- [`test`](src/test.asm) ⛔️ Evaluates an expression
+- [`test`](src/test.asm) ✅ Evaluates an expression
 - [`time`](src/time.asm) ⛔️ Display elapsed, system and kernel time used by the current shell or designated process.
-- [`timeout`](src/timeout.asm) ⛔️ Runs a command with a time limit
+- [`timeout`](src/timeout.asm) ✅ Runs a command with a time limit
 - [`touch`](src/touch.asm) ✅ Changes file timestamps; creates file
 - [`tput`](src/tput.asm) ⛔️ Change terminal characteristics
 - [`tr`](src/tr.asm) ✅ Translates or deletes characters
 - [`true`](src/true.asm) ✅ Does nothing, but exits successfully
 - [`truncate`](src/truncate.asm) ✅ Shrink the size of a file to the specified size
-- [`tsort`](src/tsort.asm) ⛔️ Performs a topological sort
+- [`tsort`](src/tsort.asm) ✅ Performs a topological sort
 - [`tty`](src/tty.asm) ✅ Prints terminal name
 - [`umask`](src/umask.asm) ✅ Get or set the file mode creation mask
-- [`unalias`](src/unalias.asm) ⛔️ Remove alias definitions
+- [`unalias`](src/unalias.asm) ✅ Remove alias definitions
 - [`uname`](src/uname.asm) ✅ Prints system information
 - [`unexpand`](src/unexpand.asm) ✅ Converts spaces to tabs
 - [`uniq`](src/uniq.asm) ✅ Removes duplicate lines from a sorted file
 - [`unlink`](src/unlink.asm) ⛔️ Removes the specified file using the unlink function
 - [`uptime`](src/uptime.asm) ✅ Tells how long the system has been running
 - [`users`](src/users.asm) ⛔️ Prints the user names of users currently logged into the current host
-- [`uudecode`](src/uudecode.asm) ⛔️ Decode a binary file
+- [`uudecode`](src/uudecode.asm) ✅ Decode a binary file
 - [`uuencode`](src/uuencode.asm) ✅ Encode a binary file
-- [`wait`](src/wait.asm) ⛔️ Await process completion
+- [`wait`](src/wait.asm) ✅ Await process completion
 - [`wc`](src/wc.asm) ✅ Prints the number of bytes, words, and lines in files
 - [`who`](src/who.asm) ✅ Prints a list of all users currently logged in
 - [`whoami`](src/whoami.asm) ✅ Prints the effective userid

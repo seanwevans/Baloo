@@ -33,7 +33,7 @@
     "name": "b2sum",
     "description": "Computes and checks BLAKE2b message digest",
     "glyph": "🧪",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "base32",
@@ -54,10 +54,10 @@
     "isDone": true
   },
   {
-    "name": "basenc",
+    "name": "baseenc",
     "description": "Encodes or decodes various encodings and prints result to standard output",
     "glyph": "🔡",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "batch",
@@ -147,13 +147,13 @@
     "name": "crontab",
     "description": "Schedule periodic background work",
     "glyph": "🗓️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "csplit",
     "description": "Splits a file into sections determined by context lines",
     "glyph": "📂",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "cut",
@@ -603,7 +603,7 @@
     "name": "renice",
     "description": "Set nice values of running processes",
     "glyph": "👍",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "rm",
@@ -675,7 +675,7 @@
     "name": "shred",
     "description": "Overwrites a file to hide its contents, and optionally deletes it",
     "glyph": "🔪",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "shuf",
@@ -717,7 +717,7 @@
     "name": "strings",
     "description": "Find printable strings in files",
     "glyph": "🔤",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "stty",
@@ -729,7 +729,7 @@
     "name": "sum",
     "description": "Checksums and counts the blocks in a file",
     "glyph": "➕",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "sync",
@@ -741,13 +741,13 @@
     "name": "tabs",
     "description": "Set terminal tabs",
     "glyph": "📑",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "tac",
     "description": "Concatenates and prints files in reverse order line by line",
     "glyph": "🙃",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "tail",
@@ -765,7 +765,7 @@
     "name": "test",
     "description": "Evaluates an expression",
     "glyph": "🧪",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "time",
@@ -813,7 +813,7 @@
     "name": "tsort",
     "description": "Performs a topological sort",
     "glyph": "🧶",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "tty",
@@ -831,7 +831,7 @@
     "name": "unalias",
     "description": "Remove alias definitions",
     "glyph": "🚫",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "uname",
