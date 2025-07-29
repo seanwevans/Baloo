@@ -308,6 +308,13 @@ teardown(){ rm -rf "$TMP"; }
   refute [ -e "$TMP/r" ]
 }
 
+@test "shred — overwrites and deletes" {
+  printf 'secret' >"$TMP/s"
+  run "$BIN/shred" -u "$TMP/s"
+  assert_success
+  refute [ -e "$TMP/s" ]
+}
+
 @test "rmdir — removes empty dir" {
   mkdir "$TMP/d"
   run "$BIN/rmdir" "$TMP/d"
