@@ -30,6 +30,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output "hi"
 }
 
+@test "at — runs stdin script after delay" {
+  run bash -c "echo 'echo hi' | \"$BIN/at\" 0"
+  assert_success
+  assert_output "hi"
+}
+
 
 @test "base32 — encodes stdin" {
   run bash -c "printf 'hello' | \"$BIN/base32\""
