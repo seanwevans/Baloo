@@ -90,7 +90,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`link`](src/link.asm) ⛔️ Creates a link to a file
 - [`ln`](src/ln.asm) ✅ Creates a link to a file
 - [`locale`](src/locale.asm) ✅ Get locale-specific information
-- [`localedef`](src/localedef.asm) ⛔️ Define locale environment
+- [`localedef`](src/localedef.asm) ✅ Define locale environment
 - [`logger`](src/logger.asm) ✅ Log messages
 - [`logname`](src/logname.asm) ✅ Print the user's login name
 - [`lp`](src/lp.asm) ✅ Send files to a printer
