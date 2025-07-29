@@ -173,7 +173,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`uptime`](src/uptime.asm) ✅ Tells how long the system has been running
 - [`users`](src/users.asm) ⛔️ Prints the user names of users currently logged into the current host
 - [`uudecode`](src/uudecode.asm) ⛔️ Decode a binary file
-- [`uuencode`](src/uuencode.asm) ⛔️ Encode a binary file
+- [`uuencode`](src/uuencode.asm) ✅ Encode a binary file
 - [`wait`](src/wait.asm) ⛔️ Await process completion
 - [`wc`](src/wc.asm) ✅ Prints the number of bytes, words, and lines in files
 - [`who`](src/who.asm) ✅ Prints a list of all users currently logged in
