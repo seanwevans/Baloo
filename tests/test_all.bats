@@ -496,3 +496,13 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/logger" "hello"
   assert_success
 }
+
+@test "uudecode — decodes uuencoded file" {
+  encoded='begin 666 file.txt\n#:&D*\n \nend\n'
+  printf "$encoded" >"$TMP/u"
+  pushd "$TMP" >/dev/null
+  run "$BIN/uudecode" "$TMP/u"
+  popd >/dev/null
+  assert_success
+  assert_equal "$(cat \"$TMP/file.txt\")" $'hi\n'
+}
