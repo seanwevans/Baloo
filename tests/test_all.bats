@@ -447,3 +447,19 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/logger" "hello"
   assert_success
 }
+
+@test "crontab — installs and lists file" {
+  echo "* * * * * echo hi" >"$TMP/cronfile"
+  run env HOME="$TMP" "$BIN/crontab" "$TMP/cronfile"
+  assert_success
+  run env HOME="$TMP" "$BIN/crontab" -l
+  assert_output "* * * * * echo hi"
+}
+
+@test "crontab — remove table" {
+  echo "a" >"$TMP/cfile"
+  run env HOME="$TMP" "$BIN/crontab" "$TMP/cfile"
+  run env HOME="$TMP" "$BIN/crontab" -r
+  assert_success
+  [ ! -f "$TMP/.baloo_crontab" ]
+}
