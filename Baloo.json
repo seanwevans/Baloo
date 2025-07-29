@@ -729,7 +729,7 @@
     "name": "sum",
     "description": "Checksums and counts the blocks in a file",
     "glyph": "➕",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "sync",

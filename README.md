@@ -148,7 +148,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`stdbuf`](src/stdbuf.asm) ⛔️ Controls buffering for commands that use stdio
 - [`strings`](src/strings.asm) ✅ Find printable strings in files
 - [`stty`](src/stty.asm) ⛔️ Changes and prints terminal line settings
-- [`sum`](src/sum.asm) ⛔️ Checksums and counts the blocks in a file
+- [`sum`](src/sum.asm) ✅ Checksums and counts the blocks in a file
 - [`sync`](src/sync.asm) ✅ Flushes file system buffers
 - [`tabs`](src/tabs.asm) ✅ Set terminal tabs
 - [`tac`](src/tac.asm) ⛔️ Concatenates and prints files in reverse order line by line

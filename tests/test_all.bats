@@ -239,6 +239,14 @@ teardown(){ rm -rf "$TMP"; }
   assert_output '49f68a5c8493ec2c0bf489821c21fc3b'
 }
 
+
+@test "sum — computes BSD checksum" {
+  printf 'hello\n' >"$TMP/sumfile"
+  run "$BIN/sum" "$TMP/sumfile"
+  assert_success
+  assert_output "36979 1 $TMP/sumfile"
+}
+
 @test "b2sum — digests stdin" {
   run bash -c "printf 'hi' | \"$BIN/b2sum\""
   assert_success
