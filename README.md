@@ -82,7 +82,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`hash`](src/hash.asm) ✅ Hash database access method
 - [`head`](src/head.asm) ✅ Output the beginning of files
 - [`hostid`](src/hostid.asm) ✅ Prints the numeric identifier for the current host
-- [`iconv`](src/iconv.asm) ⛔️ Codeset conversion
+- [`iconv`](src/iconv.asm) ✅ Codeset conversion
 - [`id`](src/id.asm) ✅ Prints real or effective UID and GID
 - [`install`](src/install.asm) ⛔️ Copies files and set attributes
 - [`join`](src/join.asm) ✅ Merges two sorted text files based on the presence of a common field

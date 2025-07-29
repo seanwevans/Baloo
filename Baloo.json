@@ -327,7 +327,7 @@
     "name": "iconv",
     "description": "Codeset conversion",
     "glyph": "🔄",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "id",
