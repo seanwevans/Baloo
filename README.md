@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-68%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-83%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -34,7 +34,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`awk`](src/awk.asm) ⛔️ Pattern scanning and processing language
 - [`b2sum`](src/b2sum.asm) ✅ Computes and checks BLAKE2b message digest
 - [`base32`](src/base32.asm) ⛔️ Encodes or decodes Base32, and prints result to standard output
-- [`base64`](src/base64.asm) ⛔️ Prints a file's contents in Base64 to standard output
+- [`base64`](src/base64.asm) ⛔️ Encodes or decodes Base64, and prints result to standard output
 - [`basename`](src/basename.asm) ✅ Removes the path prefix from a given pathname
 - [`baseenc`](src/baseenc.asm) ✅ Encodes or decodes various encodings and prints result to standard output
 - [`batch`](src/batch.asm) ⛔️ Schedules commands to be executed in a batch queue
@@ -53,7 +53,6 @@ python3 scripts/asmfmt.py src/example.asm
 - [`cp`](src/cp.asm) ✅ Copy files/directories
 - [`crontab`](src/crontab.asm) ✅ Schedule periodic background work
 - [`csplit`](src/csplit.asm) ✅ Splits a file into sections determined by context lines
-- [`crontab`](src/crontab.asm) ⛔️ Schedule periodic background work
 - [`cut`](src/cut.asm) ⛔️ Removes sections from each line of files
 - [`date`](src/date.asm) ✅ Sets or displays the date and time
 - [`dd`](src/dd.asm) ⛔️ Copies and converts a file
@@ -97,9 +96,9 @@ python3 scripts/asmfmt.py src/example.asm
 - [`ls`](src/ls.asm) ⛔️ List directory contents with formatting
 - [`m4`](src/m4.asm) ✅ Macro processor
 - [`mailx`](src/mailx.asm) ⛔️ Process messages
-- [`man`](src/man.asm) ✅ Display system documentation
+- [`man`](src/man.asm) ⛔️ Display system documentation
 - [`md5sum`](src/md5sum.asm) ✅ Computes and checks MD5 message digest
- - [`mesg`](src/mesg.asm) ✅ Permit or deny messages
+- [`mesg`](src/mesg.asm) ✅ Permit or deny messages
 - [`mkdir`](src/mkdir.asm) ✅ Creates directories
 - [`mkfifo`](src/mkfifo.asm) ⛔️ Makes named pipes (FIFOs)
 - [`mknod`](src/mknod.asm) ⛔️ Makes block or character special files
@@ -144,7 +143,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`shuf`](src/shuf.asm) ⛔️ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
 - [`sort`](src/sort.asm) ⛔️ Sorts lines of text files
-- [`split`](src/split.asm) ✅ Splits a file into pieces
+- [`split`](src/split.asm) ⛔️ Splits a file into pieces
 - [`stat`](src/stat.asm) ⛔️ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ⛔️ Controls buffering for commands that use stdio
 - [`strings`](src/strings.asm) ✅ Find printable strings in files
@@ -156,8 +155,8 @@ python3 scripts/asmfmt.py src/example.asm
 - [`tail`](src/tail.asm) ✅ Output the end of files
 - [`tee`](src/tee.asm) ✅ Sends output to multiple files
 - [`test`](src/test.asm) ✅ Evaluates an expression
-- [`time`](src/time.asm) ✅ Display elapsed, system and kernel time used by the current shell or designated process.
-- [`timeout`](src/timeout.asm) ✅ Runs a command with a time limit
+- [`time`](src/time.asm) ✅ Display elapsed, system and kernel time
+- [`timeout`](src/timeout.asm) ⛔️ Runs a command with a time limit
 - [`touch`](src/touch.asm) ✅ Changes file timestamps; creates file
 - [`tput`](src/tput.asm) ⛔️ Change terminal characteristics
 - [`tr`](src/tr.asm) ✅ Translates or deletes characters
@@ -172,17 +171,16 @@ python3 scripts/asmfmt.py src/example.asm
 - [`uniq`](src/uniq.asm) ✅ Removes duplicate lines from a sorted file
 - [`unlink`](src/unlink.asm) ⛔️ Removes the specified file using the unlink function
 - [`uptime`](src/uptime.asm) ✅ Tells how long the system has been running
-- [`users`](src/users.asm) ⛔️ Prints the user names of users currently logged into the current host
-- [`uudecode`](src/uudecode.asm) ✅ Decode a binary file
+- [`users`](src/users.asm) ⛔️ Prints the user names of users currently logged in
+- [`uudecode`](src/uudecode.asm) ⛔️ Decode a binary file
 - [`uuencode`](src/uuencode.asm) ✅ Encode a binary file
-- [`wait`](src/wait.asm) ✅ Await process completion
+- [`wait`](src/wait.asm) ⛔️ Await process completion
 - [`wc`](src/wc.asm) ✅ Prints the number of bytes, words, and lines in files
 - [`who`](src/who.asm) ✅ Prints a list of all users currently logged in
 - [`whoami`](src/whoami.asm) ✅ Prints the effective userid
 - [`write`](src/write.asm) ⛔️ Write to another user's terminal
 - [`xargs`](src/xargs.asm) ⛔️ Construct argument lists and invoke utility
 - [`yes`](src/yes.asm) ✅ Prints a string repeatedly
-
 ## Benchmark
 Run `make` to build all binaries, then execute `./benchmark.sh` to compare a few Baloo programs against the system implementations using `hyperfine`.
 
