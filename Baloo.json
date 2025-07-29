@@ -831,7 +831,7 @@
     "name": "unalias",
     "description": "Remove alias definitions",
     "glyph": "🚫",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "uname",
