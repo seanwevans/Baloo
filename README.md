@@ -32,7 +32,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`arch`](src/arch.asm) ✅ Prints machine hardware name
 - [`at`](src/at.asm) ⛔️ Executes commands at a later time
 - [`awk`](src/awk.asm) ⛔️ Pattern scanning and processing language
-- [`b2sum`](src/b2sum.asm) ⛔️ Computes and checks BLAKE2b message digest
+- [`b2sum`](src/b2sum.asm) ✅ Computes and checks BLAKE2b message digest
  - [`base32`](src/base32.asm) ⛔️ Encodes or decodes Base32, and prints result to standard output
 - [`base64`](src/base64.asm) ⛔️ Prints a file's contents in Base64 to standard output
 - [`basename`](src/basename.asm) ✅ Removes the path prefix from a given pathname
