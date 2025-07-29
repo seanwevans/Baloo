@@ -2,5 +2,6 @@ bin/*
 *.txt
 *.log
 *.bak
+tests/test_helper/
 
 fixasm.py
