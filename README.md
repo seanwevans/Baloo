@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-68%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -99,7 +99,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`mailx`](src/mailx.asm) ⛔️ Process messages
 - [`man`](src/man.asm) ⛔️ Display system documentation
 - [`md5sum`](src/md5sum.asm) ✅ Computes and checks MD5 message digest
-- [`mesg`](src/mesg.asm) ⛔️ Permit or deny messages
+ - [`mesg`](src/mesg.asm) ✅ Permit or deny messages
 - [`mkdir`](src/mkdir.asm) ✅ Creates directories
 - [`mkfifo`](src/mkfifo.asm) ⛔️ Makes named pipes (FIFOs)
 - [`mknod`](src/mknod.asm) ⛔️ Makes block or character special files
