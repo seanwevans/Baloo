@@ -97,7 +97,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`ls`](src/ls.asm) ⛔️ List directory contents with formatting
 - [`m4`](src/m4.asm) ✅ Macro processor
 - [`mailx`](src/mailx.asm) ⛔️ Process messages
-- [`man`](src/man.asm) ⛔️ Display system documentation
+- [`man`](src/man.asm) ✅ Display system documentation
 - [`md5sum`](src/md5sum.asm) ✅ Computes and checks MD5 message digest
  - [`mesg`](src/mesg.asm) ✅ Permit or deny messages
 - [`mkdir`](src/mkdir.asm) ✅ Creates directories
