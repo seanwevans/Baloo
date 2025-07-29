@@ -23,7 +23,7 @@ _start:
     syscall
 
     ; set default tabs every 8 columns (11 stops)
-    mov rcx, 11
+    mov rbx, 11
 .loop:
     mov rax, SYS_WRITE
     mov rdi, STDOUT_FILENO
@@ -37,7 +37,8 @@ _start:
     mov rdx, spaces_len
     syscall
 
-    loop .loop
+    dec rbx
+    jnz .loop
 
     ; return cursor to column 1
     mov rax, SYS_WRITE
