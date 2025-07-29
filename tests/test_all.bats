@@ -357,6 +357,11 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
 }
 
+@test "tabs — exits 0" {
+  run "$BIN/tabs"
+  assert_success
+}
+
 @test "tail — last line only" {
   printf '1\n2\n3\n' >"$TMP/l"
   run "$BIN/tail" -n 1 "$TMP/l"

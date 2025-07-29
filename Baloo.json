@@ -741,7 +741,7 @@
     "name": "tabs",
     "description": "Set terminal tabs",
     "glyph": "📑",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "tac",
