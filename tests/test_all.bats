@@ -111,6 +111,16 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/cut" -c 3 "$TMP/cutfile"
   assert_output "abc\n"
 }
+
+@test "csplit — splits at line" {
+  printf "one\ntwo\nthree\n" >"$TMP/in"
+  pushd "$TMP" >/dev/null
+  run "$BIN/csplit" "$TMP/in" 2
+  popd >/dev/null
+  assert_success
+  assert_equal "$(cat "$TMP/xaa")" "one\ntwo\n"
+  assert_equal "$(cat "$TMP/xab")" "three\n"
+}
 @test "dirname — keeps directory portion" {
   run "$BIN/dirname" "/etc/ssl/certs"
   assert_output "/etc/ssl"

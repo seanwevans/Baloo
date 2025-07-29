@@ -52,7 +52,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`command`](src/command.asm) ✅ Executes a simple command
 - [`cp`](src/cp.asm) ✅ Copy files/directories
 - [`crontab`](src/crontab.asm) ⛔️ Schedule periodic background work
-- [`csplit`](src/csplit.asm) ⛔️ Splits a file into sections determined by context lines
+- [`csplit`](src/csplit.asm) ✅ Splits a file into sections determined by context lines
  - [`cut`](src/cut.asm) ⛔️ Removes sections from each line of files
 - [`date`](src/date.asm) ✅ Sets or displays the date and time
 - [`dd`](src/dd.asm) ⛔️ Copies and converts a file
