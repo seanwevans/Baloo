@@ -879,7 +879,7 @@
     "name": "uuencode",
     "description": "Encode a binary file",
     "glyph": "📫",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "wait",
