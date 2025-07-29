@@ -2,6 +2,8 @@
 
 %include "include/sysdefs.inc"
 
+%define PRIO_PROCESS 0
+
 section .bss
     argc        resq 1
     argv_ptr    resq 1
@@ -52,10 +54,22 @@ _start:
 .set_cmd:
     mov     [argv_ptr], rdx
 
-    mov     rax, SYS_NICE
-    mov     rdi, [adjust]
+    ; adjust current priority using setpriority
+    mov     rax, SYS_GETPRIORITY
+    mov     rdi, PRIO_PROCESS
+    xor     rsi, rsi                ; current process
+    syscall
+    mov     rbx, rax                ; current nice value
+    mov     rax, [adjust]
+    add     rbx, rax                ; new nice value
+
+    mov     rax, SYS_SETPRIORITY
+    mov     rdi, PRIO_PROCESS
+    xor     rsi, rsi
+    mov     rdx, rbx
     syscall
 
+    mov     rdx, [argv_ptr]
     mov     rdi, [rdx]
     mov     rsi, rdx
     mov     rdx, [env_ptr]
