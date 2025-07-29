@@ -162,7 +162,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`tr`](src/tr.asm) ✅ Translates or deletes characters
 - [`true`](src/true.asm) ✅ Does nothing, but exits successfully
 - [`truncate`](src/truncate.asm) ✅ Shrink the size of a file to the specified size
-- [`tsort`](src/tsort.asm) ⛔️ Performs a topological sort
+- [`tsort`](src/tsort.asm) ✅ Performs a topological sort
 - [`tty`](src/tty.asm) ✅ Prints terminal name
 - [`umask`](src/umask.asm) ✅ Get or set the file mode creation mask
 - [`unalias`](src/unalias.asm) ⛔️ Remove alias definitions
