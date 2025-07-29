@@ -813,7 +813,7 @@
     "name": "tsort",
     "description": "Performs a topological sort",
     "glyph": "🧶",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "tty",
