@@ -429,7 +429,7 @@
     "name": "mesg",
     "description": "Permit or deny messages",
     "glyph": "📨",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mkdir",
