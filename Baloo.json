@@ -389,12 +389,12 @@
     "glyph": "👤",
     "isDone": true
   },
-  {
-    "name": "lp",
-    "description": "Send files to a printer",
-    "glyph": "🖨️",
-    "isDone": false
-  },
+    {
+      "name": "lp",
+      "description": "Send files to a printer",
+      "glyph": "🖨️",
+      "isDone": true
+    },
   {
     "name": "ls",
     "description": "List directory contents with formatting",
