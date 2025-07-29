@@ -21,7 +21,7 @@
     "name": "at",
     "description": "Executes commands at a later time",
     "glyph": "⏰",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "awk",
@@ -603,7 +603,7 @@
     "name": "renice",
     "description": "Set nice values of running processes",
     "glyph": "👍",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "rm",

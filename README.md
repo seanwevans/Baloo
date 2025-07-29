@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-66%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -127,7 +127,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`read`](src/read.asm) ⛔️ Read a line from standard input
 - [`readlink`](src/readlink.asm) ⛔️ Print destination of a symbolic link
 - [`realpath`](src/realpath.asm) ⛔️ Returns the resolved absolute or relative path for a file
-- [`renice`](src/renice.asm) ⛔️ Set nice values of running processes
+- [`renice`](src/renice.asm) ✅ Set nice values of running processes
 - [`rm`](src/rm.asm) ⛔️ Removes files/directories
 - [`rmdir`](src/rmdir.asm) ✅ Removes empty directories
 - [`runcon`](src/runcon.asm) ⛔️ Run command with specified security context
