@@ -392,6 +392,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output '3'
 }
 
+@test "tac — reverses line order" {
+  printf 'a\nb\nc\n' >"$TMP/tacfile"
+  run "$BIN/tac" "$TMP/tacfile"
+  assert_output $'c\nb\na\n'
+}
+
 @test "tee — duplicates stdin to file" {
   run bash -c "echo hi | \"$BIN/tee\" \"$TMP/out\""
   assert_success

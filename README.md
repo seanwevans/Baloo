@@ -151,7 +151,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`sum`](src/sum.asm) ✅ Checksums and counts the blocks in a file
 - [`sync`](src/sync.asm) ✅ Flushes file system buffers
 - [`tabs`](src/tabs.asm) ✅ Set terminal tabs
-- [`tac`](src/tac.asm) ⛔️ Concatenates and prints files in reverse order line by line
+- [`tac`](src/tac.asm) ✅ Concatenates and prints files in reverse order line by line
 - [`tail`](src/tail.asm) ✅ Output the end of files
 - [`tee`](src/tee.asm) ✅ Sends output to multiple files
 - [`test`](src/test.asm) ⛔️ Evaluates an expression
