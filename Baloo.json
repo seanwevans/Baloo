@@ -765,7 +765,7 @@
     "name": "test",
     "description": "Evaluates an expression",
     "glyph": "🧪",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "time",

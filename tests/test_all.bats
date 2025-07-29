@@ -403,6 +403,15 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
   assert_equal "$(cat "$TMP/out")" "hi"
 }
+@test "test — basic comparisons" {
+  touch "$TMP/exist"
+  run "$BIN/test" -e "$TMP/exist"
+  assert_success
+  run "$BIN/test" foo = foo
+  assert_success
+  run "$BIN/test" foo = bar
+  assert_failure
+}
 
 @test "touch — creates empty file" {
   run "$BIN/touch" "$TMP/new"

@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-68%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -155,7 +155,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`tac`](src/tac.asm) ✅ Concatenates and prints files in reverse order line by line
 - [`tail`](src/tail.asm) ✅ Output the end of files
 - [`tee`](src/tee.asm) ✅ Sends output to multiple files
-- [`test`](src/test.asm) ⛔️ Evaluates an expression
+- [`test`](src/test.asm) ✅ Evaluates an expression
 - [`time`](src/time.asm) ⛔️ Display elapsed, system and kernel time used by the current shell or designated process.
 - [`timeout`](src/timeout.asm) ✅ Runs a command with a time limit
 - [`touch`](src/touch.asm) ✅ Changes file timestamps; creates file
