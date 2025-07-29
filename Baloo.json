@@ -771,7 +771,7 @@
     "name": "time",
     "description": "Display elapsed, system and kernel time",
     "glyph": "⏱️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "timeout",
