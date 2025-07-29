@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-66%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -30,7 +30,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`alias`](src/alias.asm) ✅ Defines or displays aliases
 - [`ar`](src/ar.asm) ✅ Creates and maintains libraries
 - [`arch`](src/arch.asm) ✅ Prints machine hardware name
-- [`at`](src/at.asm) ⛔️ Executes commands at a later time
+- [`at`](src/at.asm) ✅ Executes commands at a later time
 - [`awk`](src/awk.asm) ⛔️ Pattern scanning and processing language
 - [`b2sum`](src/b2sum.asm) ⛔️ Computes and checks BLAKE2b message digest
  - [`base32`](src/base32.asm) ⛔️ Encodes or decodes Base32, and prints result to standard output
