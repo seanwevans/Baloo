@@ -156,7 +156,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`tee`](src/tee.asm) ✅ Sends output to multiple files
 - [`test`](src/test.asm) ⛔️ Evaluates an expression
 - [`time`](src/time.asm) ⛔️ Display elapsed, system and kernel time used by the current shell or designated process.
-- [`timeout`](src/timeout.asm) ⛔️ Runs a command with a time limit
+- [`timeout`](src/timeout.asm) ✅ Runs a command with a time limit
 - [`touch`](src/touch.asm) ✅ Changes file timestamps; creates file
 - [`tput`](src/tput.asm) ⛔️ Change terminal characteristics
 - [`tr`](src/tr.asm) ✅ Translates or deletes characters
