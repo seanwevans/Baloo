@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-66%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -165,7 +165,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`tsort`](src/tsort.asm) ⛔️ Performs a topological sort
 - [`tty`](src/tty.asm) ✅ Prints terminal name
 - [`umask`](src/umask.asm) ✅ Get or set the file mode creation mask
-- [`unalias`](src/unalias.asm) ⛔️ Remove alias definitions
+ - [`unalias`](src/unalias.asm) ✅ Remove alias definitions
 - [`uname`](src/uname.asm) ✅ Prints system information
 - [`unexpand`](src/unexpand.asm) ✅ Converts spaces to tabs
 - [`uniq`](src/uniq.asm) ✅ Removes duplicate lines from a sorted file
