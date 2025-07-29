@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-68%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -33,27 +33,28 @@ python3 scripts/asmfmt.py src/example.asm
 - [`at`](src/at.asm) ✅ Executes commands at a later time
 - [`awk`](src/awk.asm) ⛔️ Pattern scanning and processing language
 - [`b2sum`](src/b2sum.asm) ✅ Computes and checks BLAKE2b message digest
- - [`base32`](src/base32.asm) ⛔️ Encodes or decodes Base32, and prints result to standard output
+- [`base32`](src/base32.asm) ⛔️ Encodes or decodes Base32, and prints result to standard output
 - [`base64`](src/base64.asm) ⛔️ Prints a file's contents in Base64 to standard output
 - [`basename`](src/basename.asm) ✅ Removes the path prefix from a given pathname
 - [`baseenc`](src/baseenc.asm) ✅ Encodes or decodes various encodings and prints result to standard output
- - [`batch`](src/batch.asm) ⛔️ Schedules commands to be executed in a batch queue
+- [`batch`](src/batch.asm) ⛔️ Schedules commands to be executed in a batch queue
 - [`bc`](src/bc.asm) ✅ Arbitrary-precision arithmetic language
 - [`cat`](src/cat.asm) ✅ Concatenates and prints files
 - [`cd`](src/cd.asm) ✅ Changes the working directory
- - [`chcon`](src/chcon.asm) ✅ Changes file security context
+- [`chcon`](src/chcon.asm) ✅ Changes file security context
 - [`chgrp`](src/chgrp.asm) ⛔️ Changes file group ownership
 - [`chmod`](src/chmod.asm) ⛔️ Changes the permissions of a file or directory
- - [`chown`](src/chown.asm) ⛔️ Changes file ownership
- - [`chroot`](src/chroot.asm) ✅ Changes the root directory
+- [`chown`](src/chown.asm) ⛔️ Changes file ownership
+- [`chroot`](src/chroot.asm) ✅ Changes the root directory
 - [`cksum`](src/cksum.asm) ⛔️ Checksums (IEEE Ethernet CRC-32) and count the bytes in a file
 - [`cmp`](src/cmp.asm) ⛔️ Compares two files; see also diff
 - [`comm`](src/comm.asm) ⛔️ Compares two sorted files line by line
 - [`command`](src/command.asm) ✅ Executes a simple command
 - [`cp`](src/cp.asm) ✅ Copy files/directories
-- [`crontab`](src/crontab.asm) ⛔️ Schedule periodic background work
+- [`crontab`](src/crontab.asm) ✅ Schedule periodic background work
 - [`csplit`](src/csplit.asm) ✅ Splits a file into sections determined by context lines
- - [`cut`](src/cut.asm) ⛔️ Removes sections from each line of files
+- [`crontab`](src/crontab.asm) ⛔️ Schedule periodic background work
+- [`cut`](src/cut.asm) ⛔️ Removes sections from each line of files
 - [`date`](src/date.asm) ✅ Sets or displays the date and time
 - [`dd`](src/dd.asm) ⛔️ Copies and converts a file
 - [`df`](src/df.asm) ✅ Shows disk free space on file systems
@@ -64,7 +65,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`echo`](src/echo.asm) ✅ Displays a specified line of text
 - [`ed`](src/ed.asm) ⛔️ The standard text editor
 - [`env`](src/env.asm) ⛔️ Run a program in a modified environment
- - [`expand`](src/expand.asm) ⛔️ Converts tabs to spaces
+- [`expand`](src/expand.asm) ⛔️ Converts tabs to spaces
 - [`expr`](src/expr.asm) ✅ Evaluates expressions
 - [`factor`](src/factor.asm) ✅ Factors numbers
 - [`false`](src/false.asm) ✅ Does nothing, but exits unsuccessfully

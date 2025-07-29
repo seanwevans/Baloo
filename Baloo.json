@@ -147,7 +147,7 @@
     "name": "crontab",
     "description": "Schedule periodic background work",
     "glyph": "🗓️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "csplit",

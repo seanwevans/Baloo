@@ -511,6 +511,22 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
 }
 
+@test "crontab — installs and lists file" {
+  echo "* * * * * echo hi" >"$TMP/cronfile"
+  run env HOME="$TMP" "$BIN/crontab" "$TMP/cronfile"
+  assert_success
+  run env HOME="$TMP" "$BIN/crontab" -l
+  assert_output "* * * * * echo hi"
+}
+
+@test "crontab — remove table" {
+  echo "a" >"$TMP/cfile"
+  run env HOME="$TMP" "$BIN/crontab" "$TMP/cfile"
+  run env HOME="$TMP" "$BIN/crontab" -r
+  assert_success
+  [ ! -f "$TMP/.baloo_crontab" ]
+}
+
 @test "uudecode — decodes uuencoded file" {
   encoded='begin 666 file.txt\n#:&D*\n \nend\n'
   printf "$encoded" >"$TMP/u"
