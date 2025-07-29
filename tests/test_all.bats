@@ -19,6 +19,11 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
   assert_output 'aGk='
 }
+@test "baseenc — encodes stdin" {
+  run bash -c "printf 'hi' | \"$BIN/baseenc\""
+  assert_success
+  assert_output 'aGk='
+}
 @test "batch — runs stdin script" {
   run bash -c "echo 'echo hi' | \"$BIN/batch\""
   assert_success
