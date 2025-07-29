@@ -127,7 +127,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`read`](src/read.asm) ⛔️ Read a line from standard input
 - [`readlink`](src/readlink.asm) ⛔️ Print destination of a symbolic link
 - [`realpath`](src/realpath.asm) ⛔️ Returns the resolved absolute or relative path for a file
-- [`renice`](src/renice.asm) ⛔️ Set nice values of running processes
+- [`renice`](src/renice.asm) ✅ Set nice values of running processes
 - [`rm`](src/rm.asm) ⛔️ Removes files/directories
 - [`rmdir`](src/rmdir.asm) ✅ Removes empty directories
 - [`runcon`](src/runcon.asm) ⛔️ Run command with specified security context

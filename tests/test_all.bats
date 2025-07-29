@@ -278,6 +278,15 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
 }
 
+@test "renice — adjusts pid priority" {
+  (sleep 30 &); pid=$!
+  run "$BIN/renice" 5 "$pid"
+  assert_success
+  run ps -o ni= -p "$pid"
+  assert_output '5'
+  kill "$pid" 2>/dev/null
+}
+
 @test "printenv — returns PATH value" {
   run "$BIN/printenv" PATH
   assert_output "$PATH"
