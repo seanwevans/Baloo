@@ -30,6 +30,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output "hi"
 }
 
+@test "at — runs stdin script after delay" {
+  run bash -c "echo 'echo hi' | \"$BIN/at\" 0"
+  assert_success
+  assert_output "hi"
+}
+
 
 @test "base32 — encodes stdin" {
   run bash -c "printf 'hello' | \"$BIN/base32\""
@@ -110,6 +116,16 @@ teardown(){ rm -rf "$TMP"; }
   printf "abcdef\n" >"$TMP/cutfile"
   run "$BIN/cut" -c 3 "$TMP/cutfile"
   assert_output "abc\n"
+}
+
+@test "csplit — splits at line" {
+  printf "one\ntwo\nthree\n" >"$TMP/in"
+  pushd "$TMP" >/dev/null
+  run "$BIN/csplit" "$TMP/in" 2
+  popd >/dev/null
+  assert_success
+  assert_equal "$(cat "$TMP/xaa")" "one\ntwo\n"
+  assert_equal "$(cat "$TMP/xab")" "three\n"
 }
 @test "dirname — keeps directory portion" {
   run "$BIN/dirname" "/etc/ssl/certs"
@@ -223,6 +239,20 @@ teardown(){ rm -rf "$TMP"; }
   assert_output '49f68a5c8493ec2c0bf489821c21fc3b'
 }
 
+
+@test "sum — computes BSD checksum" {
+  printf 'hello\n' >"$TMP/sumfile"
+  run "$BIN/sum" "$TMP/sumfile"
+  assert_success
+  assert_output "36979 1 $TMP/sumfile"
+}
+
+@test "b2sum — digests stdin" {
+  run bash -c "printf 'hi' | \"$BIN/b2sum\""
+  assert_success
+  assert_output 'bfbcbe7ade93034ee0a41a2ea7b5fd81d89bdb1d75d1af230ea37d7abe71078f1df6db4d251cbc6b58e8963db2546f0f539c80b0f08c0fdd8c0a71075c97b3e7'
+}
+
 @test "mkdir — creates directory" {
   run "$BIN/mkdir" "$TMP/dir"
   assert_success
@@ -278,6 +308,15 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
 }
 
+@test "renice — adjusts pid priority" {
+  (sleep 30 &); pid=$!
+  run "$BIN/renice" 5 "$pid"
+  assert_success
+  run ps -o ni= -p "$pid"
+  assert_output '5'
+  kill "$pid" 2>/dev/null
+}
+
 @test "printenv — returns PATH value" {
   run "$BIN/printenv" PATH
   assert_output "$PATH"
@@ -313,6 +352,13 @@ teardown(){ rm -rf "$TMP"; }
   refute [ -e "$TMP/r" ]
 }
 
+@test "shred — overwrites and deletes" {
+  printf 'secret' >"$TMP/s"
+  run "$BIN/shred" -u "$TMP/s"
+  assert_success
+  refute [ -e "$TMP/s" ]
+}
+
 @test "rmdir — removes empty dir" {
   mkdir "$TMP/d"
   run "$BIN/rmdir" "$TMP/d"
@@ -335,10 +381,21 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
 }
 
+@test "tabs — exits 0" {
+  run "$BIN/tabs"
+  assert_success
+}
+
 @test "tail — last line only" {
   printf '1\n2\n3\n' >"$TMP/l"
   run "$BIN/tail" -n 1 "$TMP/l"
   assert_output '3'
+}
+
+@test "tac — reverses line order" {
+  printf 'a\nb\nc\n' >"$TMP/tacfile"
+  run "$BIN/tac" "$TMP/tacfile"
+  assert_output $'c\nb\na\n'
 }
 
 @test "tee — duplicates stdin to file" {
@@ -443,6 +500,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output 'foo'
 }
 
+@test "strings — extracts printable sequences" {
+  printf 'a\x00abcdEF\x01' >"$TMP/str"
+  run "$BIN/strings" "$TMP/str"
+  assert_output $'abcdEF\n'
+}
+
 @test "logger — logs message" {
   run "$BIN/logger" "hello"
   assert_success
@@ -462,4 +525,14 @@ teardown(){ rm -rf "$TMP"; }
   run env HOME="$TMP" "$BIN/crontab" -r
   assert_success
   [ ! -f "$TMP/.baloo_crontab" ]
+}
+
+@test "uudecode — decodes uuencoded file" {
+  encoded='begin 666 file.txt\n#:&D*\n \nend\n'
+  printf "$encoded" >"$TMP/u"
+  pushd "$TMP" >/dev/null
+  run "$BIN/uudecode" "$TMP/u"
+  popd >/dev/null
+  assert_success
+  assert_equal "$(cat \"$TMP/file.txt\")" $'hi\n'
 }
