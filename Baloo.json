@@ -717,7 +717,7 @@
     "name": "strings",
     "description": "Find printable strings in files",
     "glyph": "🔤",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "stty",

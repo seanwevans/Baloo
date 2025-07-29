@@ -438,6 +438,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output 'foo'
 }
 
+@test "strings — extracts printable sequences" {
+  printf 'a\x00abcdEF\x01' >"$TMP/str"
+  run "$BIN/strings" "$TMP/str"
+  assert_output $'abcdEF\n'
+}
+
 @test "logger — logs message" {
   run "$BIN/logger" "hello"
   assert_success
