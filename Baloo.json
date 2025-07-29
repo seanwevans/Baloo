@@ -747,7 +747,7 @@
     "name": "tac",
     "description": "Concatenates and prints files in reverse order line by line",
     "glyph": "🙃",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "tail",
