@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-66%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-67%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 <center><img src="assets/Baloo.jpg" title=" भालू "></img></center>
@@ -174,7 +174,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`users`](src/users.asm) ⛔️ Prints the user names of users currently logged into the current host
 - [`uudecode`](src/uudecode.asm) ⛔️ Decode a binary file
 - [`uuencode`](src/uuencode.asm) ⛔️ Encode a binary file
-- [`wait`](src/wait.asm) ⛔️ Await process completion
+- [`wait`](src/wait.asm) ✅ Await process completion
 - [`wc`](src/wc.asm) ✅ Prints the number of bytes, words, and lines in files
 - [`who`](src/who.asm) ✅ Prints a list of all users currently logged in
 - [`whoami`](src/whoami.asm) ✅ Prints the effective userid
