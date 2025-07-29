@@ -146,7 +146,7 @@ python3 scripts/asmfmt.py src/example.asm
 - [`split`](src/split.asm) ⛔️ Splits a file into pieces
 - [`stat`](src/stat.asm) ⛔️ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ⛔️ Controls buffering for commands that use stdio
-- [`strings`](src/strings.asm) ⛔️ Find printable strings in files
+- [`strings`](src/strings.asm) ✅ Find printable strings in files
 - [`stty`](src/stty.asm) ⛔️ Changes and prints terminal line settings
 - [`sum`](src/sum.asm) ⛔️ Checksums and counts the blocks in a file
 - [`sync`](src/sync.asm) ✅ Flushes file system buffers
