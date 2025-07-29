@@ -218,6 +218,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output '49f68a5c8493ec2c0bf489821c21fc3b'
 }
 
+@test "b2sum — digests stdin" {
+  run bash -c "printf 'hi' | \"$BIN/b2sum\""
+  assert_success
+  assert_output 'bfbcbe7ade93034ee0a41a2ea7b5fd81d89bdb1d75d1af230ea37d7abe71078f1df6db4d251cbc6b58e8963db2546f0f539c80b0f08c0fdd8c0a71075c97b3e7'
+}
+
 @test "mkdir — creates directory" {
   run "$BIN/mkdir" "$TMP/dir"
   assert_success

@@ -33,7 +33,7 @@
     "name": "b2sum",
     "description": "Computes and checks BLAKE2b message digest",
     "glyph": "🧪",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "base32",
