@@ -98,6 +98,13 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/cmp" "$TMP/a" "$TMP/b"
   assert_success
 }
+@test "comm — compares sorted files" {
+  printf 'a\nb\nc\n' >"$TMP/a"
+  printf 'b\nc\nd\n' >"$TMP/b"
+  run "$BIN/comm" "$TMP/a" "$TMP/b"
+  assert_output $'a\n\t\tb\n\t\tc\n\td\n'
+}
+
 
 @test "cp — copies file" {
   echo copy >"$TMP/src"
