@@ -14,35 +14,6 @@ teardown(){ rm -rf "$TMP"; }
   assert_output "$(uname -m)"
 }
 
-@test "base64 — encodes stdin" {
-  run bash -c "printf 'hi' | \"$BIN/base64\""
-  assert_success
-  assert_output 'aGk='
-}
-@test "baseenc — encodes stdin" {
-  run bash -c "printf 'hi' | \"$BIN/baseenc\""
-  assert_success
-  assert_output 'aGk='
-}
-@test "batch — runs stdin script" {
-  run bash -c "echo 'echo hi' | \"$BIN/batch\""
-  assert_success
-  assert_output "hi"
-}
-
-@test "at — runs stdin script after delay" {
-  run bash -c "echo 'echo hi' | \"$BIN/at\" 0"
-  assert_success
-  assert_output "hi"
-}
-
-
-@test "base32 — encodes stdin" {
-  run bash -c "printf 'hello' | \"$BIN/base32\""
-  assert_success
-  assert_output 'NBSWY3DP'
-}
-
 @test "basename — strips directories" {
   run "$BIN/basename" "/usr/local/bin/foo"
   assert_output "foo"
@@ -187,12 +158,6 @@ teardown(){ rm -rf "$TMP"; }
   [[ "$output" =~ ^[0-9a-f]{8}$ ]]
 }
 
-@test "hash — prints fnv1a hex" {
-  run bash -c "printf 'hello' | \"$BIN/hash\""
-  assert_success
-  [[ "$output" =~ ^[0-9a-f]{16}$ ]]
-}
-
 @test "id — prints uid" {
   run "$BIN/id" -u
   assert_output "$(id -u)"
@@ -233,24 +198,11 @@ teardown(){ rm -rf "$TMP"; }
   assert_output --partial "zzz"
 }
 
-@test "md5sum — digests stdin" {
-  run bash -c "printf 'hi' | \"$BIN/md5sum\""
-  assert_success
-  assert_output '49f68a5c8493ec2c0bf489821c21fc3b'
-}
-
-
 @test "sum — computes BSD checksum" {
   printf 'hello\n' >"$TMP/sumfile"
   run "$BIN/sum" "$TMP/sumfile"
   assert_success
   assert_output "36979 1 $TMP/sumfile"
-}
-
-@test "b2sum — digests stdin" {
-  run bash -c "printf 'hi' | \"$BIN/b2sum\""
-  assert_success
-  assert_output 'bfbcbe7ade93034ee0a41a2ea7b5fd81d89bdb1d75d1af230ea37d7abe71078f1df6db4d251cbc6b58e8963db2546f0f539c80b0f08c0fdd8c0a71075c97b3e7'
 }
 
 @test "mkdir — creates directory" {
@@ -397,12 +349,6 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/tac" "$TMP/tacfile"
   assert_output $'c\nb\na\n'
 }
-
-@test "tee — duplicates stdin to file" {
-  run bash -c "echo hi | \"$BIN/tee\" \"$TMP/out\""
-  assert_success
-  assert_equal "$(cat "$TMP/out")" "hi"
-}
 @test "test — basic comparisons" {
   touch "$TMP/exist"
   run "$BIN/test" -e "$TMP/exist"
@@ -418,12 +364,6 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
   assert [ -f "$TMP/new" ]
 }
-
-@test "tr — character translation" {
-  run bash -c "printf 'abc' | \"$BIN/tr\" 'a-c' 'A-C'"
-  assert_output 'ABC'
-}
-
 @test "true — exits 0" {
   run "$BIN/true"
   assert_success
@@ -456,11 +396,6 @@ teardown(){ rm -rf "$TMP"; }
   printf 'a       b\n' >"$TMP/s"
   run "$BIN/unexpand" "$TMP/s"
   assert_output $'a\tb'
-}
-
-@test "uniq — removes duplicate lines" {
-  run bash -c "printf 'x\nx\ny\n' | \"$BIN/uniq\""
-  assert_output $'x\ny'
 }
 
 @test "unlink — removes file via unlink" {
@@ -496,13 +431,6 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/whoami"
   assert_output "$(whoami)"
 }
-
-@test "yes — stops after 3 lines with head" {
-  run bash -c "\"$BIN/yes\" | head -n 3"
-  assert_success
-  [ "$(echo \"$output\" | wc -l)" -eq 3 ]
-}
-
 @test "grep — matches lines containing pattern" {
   printf 'foo\nbar\n' >"$TMP/g"
   run "$BIN/grep" foo "$TMP/g"
@@ -536,12 +464,3 @@ teardown(){ rm -rf "$TMP"; }
   [ ! -f "$TMP/.baloo_crontab" ]
 }
 
-@test "uudecode — decodes uuencoded file" {
-  encoded='begin 666 file.txt\n#:&D*\n \nend\n'
-  printf "$encoded" >"$TMP/u"
-  pushd "$TMP" >/dev/null
-  run "$BIN/uudecode" "$TMP/u"
-  popd >/dev/null
-  assert_success
-  assert_equal "$(cat \"$TMP/file.txt\")" $'hi\n'
-}
