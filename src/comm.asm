@@ -261,22 +261,22 @@ output_line:
     ; column 3
     cmp byte [show3], 0
     je .ret
-    xor rcx, rcx
+    xor r10d, r10d
     cmp byte [show1], 0
     je .skip31
-    inc rcx
+    inc r10
 .skip31:
     cmp byte [show2], 0
     je .skip32
-    inc rcx
+    inc r10
 .skip32:
     mov rsi, tab_char
     mov rdx, 1
 .tab_loop3:
-    cmp rcx, 0
+    cmp r10, 0
     je .after_tabs3
     write STDOUT_FILENO, rsi, rdx
-    dec rcx
+    dec r10
     jmp .tab_loop3
 .after_tabs3:
     mov rsi, r8
@@ -286,18 +286,18 @@ output_line:
 .col2:
     cmp byte [show2], 0
     je .ret
-    xor rcx, rcx
+    xor r10d, r10d
     cmp byte [show1], 0
     je .skip21
-    inc rcx
+    inc r10
 .skip21:
     mov rsi, tab_char
     mov rdx, 1
 .tab_loop2:
-    cmp rcx, 0
+    cmp r10, 0
     je .after_tabs2
     write STDOUT_FILENO, rsi, rdx
-    dec rcx
+    dec r10
     jmp .tab_loop2
 .after_tabs2:
     mov rsi, r8
