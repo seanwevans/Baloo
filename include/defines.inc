@@ -144,6 +144,7 @@
 %define ACCOUNTING      9
 
 %define EEXIST          17      ; Error number for "File exists"
+%define ENOENT          2       ; Error number for "No such file or directory"
 
 %define SIGHUP          1       ; Hangup signal number
 %define SIG_IGN         1       ; Ignore handler
