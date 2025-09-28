@@ -11,6 +11,8 @@ section .data
     spool_suffix db "/.baloo_crontab", 0
 usage_msg    db "Usage: crontab [-l|-r|FILE|-]", WHITESPACE_NL
     usage_len    equ $ - usage_msg
+remove_err_msg db "Error: Could not remove crontab", WHITESPACE_NL
+    remove_err_len equ $ - remove_err_msg
 
 section .text
 global _start
@@ -121,7 +123,12 @@ cmd_remove:
     mov     rax, SYS_UNLINK
     mov     rdi, path_buf
     syscall
-    jmp     exit_success
+    cmp     rax, 0
+    jge     exit_success
+    cmp     rax, -ENOENT
+    je      exit_success
+    write   STDERR_FILENO, remove_err_msg, remove_err_len
+    exit    1
 
 usage:
     write   STDERR_FILENO, usage_msg, usage_len
