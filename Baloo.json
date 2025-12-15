@@ -39,13 +39,13 @@
     "name": "base32",
     "description": "Encodes or decodes Base32, and prints result to standard output",
     "glyph": "3️⃣",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "base64",
     "description": "Encodes or decodes Base64, and prints result to standard output",
     "glyph": "6️⃣",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "basename",
@@ -63,7 +63,7 @@
     "name": "batch",
     "description": "Schedules commands to be executed in a batch queue",
     "glyph": "📚",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "bc",
@@ -93,19 +93,19 @@
     "name": "chgrp",
     "description": "Changes file group ownership",
     "glyph": "👥",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "chmod",
     "description": "Changes the permissions of a file or directory",
     "glyph": "🔒",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "chown",
     "description": "Changes file ownership",
     "glyph": "🔐",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "chroot",
@@ -117,19 +117,19 @@
     "name": "cksum",
     "description": "Checksums (IEEE Ethernet CRC-32) and count the bytes in a file",
     "glyph": "🧾",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "cmp",
     "description": "Compares two files; see also diff",
     "glyph": "🔬",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "comm",
     "description": "Compares two sorted files line by line",
     "glyph": "☯️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "command",
@@ -159,7 +159,7 @@
     "name": "cut",
     "description": "Removes sections from each line of files",
     "glyph": "✂️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "date",
@@ -171,7 +171,7 @@
     "name": "dd",
     "description": "Copies and converts a file",
     "glyph": "💾",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "df",
@@ -183,7 +183,7 @@
     "name": "diff",
     "description": "Compare two files; see also cmp",
     "glyph": "🔍",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "dircolors",
@@ -201,7 +201,7 @@
     "name": "du",
     "description": "Shows disk usage on file systems",
     "glyph": "📊",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "echo",
@@ -219,13 +219,13 @@
     "name": "env",
     "description": "Run a program in a modified environment",
     "glyph": "🌐",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "expand",
     "description": "Converts tabs to spaces",
     "glyph": "➡️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "expr",
@@ -249,7 +249,7 @@
     "name": "file",
     "description": "Determine file type",
     "glyph": "📎",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "find",
@@ -267,7 +267,7 @@
     "name": "fold",
     "description": "Wraps each input line to fit in specified width",
     "glyph": "📃",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "gencat",
@@ -291,7 +291,7 @@
     "name": "gettext",
     "description": "Retrieve text string from messages object",
     "glyph": "💬",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "grep",
@@ -303,13 +303,13 @@
     "name": "groups",
     "description": "Prints the groups of which the user is a member",
     "glyph": "👪",
-    "isDone": false
+    "isDone": true
   },
   {
-  "name": "hash",
-  "description": "Hash database access method",
-  "glyph": "🔐",
-  "isDone": true
+    "name": "hash",
+    "description": "Hash database access method",
+    "glyph": "🔐",
+    "isDone": true
   },
   {
     "name": "head",
@@ -339,7 +339,7 @@
     "name": "install",
     "description": "Copies files and set attributes",
     "glyph": "📥",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "join",
@@ -351,13 +351,13 @@
     "name": "kill",
     "description": "Terminate or signal processes",
     "glyph": "💀",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "link",
     "description": "Creates a link to a file",
     "glyph": "🔗",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "ln",
@@ -389,17 +389,17 @@
     "glyph": "👤",
     "isDone": true
   },
-    {
-      "name": "lp",
-      "description": "Send files to a printer",
-      "glyph": "🖨️",
-      "isDone": true
-    },
+  {
+    "name": "lp",
+    "description": "Send files to a printer",
+    "glyph": "🖨️",
+    "isDone": true
+  },
   {
     "name": "ls",
     "description": "List directory contents with formatting",
     "glyph": "📋",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "m4",
@@ -417,7 +417,7 @@
     "name": "man",
     "description": "Display system documentation",
     "glyph": "📚",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "md5sum",
@@ -441,19 +441,19 @@
     "name": "mkfifo",
     "description": "Makes named pipes (FIFOs)",
     "glyph": "📯",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mknod",
     "description": "Makes block or character special files",
     "glyph": "🧩",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mktemp",
     "description": "Creates a temporary file or directory",
     "glyph": "📜",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "msgfmt",
@@ -465,19 +465,19 @@
     "name": "mv",
     "description": "Moves files or rename files",
     "glyph": "🚚",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "newgrp",
     "description": "Change to a new group",
     "glyph": "👨‍👩‍👧",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "ngettext",
     "description": "Retrieve text string from messages object with plural form",
     "glyph": "🗯️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "nice",
@@ -489,7 +489,7 @@
     "name": "nl",
     "description": "Numbers lines of files",
     "glyph": "🔢",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "nohup",
@@ -513,7 +513,7 @@
     "name": "od",
     "description": "Dumps files in octal and other formats",
     "glyph": "👁️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "paste",
@@ -543,7 +543,7 @@
     "name": "pinky",
     "description": "A lightweight version of finger",
     "glyph": "👆",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "pr",
@@ -561,13 +561,13 @@
     "name": "printf",
     "description": "Formats and prints data",
     "glyph": "🖊️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "ps",
     "description": "Report process status",
     "glyph": "📈",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "ptx",
@@ -591,7 +591,7 @@
     "name": "readlink",
     "description": "Print destination of a symbolic link",
     "glyph": "👉",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "realpath",
@@ -609,7 +609,7 @@
     "name": "rm",
     "description": "Removes files/directories",
     "glyph": "🗑️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "rmdir",
@@ -699,7 +699,7 @@
     "name": "split",
     "description": "Splits a file into pieces",
     "glyph": "✂️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "stat",
@@ -711,7 +711,7 @@
     "name": "stdbuf",
     "description": "Controls buffering for commands that use stdio",
     "glyph": "📤",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "strings",
@@ -777,7 +777,7 @@
     "name": "timeout",
     "description": "Runs a command with a time limit",
     "glyph": "⌛",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "touch",
@@ -855,7 +855,7 @@
     "name": "unlink",
     "description": "Removes the specified file using the unlink function",
     "glyph": "🔓",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "uptime",
@@ -867,13 +867,13 @@
     "name": "users",
     "description": "Prints the user names of users currently logged in",
     "glyph": "👨‍👩‍👧‍👦",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "uudecode",
     "description": "Decode a binary file",
     "glyph": "📩",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "uuencode",
@@ -885,7 +885,7 @@
     "name": "wait",
     "description": "Await process completion",
     "glyph": "⏳",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "wc",
@@ -909,13 +909,13 @@
     "name": "write",
     "description": "Write to another user's terminal",
     "glyph": "✉️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "xargs",
     "description": "Construct argument lists and invoke utility",
     "glyph": "🔨",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "yes",
