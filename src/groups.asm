@@ -19,8 +19,8 @@ _start:
     mov     rsi, groups_buf
     syscall
 
-    mov     rcx, rax            ; number of groups
-    cmp     rcx, 0
+    mov     r12, rax            ; number of groups (preserved across helper calls)
+    cmp     r12, 0
     je      .done
 
     xor     rbx, rbx            ; index
@@ -29,7 +29,7 @@ _start:
     call    print_num
 
     inc     rbx
-    cmp     rbx, rcx
+    cmp     rbx, r12
     je      .done
 
     call    write_space
@@ -43,11 +43,11 @@ print_num:
     mov     rax, rdi
     mov     rsi, numbuf + 15
     mov     byte [rsi], 0
-    mov     rcx, 10
+    mov     r8, 10
 
 .print_loop:
     xor     rdx, rdx
-    div     rcx
+    div     r8
     dec     rsi
     add     dl, '0'
     mov     [rsi], dl
@@ -56,7 +56,7 @@ print_num:
 
     mov     rax, SYS_WRITE
     mov     rdi, STDOUT_FILENO
-    mov     rdx, numbuf + 16
+    mov     rdx, numbuf + 15
     sub     rdx, rsi
     syscall
     ret
