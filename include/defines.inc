@@ -57,6 +57,7 @@
 %define SYS_GETGID      104
 %define SYS_SETGID      106
 %define SYS_GETEUID     107
+%define SYS_GETEGID     108
 
 %define SYS_GETGROUPS   115
 
