@@ -23,11 +23,13 @@ _start:
     mov rsi, O_WRONLY | O_APPEND
     xor rdx, rdx
     syscall
-    cmp rax, 0
-    jl  .fail
-    mov r12, rax            ; fd
+    mov r12, rax            ; fd (or negative error)
+    cmp r12, 0
+    jge .write_msg
+    mov r12, 1              ; fallback to stdout when /dev/kmsg is unavailable
 
-    mov rdi, r13            ; pointer to message
+.write_msg:
+    mov rsi, r13            ; pointer to message (strlen expects RSI)
     call strlen             ; length in rbx
     mov rax, SYS_WRITE
     mov rdi, r12
@@ -42,14 +44,14 @@ _start:
     mov rdx, 1
     syscall
 
+    cmp r12, 1              ; only close real fd
+    je  .done
     mov rax, SYS_CLOSE
     mov rdi, r12
     syscall
 
+.done:
     exit 0
 
 .usage:
-    exit 1
-
-.fail:
     exit 1
