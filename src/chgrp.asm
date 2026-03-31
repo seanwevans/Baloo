@@ -18,7 +18,9 @@ _start:
 
     mov             rsi, [rsp + 16]         ; argv[1] = group
     call            parse_group
-    
+    cmp             eax, -1                 ; parse failure
+    je              .usage
+
     mov             edi, eax                ; gid
 
     mov             rsi, [rsp + 24]         ; argv[2] = file
@@ -40,19 +42,30 @@ _start:
 parse_group:
     xor             rax, rax                ; result = 0
     xor             rcx, rcx                ; temp
+    xor             rdx, rdx                ; parsed digit count
 
 .parse_loop:
     mov             cl, byte [rsi]
     cmp             cl, 0
     je              .done
-    sub             cl, '0'
-    cmp             cl, 9
-    ja              .done
+    cmp             cl, '0'
+    jb              .parse_fail
+    cmp             cl, '9'
+    ja              .parse_fail
     imul            rax, rax, 10
+    sub             cl, '0'
     add             rax, rcx
+    inc             rdx
     inc             rsi
     jmp             .parse_loop
+
 .done:
+    cmp             rdx, 0
+    je              .parse_fail
+    ret
+
+.parse_fail:
+    mov             eax, -1
     ret
 
 chgrp:
