@@ -206,7 +206,12 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "logname — prints login name" {
+  if ! logname >/dev/null 2>&1; then
+    skip "logname unavailable (no login session in CI)"
+  fi
+
   run "$BIN/logname"
+  assert_success
   assert_output "$(logname)"
 }
 
