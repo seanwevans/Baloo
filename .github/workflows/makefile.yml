@@ -1,4 +1,4 @@
-name: Makefile CI
+name: Baloo CI
 
 on:
   push:
@@ -7,32 +7,32 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10 # Reduced from 20 to fail faster on hangs
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y nasm
-    - name: Clean
-      run: make clean
-    - name: Compile
-      run: make
-    - name: Install test dependencies
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
       run: |
-        set -eux
         sudo apt-get update
-        sudo apt-get install -y bats bats-assert bats-support
+        # Combined installation of build, test, and debugging tools
+        sudo apt-get install -y nasm bats strace
+
+    - name: Install bats helpers
+      run: |
         mkdir -p tests/test_helper
+        # Use shallow clones (--depth 1) for significantly faster downloads
+        git clone --depth 1 https://github.com/bats-core/bats-support.git tests/test_helper/bats-support
+        git clone --depth 1 https://github.com/bats-core/bats-assert.git tests/test_helper/bats-assert
 
-        support_root="$(dpkg -L bats-support | awk '/\/load$/ { sub(/\/load$/, ""); print; exit }')"
-        assert_root="$(dpkg -L bats-assert | awk '/\/load$/ { sub(/\/load$/, ""); print; exit }')"
+    - name: Compile
+      # make clean is unnecessary on a fresh GitHub-hosted runner, went straight to make
+      run: make
 
-        test -n "$support_root"
-        test -n "$assert_root"
-
-        ln -sfn "$support_root" tests/test_helper/bats-support
-        ln -sfn "$assert_root" tests/test_helper/bats-assert
-    - name: Test
+    - name: Run Tests
       timeout-minutes: 5
-      run: timeout --foreground 4m make test TEST_FLAGS="--timing --print-output-on-failure"
+      # Removed the 'timeout' utility wrapper since GitHub Actions provides native step timeouts
+      run: make test TEST_FLAGS="--timing --print-output-on-failure"
