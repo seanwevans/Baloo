@@ -81,8 +81,29 @@ _start:
     je          .next_entry
 
 .print_entry:
-    mov         rdi, rsi
-    xor         rcx, rcx                ; Counter for string length
+    xor         rdx, rdx                ; Counter for string length
+
+.name_len_loop:
+    cmp         byte [rsi + rdx], 0
+    je          .name_len_done
+    inc         rdx
+    jmp         .name_len_loop
+
+.name_len_done:
+    test        rdx, rdx                ; Defensive skip for empty names
+    jz          .next_entry
+
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    syscall
+
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    mov         rsi, newline
+    mov         rdx, 1
+    syscall
+
+    jmp         .next_entry
     
 .next_entry:
     add         r13, r14
