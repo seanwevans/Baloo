@@ -3,48 +3,55 @@
 %include "include/sysdefs.inc"
 
 section .bss
-    filename    resb 256        ; buffer for filename
-    filesize    resq 1          ; buffer for file size
+    filesize    resq 1
 
 section .data
-    usage_msg   db "Usage: truncate FILENAME LENGTH", 10, 0
+    usage_msg   db "Usage: truncate -s <size> <file>", 10
     usage_len   equ $ - usage_msg
-    error_msg   db "Error: Could not truncate file", 10, 0
+    error_msg   db "Error: Could not truncate file", 10
     error_len   equ $ - error_msg
-    success_msg db "File truncated successfully", 10, 0
-    success_len equ $ - success_msg
+    opt_s       db "-s", 0
 
 section .text
     global      _start
 
 _start:
     pop         rcx                     ; argc
-    cmp         rcx, 3                  ; Need program name + filename + length
-    jne         print_usage             ; If not 3 args, print usage and exit
+    cmp         rcx, 4                  ; Need program name + -s + size + file
+    jne         print_usage
 
-    pop         rdi                     ; Remove program name from stack
-    pop         rdi                     ; Get filename pointer
-    mov         r12, rdi                ; Save filename pointer in r12
-    pop         rdi                     ; Get length string pointer
-    call        string_to_int           ; Convert string to integer in RAX
-    
-    mov         r13, rax                ; Save length in r13
+    pop         rdi                     ; Drop program name
+    pop         r12                     ; option
+    pop         r13                     ; size
+    pop         r14                     ; file
+
+    mov         rdi, r12
+    mov         rsi, opt_s
+    call        streq
+    test        rax, rax
+    jz          print_usage
+
+    mov         rdi, r13
+    call        string_to_uint          ; size in rax, success in rdx
+    test        rdx, rdx
+    jz          print_usage
+
+    mov         [filesize], rax
     mov         rax, SYS_TRUNCATE       ; truncate syscall
-    mov         rdi, r12                ; filename
-    mov         rsi, r13                ; length
+    mov         rdi, r14                ; pathname
+    mov         rsi, [filesize]         ; length
     syscall
 
     test        rax, rax
     js          error_exit
-    
     jmp         exit_success
 
 print_usage:
-    write       STDOUT_FILENO, usage_msg, usage_len
+    write       STDERR_FILENO, usage_msg, usage_len
     jmp         exit_failure
 
 error_exit:
-    write       STDOUT_FILENO, error_msg, error_len
+    write       STDERR_FILENO, error_msg, error_len
     jmp         exit_failure
 
 exit_success:
@@ -53,36 +60,58 @@ exit_success:
 exit_failure:
     exit        1
 
-string_to_int:
-    xor         rax, rax                ; Initialize result to 0
-    xor         rcx, rcx                ; Initialize current character
-    xor         r8, r8                  ; Initialize sign flag (0 = positive)
-    mov         cl, byte [rdi]
-    cmp         cl, '-'
-    jne         .process_digits         ; Not negative, start processing digits
-    
-    inc         rdi                     ; Move past the '-' sign
-    mov         r8, 1                   ; Set sign flag to negative
-
-.process_digits:
-    mov         cl, byte [rdi]
-    test        cl, cl
-    jz          .done
-
-    sub         cl, '0'
-    cmp         cl, 9
-    ja          .done                    ; If > 9, not a digit, we're done
-
-    imul        rax, 10
-    add         rax, rcx
-
+; rdi = lhs, rsi = rhs
+; rax = 1 if equal, 0 otherwise
+streq:
+.loop:
+    mov         al, [rdi]
+    mov         dl, [rsi]
+    cmp         al, dl
+    jne         .not_equal
+    test        al, al
+    jz          .equal
     inc         rdi
-    jmp         .process_digits
+    inc         rsi
+    jmp         .loop
 
-.done:
-    test        r8, r8
-    jz          .positive
-    neg         rax                     ; Negate the result if sign flag is set
+.not_equal:
+    xor         rax, rax
+    ret
 
-.positive:
+.equal:
+    mov         rax, 1
+    ret
+
+; rdi = numeric string
+; rax = parsed value
+; rdx = 1 on success, 0 on error
+string_to_uint:
+    xor         rax, rax
+    xor         rdx, rdx
+    mov         cl, [rdi]
+    test        cl, cl
+    jz          .parse_fail
+
+.parse_loop:
+    movzx       rcx, byte [rdi]
+    test        cl, cl
+    jz          .parse_ok
+    cmp         cl, '0'
+    jb          .parse_fail
+    cmp         cl, '9'
+    ja          .parse_fail
+
+    imul        rax, rax, 10
+    sub         cl, '0'
+    add         rax, rcx
+    inc         rdi
+    jmp         .parse_loop
+
+.parse_ok:
+    mov         rdx, 1
+    ret
+
+.parse_fail:
+    xor         rax, rax
+    xor         rdx, rdx
     ret
