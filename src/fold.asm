@@ -27,18 +27,21 @@ _start:
     mov         [width], rax
     mov         qword [column], 0
     mov         qword [fd], STDIN_FILENO
-    pop         rcx                 ; argc
-    cmp         rcx, 1              ; If argc == 1, use stdin
+    pop         r12                 ; argc
+    cmp         r12, 1              ; If argc == 1, use stdin
     je          process_input
     
     pop         rax                 ; skip program name
-    dec         rcx
+    dec         r12
 
 parse_args:
-    cmp         rcx, 0              ; No more arguments
+    cmp         r12, 0              ; No more arguments
     je          open_file_fold
 
     pop         rax                 ; Get next argument
+    test        rax, rax            ; Defensive: null argv pointer
+    jz          show_help
+    dec         r12
     cmp         byte [rax], '-'     ; Check if it's an option
     jne         store_filename      ; If not, assume it's a filename
 
@@ -58,11 +61,13 @@ parse_args:
     jmp         parse_args
     
 get_width_arg:
-    cmp         rcx, 1              ; Check if there's another argument
+    cmp         r12, 0              ; Check if there's another argument
     je          show_help           ; If not, show help
-    
-    dec         rcx
+
     pop         rax                 ; Get the width argument
+    test        rax, rax            ; Defensive: null argv pointer
+    jz          show_help
+    dec         r12
     call        atoi
     
     cmp         rax, 0              ; Check if width <= 0
@@ -103,7 +108,6 @@ check_help:
     
 store_filename:
     mov         [filename], rax
-    dec         rcx
     jmp         parse_args
 
 open_file_fold:
