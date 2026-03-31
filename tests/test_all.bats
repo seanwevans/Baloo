@@ -31,6 +31,7 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "chcon — sets security context" {
+  skip "Temporarily disabled per request: skip chcon tests"
   touch "$TMP/ctxfile"
 
   # Probe SELinux xattr support first so this test is skipped (not failed)
@@ -320,6 +321,7 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "renice — adjusts pid priority" {
+  skip "Temporarily disabled per request: skip renice tests"
   sleep 30 & pid=$!
   trap 'kill "$pid" 2>/dev/null || true' RETURN
   if [ -z "$pid" ]; then
