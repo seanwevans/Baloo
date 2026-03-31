@@ -23,6 +23,7 @@ _start:
     pop             rdi
     pop             rdi
     call            parse_mode      ; Parse octal mode string to numeric value
+    jc              usage_error     ; Invalid mode string
     mov             [mode], rax     ; Store the parsed mode
 
     pop             rdi
@@ -41,23 +42,34 @@ _start:
 
 parse_mode:
     xor             rax, rax        ; Clear result register
-    
+    xor             r8d, r8d        ; Track whether at least one digit was parsed
+
 .next_char:
     movzx           rcx, byte [rdi] ; Get current character
     test            rcx, rcx
     jz              .done
-    
+
+    cmp             rcx, '0'
+    jb              .error
+    cmp             rcx, '7'
+    ja              .error
+
     sub             rcx, '0'        ; Convert ASCII to numeric
-    cmp             rcx, 7          ; Check if digit is valid octal (0-7)
-    ja              .done           ; If above 7, it's not valid octal
-    
     shl             rax, 3          ; Multiply current result by 8 (octal shift)
     add             rax, rcx        ; Add new digit
-    
+
+    mov             r8b, 1          ; Mark that we parsed at least one digit
     inc             rdi             ; Move to next character
     jmp             .next_char
-    
+
 .done:
+    test            r8b, r8b
+    jz              .error          ; Reject empty mode strings
+    clc                             ; Success
+    ret
+
+.error:
+    stc                             ; Failure
     ret
 
 copy_string:
