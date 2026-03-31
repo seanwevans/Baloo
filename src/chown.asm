@@ -121,7 +121,6 @@ _start:
 parse_uint:
     xor             rax, rax            ; Accumulator (result)
     xor             rcx, rcx            ; Pointer/index within string
-    mov             edx, eax            ; Use edx temporarily to check for leading char
 .loop:
     mov             dl, [rdi+rcx]       ; Get character
     cmp             dl, 0
@@ -134,33 +133,24 @@ parse_uint:
 
     sub             dl, '0'             ; Convert char to integer value
 
-    mov             r11, 0xFFFFFFFF     ; Max 32-bit unsigned value
-    shr             r11, 3              ; Roughly MAX_UINT / 8 - quick check boundary
-    cmp             rax, r11            ; If rax is already large, multiplying by 10 might overflow
-    ja              .error              ; Likely overflow
-
     imul            rax, rax, 10        ; Multiply accumulator by 10
     jo              .error              ; Check overflow flag after multiplication
 
-    add             al, dl              ; Add the new digit (only low 8 bits needed)
-    jnc             .digit_added        ; Check carry after addition
-    
-    mov             r11, 0xFFFFFFFF00000000
-    test            rax, r11
-    jnz             .error
+    movzx           r11, dl             ; Zero-extend digit for full-width add
+    add             rax, r11            ; Add digit to full accumulator
+    jc              .error
 
+    mov             r11d, 0xFFFFFFFF    ; Keep value within 32-bit unsigned range
+    cmp             rax, r11
+    ja              .error
 
-.digit_added:
     inc             rcx
     jmp             .loop
 
 .done:
     cmp             rcx, 0
     je              .error
-    
-    mov             r11, 0xFFFFFFFF00000000
-    test            rax, r11
-    jnz             .error   
+
     clc
     ret
 
