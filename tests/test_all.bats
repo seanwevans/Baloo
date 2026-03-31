@@ -229,7 +229,11 @@ teardown(){ rm -rf "$TMP"; }
 
 @test "sum — computes BSD checksum" {
   printf 'hello\n' >"$TMP/sumfile"
-  run "$BIN/sum" "$TMP/sumfile"
+  if command -v timeout >/dev/null 2>&1; then
+    run timeout 2 "$BIN/sum" "$TMP/sumfile"
+  else
+    run "$BIN/sum" "$TMP/sumfile"
+  fi
   assert_success
   assert_output "36979 1 $TMP/sumfile"
 }

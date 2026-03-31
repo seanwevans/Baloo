@@ -26,11 +26,17 @@ _start:
 
     mov rbx, rbp
     add rbx, 8                 ; skip program name
+    dec rcx                    ; filename count (argc - 1)
 .arg_loop:
     mov rsi, [rbx]             ; filename pointer
+    test rsi, rsi
+    jz .done_args
+    push rcx
+    mov r9, rsi                ; preserve filename across open_file
     mov rdi, STDIN_FILENO
     call open_file             ; returns fd in rax
     mov r8, rax                ; fd
+    mov rsi, r9
     call do_sum
     cmp r8, STDIN_FILENO
     je .skip_close
@@ -38,9 +44,11 @@ _start:
     mov rdi, r8
     syscall
 .skip_close:
+    pop rcx
     add rbx, 8
     dec rcx
     jnz .arg_loop
+.done_args:
     exit 0
 
 use_stdin:
