@@ -22,6 +22,7 @@ _start:
     pop     rdi             ; file path
 
     call    strlen          ; length -> rbx
+    inc     rbx             ; include NUL terminator in xattr value size
 
     mov     rax, SYS_SETXATTR
     mov     rdx, rsi        ; value
