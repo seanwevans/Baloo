@@ -47,7 +47,7 @@ _start:
     mov [fd], rax
 
 process:
-    xor rcx, rcx                        ;char counter
+    xor r8, r8                          ;char counter
 read_loop:
     mov rax, SYS_READ
     mov rdi, [fd]
@@ -61,13 +61,13 @@ read_loop:
     movzx rax, byte [buffer]
     cmp al, WHITESPACE_NL
     jne check_print
-    mov rcx, 0
+    mov r8, 0
     jmp print_char
 
 check_print:
-    inc rcx
+    inc r8
     mov rdx, [bytes_limit]
-    cmp rcx, rdx
+    cmp r8, rdx
     jg read_loop
 
 print_char:
