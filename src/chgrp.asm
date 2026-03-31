@@ -69,9 +69,10 @@ parse_group:
     ret
 
 chgrp:
+    mov             r8d, edi         ; preserve parsed gid
     mov             rax, SYS_CHOWN
-    mov             rdi, rsi        ; rdi = filename
-    mov             rsi, -1         ; rsi = uid
-    mov             edx, edi        ; edx = gid
+    mov             rdi, rsi         ; rdi = filename
+    mov             rsi, -1          ; rsi = uid unchanged
+    mov             edx, r8d         ; rdx = original gid
     syscall
     ret
