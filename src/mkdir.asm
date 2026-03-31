@@ -16,8 +16,12 @@ section .text
 _start:
     mov         r12, [rsp]          ; argc
     cmp         r12, 2
-    jne         .read_stdin         ; if no argument, read from stdin
+    je          .use_argv
+    cmp         r12, 1
+    je          .read_stdin         ; optional stdin mode (no dirname arg)
+    jmp         .print_usage        ; unsupported argc form
 
+.use_argv:
     mov         r13, [rsp + 16]     ; pointer to dirname
     jmp         .mkdir
 
@@ -55,5 +59,5 @@ _start:
     exit        0
 
 .print_usage:
-    write       STDOUT_FILENO, usage_msg, usage_len
+    write       STDERR_FILENO, usage_msg, usage_len
     exit        1
