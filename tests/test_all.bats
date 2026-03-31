@@ -184,7 +184,11 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "kill — terminates a background process" {
-  (sleep 30 &); pid=$!
+  sleep 30 & pid=$!
+  trap 'kill "$pid" 2>/dev/null || true' RETURN
+  if [ -z "$pid" ]; then
+    fail "failed to capture background pid in kill test"
+  fi
   run "$BIN/kill" "$pid"
   assert_success
   run wait "$pid"
@@ -280,12 +284,15 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "renice — adjusts pid priority" {
-  (sleep 30 &); pid=$!
+  sleep 30 & pid=$!
+  trap 'kill "$pid" 2>/dev/null || true' RETURN
+  if [ -z "$pid" ]; then
+    fail "failed to capture background pid in renice test"
+  fi
   run "$BIN/renice" 5 "$pid"
   assert_success
   run ps -o ni= -p "$pid"
   assert_output '5'
-  kill "$pid" 2>/dev/null
 }
 
 @test "printenv — returns PATH value" {
@@ -482,4 +489,3 @@ teardown(){ rm -rf "$TMP"; }
   assert_success
   [ ! -f "$TMP/.baloo_crontab" ]
 }
-
