@@ -2,6 +2,7 @@
 
 ASM=nasm
 LD=ld
+TEST_FLAGS?=--timing --print-output-on-failure
 
 SRC=$(wildcard src/*.asm)
 OBJ=$(patsubst src/%.asm,build/%.o,$(SRC))
@@ -22,4 +23,4 @@ clean:
 	rm -f build/*.o bin/*
 
 test: all
-	bats tests/test_all.bats
+	bats $(TEST_FLAGS) tests/test_all.bats

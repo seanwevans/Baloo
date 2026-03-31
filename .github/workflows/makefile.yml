@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
     - uses: actions/checkout@v4
     - name: Install dependencies
@@ -24,4 +25,5 @@ jobs:
         ln -s /usr/lib/bats/bats-support tests/test_helper/bats-support
         ln -s /usr/lib/bats/bats-assert tests/test_helper/bats-assert
     - name: Test
-      run: make test
+      timeout-minutes: 5
+      run: timeout --foreground 4m make test TEST_FLAGS="--timing --print-output-on-failure"
