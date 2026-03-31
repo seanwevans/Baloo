@@ -78,11 +78,8 @@ display_current_umask:
     mov         byte [rsi], 10
     inc         rsi
     mov         byte [rsi], 0   ; Null terminator
-    mov         rsi, buffer
-    mov         rdx, rsi        ; Find length
-    
-.print_buffer:
-    sub         rdx, rsi        ; Calculate length
+    mov         rdx, rsi        ; End of output buffer (past newline)
+    sub         rdx, buffer     ; Calculate length from buffer start
     write       STDOUT_FILENO, buffer, rdx ; Write directly
     exit        0
 
