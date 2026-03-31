@@ -3,7 +3,7 @@
 %include "include/sysdefs.inc"
 
 section .bss
-    groups_buf  resd 32         ; buffer for group IDs (32-bit each)
+    groups_buf  resd 256        ; buffer for group IDs (32-bit each)
     numbuf      resb 16         ; temporary buffer for printing numbers
 
 section .data
@@ -15,9 +15,12 @@ section .text
 
 _start:
     mov     rax, SYS_GETGROUPS
-    mov     rdi, 32             ; max groups
+    mov     rdi, 256            ; max groups
     mov     rsi, groups_buf
     syscall
+
+    test    rax, rax
+    js      .error
 
     mov     r12, rax            ; number of groups (preserved across helper calls)
     cmp     r12, 0
@@ -38,6 +41,9 @@ _start:
 .done:
     write   STDOUT_FILENO, newline, 1
     exit    0
+
+.error:
+    exit    1
 
 print_num:
     mov     rax, rdi
