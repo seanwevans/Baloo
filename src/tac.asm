@@ -80,16 +80,17 @@ tac_fd:
     jmp .scan_loop
 
 .scan_done:
-    mov rdx, rcx            ; total lines -> rdx
-    dec rcx                 ; rcx = last index
+    mov r15, rcx            ; total line count
+    mov r14, r15
+    dec r14                 ; r14 = last line index
 
 .output_loop:
-    cmp rcx, -1
+    cmp r14, -1
     jle .done
-    mov r9, [line_pos + rcx*8] ; start
-    mov r10, rcx
+    mov r9, [line_pos + r14*8] ; start
+    mov r10, r14
     inc r10
-    cmp r10, rdx
+    cmp r10, r15
     jne .not_last
     mov r11, rbx
     jmp .write_line
@@ -102,7 +103,7 @@ tac_fd:
     mov rdx, r11
     sub rdx, r9
     syscall
-    dec rcx
+    dec r14
     jmp .output_loop
 
 .done:
