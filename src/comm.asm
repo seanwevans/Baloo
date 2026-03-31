@@ -351,6 +351,15 @@ read_line1:
     mov rax, 1
     ret
 .eof1:
+    cmp qword [len1], 0
+    je .true_eof1
+    mov rdi, line1
+    add rdi, [len1]
+    mov byte [rdi], WHITESPACE_NL
+    inc qword [len1]
+    mov rax, 1
+    ret
+.true_eof1:
     mov rax, 0
     ret
 
@@ -392,5 +401,14 @@ read_line2:
     mov rax, 1
     ret
 .eof2:
+    cmp qword [len2], 0
+    je .true_eof2
+    mov rdi, line2
+    add rdi, [len2]
+    mov byte [rdi], WHITESPACE_NL
+    inc qword [len2]
+    mov rax, 1
+    ret
+.true_eof2:
     mov rax, 0
     ret
