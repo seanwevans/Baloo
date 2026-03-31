@@ -32,7 +32,29 @@ teardown(){ rm -rf "$TMP"; }
 
 @test "chcon — sets security context" {
   touch "$TMP/ctxfile"
+
+  # Probe SELinux xattr support first so this test is skipped (not failed)
+  # on filesystems that do not implement security.selinux xattrs.
+  unsupported_reason=""
+  if command -v getfattr >/dev/null 2>&1; then
+    if ! getfattr -n security.selinux "$TMP/ctxfile" >/dev/null 2>"$TMP/chcon-probe.err"; then
+      probe_err=$(<"$TMP/chcon-probe.err")
+      if [[ "$probe_err" =~ [Oo]peration[[:space:]]not[[:space:]]supported|[Nn]ot[[:space:]]supported|ENOTSUP|EOPNOTSUPP ]]; then
+        unsupported_reason="SELinux xattrs unsupported for test filesystem ($probe_err)"
+      fi
+    fi
+  fi
+
+  if [ -n "$unsupported_reason" ]; then
+    skip "$unsupported_reason"
+  fi
+
   run "$BIN/chcon" "dummy_u:dummy_r:dummy_t:s0" "$TMP/ctxfile"
+
+  if [ "$status" -ne 0 ] && [[ "$output" =~ [Oo]peration[[:space:]]not[[:space:]]supported|[Nn]ot[[:space:]]supported|ENOTSUP|EOPNOTSUPP ]]; then
+    skip "Baloo chcon reports SELinux xattrs unsupported: $output"
+  fi
+
   assert_success
 }
 
