@@ -18,68 +18,135 @@ section .text
     global          _start
 
 _start:
-    mov             rax, SYS_GETUID
-    syscall
-    
+    mov             rbx, [rsp]          ; argc
+    cmp             rbx, 2
+    jl              .mode_default
+
+    mov             rdi, [rsp + 16]     ; argv[1]
+    call            parse_mode
+    cmp             al, 'u'
+    je              .mode_u
+    cmp             al, 'g'
+    je              .mode_g
+    cmp             al, 'G'
+    je              .mode_G
+
+.mode_default:
     mov             rdi, uid_prefix
     call            write_str
-    
+    call            get_euid
     mov             rdi, rax
     call            print_num
-    call            write_space
-    
-    mov             rax, SYS_GETGID
-    syscall
-    
+
     mov             rdi, gid_prefix
     call            write_str
-    
+    call            get_egid
     mov             rdi, rax
     call            print_num
-    call            write_space
 
-    mov             rax, SYS_GETGROUPS
-    mov             rdi, 32             ; max count we can hold
-    mov             rsi, groups_buf
-    syscall
-
-    cmp             rax, 32
-    jg              .too_many_groups
-    mov             rcx, rax
-    jmp             .check_count
-
-.too_many_groups:
-    mov             rcx, 32             ; clamp to safe max
-
-.check_count:
-    cmp             rcx, 0
+    call            get_groups_count
+    test            rax, rax
     je              .done
+    mov             r13, rax
 
-    call            write_groups_prefix
+    mov             rdi, groups_prefix
+    call            write_str
 
-    xor             rbx, rbx
+    mov             rdi, r13
+    mov             rsi, comma
+    mov             rdx, 1
+    call            print_groups_with_sep
+    jmp             .done
 
-.group_loop:
-    mov             edi, [groups_buf + rbx*4]
-    test            edi, edi
-    je              .done
+.mode_u:
+    call            get_euid
+    mov             rdi, rax
     call            print_num
-    
-    mov             eax, [groups_buf + rbx*4 + 4]
-    test            eax, eax
-    je              .newline_and_exit
+    jmp             .done
 
-    call            write_comma
-    inc             rbx
-    jmp             .group_loop
+.mode_g:
+    call            get_egid
+    mov             rdi, rax
+    call            print_num
+    jmp             .done
 
-.newline_and_exit:
-    write           1, newline, 1
-    exit            0
+.mode_G:
+    call            get_groups_count
+    mov             rdi, rax
+    mov             rsi, space
+    mov             rdx, 1
+    call            print_groups_with_sep
 
 .done:
-    write           1, newline, 1
+    call            write_newline
     exit            0
+
+parse_mode:
+    mov             al, 0
+    cmp             byte [rdi], '-'
+    jne             .ret
+    cmp             byte [rdi + 2], 0
+    jne             .ret
+    mov             al, [rdi + 1]
+    cmp             al, 'u'
+    je              .ret
+    cmp             al, 'g'
+    je              .ret
+    cmp             al, 'G'
+    je              .ret
+    xor             eax, eax
+.ret:
+    ret
+
+get_euid:
+    mov             rax, SYS_GETEUID
+    syscall
+    ret
+
+get_egid:
+    mov             rax, SYS_GETEGID
+    syscall
+    ret
+
+get_groups_count:
+    mov             rax, SYS_GETGROUPS
+    mov             rdi, 32
+    mov             rsi, groups_buf
+    syscall
+    test            rax, rax
+    js              .none
+    cmp             rax, 32
+    jle             .ret
+    mov             rax, 32
+.ret:
+    ret
+.none:
+    xor             eax, eax
+    ret
+
+print_groups_with_sep:
+    mov             r8, rdi             ; count
+    mov             r10, rsi            ; separator pointer
+    mov             r12, rdx            ; separator length
+    xor             r9, r9              ; index
+.loop:
+    cmp             r9, r8
+    jae             .ret
+
+    mov             edi, [groups_buf + r9*4]
+    call            print_num
+    inc             r9
+    cmp             r9, r8
+    jae             .ret
+
+    mov             rax, SYS_WRITE
+    mov             rdi, 1
+    mov             rsi, r10
+    mov             rdx, r12
+    syscall
+    jmp             .loop
+.ret:
+    ret
 
 print_num:    
     mov             rax, rdi
@@ -97,7 +164,7 @@ print_num:
     jnz             .next_digit
     mov             rax, SYS_WRITE
     mov             rdi, 1
-    mov             rdx, numbuf + 16
+    mov             rdx, numbuf + 15
     sub             rdx, rsi
     syscall
     ret
@@ -119,4 +186,8 @@ write_space:
 write_groups_prefix:
     mov             rdi, groups_prefix
     call            write_str
+    ret
+
+write_newline:
+    write           1, newline, 1
     ret
