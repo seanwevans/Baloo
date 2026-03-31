@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
-load '/usr/lib/bats/bats-support/load'
-load '/usr/lib/bats/bats-assert/load'
+load 'test_helper/bats-support/load'
+load 'test_helper/bats-assert/load'
 
 # Directory with Baloo binaries ------------------------------------------------
 setup()  { BIN="${BATS_TEST_DIRNAME}/../bin"; TMP=$(mktemp -d); }

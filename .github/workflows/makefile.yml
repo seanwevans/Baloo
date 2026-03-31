@@ -24,8 +24,15 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y bats bats-assert bats-support
         mkdir -p tests/test_helper
-        ln -s /usr/lib/bats/bats-support tests/test_helper/bats-support
-        ln -s /usr/lib/bats/bats-assert tests/test_helper/bats-assert
+
+        support_root="$(dpkg -L bats-support | awk '/\/load$/ { sub(/\/load$/, ""); print; exit }')"
+        assert_root="$(dpkg -L bats-assert | awk '/\/load$/ { sub(/\/load$/, ""); print; exit }')"
+
+        test -n "$support_root"
+        test -n "$assert_root"
+
+        ln -sfn "$support_root" tests/test_helper/bats-support
+        ln -sfn "$assert_root" tests/test_helper/bats-assert
     - name: Test
       timeout-minutes: 5
       run: timeout --foreground 4m make test TEST_FLAGS="--timing --print-output-on-failure"
