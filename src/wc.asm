@@ -14,12 +14,47 @@ section .text
     global  _start
 
 _start:
-    mov     rdi, [rsp]          ; argc
-    cmp     rdi, 2              ; file argument?
-    jb      use_stdin           ; use standard input
-    
-    mov     rax, [rsp+16]
-    mov     rdi, rax
+    mov     r8, [rsp]           ; argc
+    xor     r9, r9              ; filename pointer (0 = stdin)
+    xor     r10, r10            ; mode flag (0 = full output, 1 = lines + path)
+
+    cmp     r8, 1               ; no args -> stdin
+    je      use_stdin
+
+    cmp     r8, 2               ; one arg -> filename
+    je      single_arg
+
+    cmp     r8, 3               ; two args -> expect "-l FILE"
+    je      maybe_line_mode
+
+    jmp     exit_fail           ; unsupported argument count
+
+single_arg:
+    mov     r9, [rsp+16]        ; argv[1]
+    jmp     open_input
+
+maybe_line_mode:
+    mov     rax, [rsp+16]       ; argv[1]
+    mov     dl, [rax]
+    cmp     dl, '-'
+    jne     exit_fail
+    mov     dl, [rax+1]
+    cmp     dl, 'l'
+    jne     exit_fail
+    mov     dl, [rax+2]
+    cmp     dl, 0
+    jne     exit_fail
+
+    mov     r10, 1              ; enable line-only output mode
+    mov     r9, [rsp+24]        ; argv[2] is filename
+    jmp     open_input
+
+use_stdin:
+    mov     r12, STDIN_FILENO   ; use standard input if no file argument
+    jmp     process_file
+
+open_input:
+    mov     rdi, r9
     mov     rsi, O_RDONLY
     mov     rdx, 0
     mov     rax, SYS_OPEN
@@ -28,11 +63,8 @@ _start:
     cmp     rax, 0              ; open succeeded?
     jl      exit_fail           ; error
     
-    mov     r12, rax            ; file descriptor 
+    mov     r12, rax            ; file descriptor
     jmp     process_file
-
-use_stdin:
-    mov     r12, STDIN_FILENO   ; use standard input if no file argument
 
 process_file:
     xor     r13, r13            ; line count = 0
@@ -101,9 +133,33 @@ close_file:
     syscall
 
 print_results:    
+    cmp     r10, 1              ; lines-only mode?
+    jne     print_all_counts
+
     mov     rdi, r13            ; line count
     call    print_decimal
-    
+
+    mov     rdi, STDOUT_FILENO
+    mov     rsi, space
+    mov     rdx, 1
+    mov     rax, SYS_WRITE
+    syscall
+
+    mov     rdi, STDOUT_FILENO
+    mov     rsi, r9
+    call    print_cstring
+
+    mov     rdi, STDOUT_FILENO
+    mov     rsi, newline
+    mov     rdx, 1
+    mov     rax, SYS_WRITE
+    syscall
+    jmp     exit_ok
+
+print_all_counts:
+    mov     rdi, r13            ; line count
+    call    print_decimal
+
     mov     rdi, STDOUT_FILENO
     mov     rsi, space
     mov     rdx, 1
@@ -127,6 +183,7 @@ print_results:
     mov     rax, SYS_WRITE
     syscall
 
+exit_ok:
     mov     rdi, 0
     exit    0
 
@@ -171,4 +228,20 @@ print_decimal:
     syscall
     
     pop     rbx                 ; restore rbx
+    ret
+
+print_cstring:
+    push    rsi
+    xor     rdx, rdx
+
+.len_loop:
+    cmp     byte [rsi+rdx], 0
+    je      .write
+    inc     rdx
+    jmp     .len_loop
+
+.write:
+    mov     rax, SYS_WRITE
+    syscall
+    pop     rsi
     ret
