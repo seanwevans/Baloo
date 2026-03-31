@@ -328,7 +328,9 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/renice" 5 "$pid"
   assert_success
   run ps -o ni= -p "$pid"
-  assert_output '5'
+  assert_success
+  normalized_nice="$(echo "$output" | xargs)"
+  assert_equal "$normalized_nice" "5"
 }
 
 @test "printenv — returns PATH value" {
