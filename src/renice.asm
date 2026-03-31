@@ -19,20 +19,25 @@ _start:
     mov     rbx, rsp                ; argv pointer
     cmp     rcx, 3
     jl      .usage
+    mov     r14, rcx                ; stable argc tracker
 
     mov     rdi, [rbx + 8]          ; argv[1] priority
+    test    rdi, rdi
+    jz      .usage
     call    parse_number
     cmp     rax, -1
     je      .usage
     mov     [newprio], rax
 
     lea     rbx, [rbx + 16]         ; first pid arg
-    sub     rcx, 2                  ; number of pids
+    sub     r14, 2                  ; number of pids
 
 .next_pid:
-    cmp     rcx, 0
+    cmp     r14, 0
     je      .done
     mov     rdi, [rbx]
+    test    rdi, rdi
+    jz      .usage
     call    parse_number
     cmp     rax, -1
     je      .usage
@@ -45,7 +50,7 @@ _start:
     test    rax, rax
     js      .err
     add     rbx, 8
-    dec     rcx
+    dec     r14
     jmp     .next_pid
 
 .done:

@@ -7,6 +7,9 @@
 section .bss
     buffer  resb BUFFER_SIZE
     numbuf  resb 32
+    sum_fd      resq 1
+    sum_name    resq 1
+    sum_blocks  resq 1
 
 section .data
     nl      db WHITESPACE_NL
@@ -52,12 +55,15 @@ use_stdin:
 do_sum:
     push rbp
     mov rbp, rsp
+    mov [sum_fd], r8
+    mov [sum_name], rsi
     xor r12d, r12d               ; checksum
     xor r13, r13                 ; total bytes
 .read_loop:
     mov rax, SYS_READ
-    mov rdi, r8
-    mov rsi, buffer
+    mov rdi, [sum_fd]
+    mov r9, buffer
+    mov rsi, r9
     mov rdx, BUFFER_SIZE
     syscall
     cmp rax, 0
@@ -82,15 +88,17 @@ do_sum:
     mov rax, r13
     add rax, 1023
     shr rax, 10                  ; block count
+    mov [sum_blocks], rax
     mov rdi, r12
     call print_decimal
     write STDOUT_FILENO, space, 1
-    mov rdi, rax
+    mov rdi, [sum_blocks]
     call print_decimal
-    test rsi, rsi
+    mov r10, [sum_name]
+    test r10, r10
     jz .newline
     write STDOUT_FILENO, space, 1
-    mov rdi, rsi
+    mov rdi, r10
     call print_string
 .newline:
     write STDOUT_FILENO, nl, 1
