@@ -24,7 +24,7 @@ Install `bats`, `bats-assert`, and `bats-support` then run:
 ## 📐 Formatting
 
 Use `scripts/asmfmt.py` to keep assembly files consistent. By default it indents instructions with four spaces and aligns comments to column 40.
-python3 scripts/asmfmt.py src/example.asm
+`python3 scripts/asmfmt.py src/example.asm`
 
 ## Catalog
 - [`alias`](src/alias.asm) ✅ Defines or displays aliases
