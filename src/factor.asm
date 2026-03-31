@@ -9,6 +9,7 @@ section .bss
 
 section .data
     space       db WHITESPACE_SPACE
+    colon_space db ": "
     newline     db WHITESPACE_NL
     error_msg   db "Invalid input", WHITESPACE_NL
     error_len   equ $ - error_msg
@@ -81,8 +82,8 @@ parse_done:
 
     mov         rax, SYS_WRITE
     mov         rdi, STDOUT_FILENO
-    mov         rsi, space
-    mov         rdx, 1
+    mov         rsi, colon_space
+    mov         rdx, 2
     syscall
 
     mov         rax, [num]      ; Get the number
@@ -211,8 +212,8 @@ print_convert_done:
 
     mov         r8, num_buffer
     add         r8, 31          ; End of buffer
-    sub         r8, rcx         ; Length = end - current position
     inc         rcx             ; Point to first digit
+    sub         r8, rcx         ; Length = end - first digit
 
     mov         rax, SYS_WRITE
     mov         rdi, STDOUT_FILENO
