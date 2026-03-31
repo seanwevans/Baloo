@@ -71,27 +71,27 @@ parse_number:
     xor     rax, rax
     xor     rcx, rcx                 ; digit count
     xor     r8, r8                   ; sign flag
-    movzx   rbx, byte [rdi]
-    cmp     bl, '-'
+    movzx   r9, byte [rdi]
+    cmp     r9b, '-'
     jne     .check_plus
     mov     r8, 1
     inc     rdi
     jmp     .parse_loop
 .check_plus:
-    cmp     bl, '+'
+    cmp     r9b, '+'
     jne     .parse_loop
     inc     rdi
 .parse_loop:
-    movzx   rbx, byte [rdi]
-    cmp     bl, 0
+    movzx   r9, byte [rdi]
+    cmp     r9b, 0
     je      .finish
-    cmp     bl, '0'
+    cmp     r9b, '0'
     jb      .error
-    cmp     bl, '9'
+    cmp     r9b, '9'
     ja      .error
-    sub     bl, '0'
+    sub     r9b, '0'
     imul    rax, 10
-    add     rax, rbx
+    add     rax, r9
     inc     rdi
     inc     rcx
     jmp     .parse_loop
