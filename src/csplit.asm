@@ -8,6 +8,7 @@ section .bss
     out_fd       resq 1
     line_count   resq 1
     split_after  resq 1
+    pending_cut  resb 1
 
 section .data
     file1        db "xaa", 0
@@ -41,6 +42,7 @@ _start:
     mov     [out_fd], rax
     xor     rcx, rcx
     mov     [line_count], rcx
+    mov     byte [pending_cut], 0
 
 read_loop:
     mov     rax, SYS_READ
@@ -51,6 +53,18 @@ read_loop:
     test    rax, rax
     jle     finish
 
+    cmp     byte [pending_cut], 1
+    jne     .write_byte
+    mov     byte [pending_cut], 0
+    mov     rax, SYS_CLOSE
+    mov     rdi, [out_fd]
+    syscall
+    mov     rdi, STDOUT_FILENO
+    mov     rsi, file2
+    call    open_dest_file
+    mov     [out_fd], rax
+
+.write_byte:
     mov     rax, SYS_WRITE
     mov     rdi, [out_fd]
     mov     rsi, buffer
@@ -65,14 +79,8 @@ read_loop:
     cmp     qword [line_count], rax
     jne     read_loop
 
-    ; switch to second file
-    mov     rax, SYS_CLOSE
-    mov     rdi, [out_fd]
-    syscall
-    mov     rdi, STDOUT_FILENO
-    mov     rsi, file2
-    call    open_dest_file
-    mov     [out_fd], rax
+    ; switch to the second file only if we actually read more input
+    mov     byte [pending_cut], 1
     jmp     read_loop
 
 finish:
