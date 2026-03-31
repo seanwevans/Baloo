@@ -113,25 +113,24 @@ exit_success:
 ; returns rax = 1 if found, 0 otherwise
 contains_pattern:
     push    rbx
-    push    r8
-    push    r9
     xor     rax, rax
     cmp     rcx, 0
     je      .found
     cmp     rsi, rcx
-    jl      .done
+    jl      .not_found
+    xor     rbx, rbx
     mov     r8, rsi
     sub     r8, rcx
 .outer:
     cmp     rbx, r8
-    jg      .done
+    jg      .not_found
     mov     r9, 0
 .inner:
     cmp     r9, rcx
     je      .found
-    mov     r8, rbx
-    add     r8, r9
-    mov     al, [rdi + r8]
+    mov     r10, rbx
+    add     r10, r9
+    mov     al, [rdi + r10]
     cmp     al, [rdx + r9]
     jne     .next
     inc     r9
@@ -141,8 +140,9 @@ contains_pattern:
     jmp     .outer
 .found:
     mov     rax, 1
+    jmp     .done
+.not_found:
+    xor     rax, rax
 .done:
-    pop     r9
-    pop     r8
     pop     rbx
     ret
