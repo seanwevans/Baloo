@@ -45,6 +45,19 @@ teardown(){ rm -rf "$TMP"; }
   assert_equal "$file_group" "$current_group"
 }
 
+@test "chgrp — passes parsed gid as chown gid argument" {
+  if ! command -v strace >/dev/null 2>&1; then
+    skip "strace is required for syscall argument regression check"
+  fi
+
+  touch "$TMP/testfile"
+  gid=12345
+  run strace -e trace=chown "$BIN/chgrp" "$gid" "$TMP/testfile"
+
+  assert_failure
+  assert_line --regexp "chown\(\"$TMP/testfile\", -1, $gid\)"
+}
+
 @test "chmod — changes mode" {
   touch "$TMP/f"
   run "$BIN/chmod" 600 "$TMP/f"
