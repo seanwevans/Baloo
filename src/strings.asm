@@ -33,7 +33,7 @@ _start:
     jmp     show_usage
 
 process:
-    xor     rcx, rcx                ; current length
+    xor     r12, r12                ; current length
 
 read_loop:
     mov     rax, SYS_READ
@@ -50,36 +50,36 @@ read_loop:
     cmp     al, 126
     jg      flush
 
-    mov     byte [strbuf + rcx], al
-    inc     rcx
-    cmp     rcx, 1023
+    mov     byte [strbuf + r12], al
+    inc     r12
+    cmp     r12, 1023
     jl      read_loop
 
     ; buffer full, flush if long enough
-    mov     byte [strbuf + rcx], 0
-    cmp     rcx, 4
+    mov     byte [strbuf + r12], 0
+    cmp     r12, 4
     jl      reset
-    write   STDOUT_FILENO, strbuf, rcx
+    write   STDOUT_FILENO, strbuf, r12
     write   STDOUT_FILENO, nl, 1
 reset:
-    xor     rcx, rcx
+    xor     r12, r12
     jmp     read_loop
 
 flush:
-    mov     byte [strbuf + rcx], 0
-    cmp     rcx, 4
+    mov     byte [strbuf + r12], 0
+    cmp     r12, 4
     jl      clr
-    write   STDOUT_FILENO, strbuf, rcx
+    write   STDOUT_FILENO, strbuf, r12
     write   STDOUT_FILENO, nl, 1
 clr:
-    xor     rcx, rcx
+    xor     r12, r12
     jmp     read_loop
 
 eof:
-    mov     byte [strbuf + rcx], 0
-    cmp     rcx, 4
+    mov     byte [strbuf + r12], 0
+    cmp     r12, 4
     jl      close_fd
-    write   STDOUT_FILENO, strbuf, rcx
+    write   STDOUT_FILENO, strbuf, r12
     write   STDOUT_FILENO, nl, 1
 
 close_fd:
