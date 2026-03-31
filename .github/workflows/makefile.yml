@@ -20,6 +20,8 @@ jobs:
       run: make
     - name: Install test dependencies
       run: |
+        set -eux
+        sudo apt-get update
         sudo apt-get install -y bats bats-assert bats-support
         mkdir -p tests/test_helper
         ln -s /usr/lib/bats/bats-support tests/test_helper/bats-support
