@@ -8,10 +8,12 @@ section .bss
     pid             resq 1      ; Process ID
     random_bytes    resb 8      ; Buffer for random bytes
     directory_mode  resb 1      ; 1 = create dir, 0 = create file
+    unique_mode     resb 1      ; 1 = only print unique path (-u), 0 = create it
     
 section .data
     default_template db "/tmp/tmp.XXXXXXXXXX", 0
     d_option    db "-d", 0
+    u_option    db "-u", 0
     err_msg     db "Error: Failed to create temporary file/directory", 10
     err_len     equ $ - err_msg
     usage_msg   db "Usage: mktemp [-d] [template]", 10
@@ -22,6 +24,7 @@ section .text
 
 _start:
     mov         byte [directory_mode], 0
+    mov         byte [unique_mode], 0
     pop         rcx                     ; argc
     cmp         rcx, 1                  ; If argc == 1, use default template
     je          use_default_template
@@ -31,6 +34,23 @@ _start:
     jl          use_default_template    ; Not enough args, use default
     
     pop         rsi                     ; Get argv[1]
+    mov         rdi, u_option
+    push        rcx                     ; Save argc
+    call        strcmp
+    pop         rcx                     ; Restore argc
+    cmp         rax, 0
+    jne         check_d_option
+
+    mov         byte [unique_mode], 1
+    cmp         rcx, 3                  ; If we have 3 args (prog + -u + template)
+    jl          use_default_template
+
+    pop         rsi
+    mov         rdi, template
+    call        copy_string
+    jmp         template_ready
+
+check_d_option:
     mov         rdi, d_option
     push        rcx                     ; Save argc
     call        strcmp
@@ -60,10 +80,10 @@ use_default_template:
     call        copy_string
     
 template_ready:
-    mov         rdi, template
+    mov         rsi, template
     call        strlen
     
-    mov         [template_len], rax
+    mov         [template_len], rbx
     mov         rdi, template
     add         rdi, [template_len]     ; Start from the end
     
@@ -85,6 +105,8 @@ check_if_done:
 
     cmp         byte [directory_mode], 0
     jne         create_directory
+    cmp         byte [unique_mode], 1
+    je          output_result
 
     mov         rax, SYS_OPEN
     mov         rdi, template
