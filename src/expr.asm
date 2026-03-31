@@ -24,24 +24,24 @@ _start:
     pop rdi                             ;skip program name
     pop rdi                             ;first operand
     call parse_number
-    mov rbx, rax                        ;store first number
+    mov r10, rax                        ;store first number
 
     pop rdi                             ;operator
-    movzx r8, byte [rdi]
+    movzx r9, byte [rdi]
 
     pop rdi                             ;second operand
     call parse_number
     mov rcx, rax                        ;store second number
 
-    mov rax, rbx                        ;prepare result with first number
+    mov rax, r10                        ;prepare result with first number
 
-    cmp r8b, '+'
+    cmp r9b, '+'
     je do_add
-    cmp r8b, '-'
+    cmp r9b, '-'
     je do_sub
-    cmp r8b, '*'
+    cmp r9b, '*'
     je do_mul
-    cmp r8b, '/'
+    cmp r9b, '/'
     je do_div
 
 print_usage:
