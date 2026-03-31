@@ -14,6 +14,20 @@ section .text
     global _start
 
 _start:
+    mov     rax, SYS_GETGID
+    syscall
+    test    rax, rax
+    js      .error
+    mov     r13, rax            ; primary gid (match id -G ordering)
+
+    mov     rax, SYS_GETEGID
+    syscall
+    test    rax, rax
+    js      .error
+
+    mov     edi, r13d
+    call    print_num
+
     mov     rax, SYS_GETGROUPS
     mov     rdi, 256            ; max groups
     mov     rsi, groups_buf
@@ -22,20 +36,22 @@ _start:
     test    rax, rax
     js      .error
 
-    mov     r12, rax            ; number of groups (preserved across helper calls)
-    cmp     r12, 0
-    je      .done
-
+    mov     r12, rax            ; number of supplementary groups
     xor     rbx, rbx            ; index
 .next_group:
-    mov     edi, [groups_buf + rbx*4]
-    call    print_num
-
-    inc     rbx
     cmp     rbx, r12
     je      .done
 
+    mov     r14d, [groups_buf + rbx*4]
+    cmp     r14d, r13d
+    je      .skip_group
+
     call    write_space
+    mov     edi, r14d
+    call    print_num
+
+.skip_group:
+    inc     rbx
     jmp     .next_group
 
 .done:
