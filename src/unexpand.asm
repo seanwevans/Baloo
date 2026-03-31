@@ -4,7 +4,6 @@
 
 section .bss
     buffer      resb buffer_size ; I/O buffer
-    spaces      resb buffer_size ; Temporary buffer for spaces
     output      resb buffer_size ; Output buffer
 
 section .data
@@ -58,6 +57,8 @@ use_stdout:
     mov     r9, STDOUT_FILENO   ; Use standard output
 
 process_input:
+    xor     r13, r13            ; Current column
+    xor     r14, r14            ; Pending space count
 
     
 read_loop:
@@ -72,85 +73,64 @@ read_loop:
     jle     cleanup             ; If EOF or error, exit
     
     mov     r10, rax            ; Save number of bytes read
-    mov     r11, 0              ; Initialize position counter
-    mov     r12, 0              ; Initialize output position
-    mov     r14, 0              ; Flag: 0 = start of line, 1 = not at start
-    mov     r15, 0              ; Space counter
+    mov     r11, 0              ; Input position
+    mov     r12, 0              ; Output position
 
 process_char:
     cmp     r11, r10            ; Check if we've processed all input
-    jge     write_output        ; If yes, write the output buffer
+    jge     flush_pending_spaces ; If yes, flush pending spaces then write
     
     movzx   rax, byte [buffer + r11] ; Get current character
     inc     r11                 ; Move to next character
-    
-    cmp     r14, 0              ; Are we at the start of a line?
-    jne     not_line_start      ; If not, handle differently
+ 
+    cmp     al, WHITESPACE_SPACE
+    je      handle_space
 
-    cmp     al, WHITESPACE_SPACE ; Is it a space?
-    jne     check_tab           ; If not, check if it's a tab
+    cmp     r14, 0
+    je      handle_non_space
+    call    emit_pending_spaces
 
-    mov     byte [spaces + r15], al ; Store space in temporary buffer
-    inc     r15                 ; Increment space counter
+handle_non_space:
+    cmp     al, WHITESPACE_TAB
+    je      handle_tab
 
-    cmp     r15, tab_size
-    jl      process_char        ; If not enough spaces yet, continue
+    cmp     al, WHITESPACE_NL
+    je      handle_newline
 
-    mov     byte [output + r12], WHITESPACE_TAB ; Add tab to output
-    inc     r12                 ; Move output position
-    mov     r15, 0              ; Reset space counter
+    mov     byte [output + r12], al
+    inc     r12
+    inc     r13
+    jmp     process_char
+
+handle_space:
+    inc     r14                 ; Keep pending until tab stop reached
+    inc     r13
+    test    r13, tab_size - 1
+    jne     process_char
+    mov     byte [output + r12], WHITESPACE_TAB
+    inc     r12
+    xor     r14, r14
+    jmp     process_char
+
+handle_tab:
+    mov     byte [output + r12], WHITESPACE_TAB
+    inc     r12
+    add     r13, tab_size
+    and     r13, -tab_size      ; Next tab stop
+    jmp     process_char
+
+handle_newline:
+    mov     byte [output + r12], WHITESPACE_NL
+    inc     r12
+    xor     r13, r13
+    xor     r14, r14
     jmp     process_char        ; Continue processing
-    
-check_tab:
-    cmp     al, WHITESPACE_TAB  ; Is it a tab?
-    jne     flush_spaces        ; If not, flush any pending spaces
 
-    mov     r15, 0              ; Reset space counter
-    mov     byte [output + r12], WHITESPACE_TAB ; Add tab to output
-    inc     r12                 ; Move output position
-    jmp     process_char        ; Continue processing
-    
-flush_spaces:
+flush_pending_spaces:
+    cmp     r14, 0
+    je      write_output
+    call    emit_pending_spaces
 
-    cmp     r15, 0              ; Any spaces to flush?
-    je      regular_char        ; If not, handle as regular character
-
-    mov     rcx, r15            ; Set counter to number of spaces
-    mov     r13, 0              ; Initialize index
-    
-copy_spaces:
-    mov     bl, byte [spaces + r13] ; Get space from temp buffer
-    mov     byte [output + r12], bl ; Copy to output buffer
-    inc     r12                 ; Advance output position
-    inc     r13                 ; Advance temp buffer position
-    loop    copy_spaces         ; Continue until all spaces copied
-    
-    mov     r15, 0              ; Reset space counter
-
-
-regular_char:
-
-    mov     byte [output + r12], al ; Add the character to output
-    inc     r12                 ; Move output position
-    mov     r14, 1              ; Set flag to indicate not at line start
-    jmp     process_char        ; Continue processing
-    
-not_line_start:
-
-    cmp     al, WHITESPACE_NL   ; Is it a newline?
-    jne     copy_char           ; If not, just copy it
-
-    mov     byte [output + r12], al ; Add newline to output
-    inc     r12                 ; Move output position
-    mov     r14, 0              ; Reset to start of line
-    jmp     process_char        ; Continue processing
-    
-copy_char:
-
-    mov     byte [output + r12], al ; Add character to output
-    inc     r12                 ; Move output position
-    jmp     process_char        ; Continue processing
-    
 write_output:
 
     mov     rax, SYS_WRITE
@@ -160,6 +140,17 @@ write_output:
     syscall
 
     jmp     read_loop
+
+emit_pending_spaces:
+    cmp     r14, 0
+    je      .done
+.loop:
+    mov     byte [output + r12], WHITESPACE_SPACE
+    inc     r12
+    dec     r14
+    jne     .loop
+.done:
+    ret
     
 cleanup:
 
