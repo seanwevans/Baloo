@@ -1,9 +1,23 @@
 #!/usr/bin/env bash
 # Benchmark Baloo's assembly utilities against system utilities.
+#
+# Usage: run from any working directory after `make`; this script resolves
+# the repository root from its own location and uses <repo>/bin for Baloo binaries.
 
 set -e
 
-BALOOBIN="$(dirname "$0")/bin"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BALOOBIN="$REPO_ROOT/bin"
+
+
+# Verify every benchmarked Baloo command resolves to a built binary in bin/
+for cmd in cat echo true false base64; do
+  if [[ ! -x "$BALOOBIN/$cmd" ]]; then
+    echo "Missing benchmark binary: $BALOOBIN/$cmd. Run 'make' from repo root first." >&2
+    exit 1
+  fi
+done
 
 # Ensure hyperfine is installed
 if ! command -v hyperfine >/dev/null; then
