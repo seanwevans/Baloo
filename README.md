@@ -23,8 +23,15 @@ Install `bats`, `bats-assert`, and `bats-support` then run:
 
 ## 📐 Formatting
 
-Use `scripts/asmfmt.py` to keep assembly files consistent. By default it indents instructions with four spaces and aligns comments to column 40.
-`python3 scripts/asmfmt.py src/example.asm`
+Canonical style rules:
+- Makefile recipe lines use **tabs**.
+- No trailing whitespace in tracked text files.
+- NASM labels/directives stay at column 0; instructions use 4-space indentation; inline comments are aligned to column 40.
+
+Commands:
+- Apply formatting: `make format`
+- Validate formatting only: `make lint-format`
+- Single file: `python3 scripts/asmfmt.py src/example.asm`
 
 ## Catalog
 - [`alias`](src/alias.asm) ✅ Defines or displays aliases
@@ -182,7 +189,7 @@ Use `scripts/asmfmt.py` to keep assembly files consistent. By default it indents
 - [`xargs`](src/xargs.asm) ✅ Construct argument lists and invoke utility
 - [`yes`](src/yes.asm) ✅ Prints a string repeatedly
 ## Benchmark
-Run `make` to build all binaries, then execute `./benchmark.sh` to compare a few Baloo programs against the system implementations using `hyperfine`.
+Run `make` to build all binaries, then execute `tests/benchmark.sh` to compare a few Baloo programs against the system implementations using `hyperfine`.
 
 ## License
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

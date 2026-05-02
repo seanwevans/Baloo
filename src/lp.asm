@@ -1,27 +1,27 @@
 ; src/lp.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    buffer      resb 4096       ; buffer for reading
+    buffer      resb 4096               ;buffer for reading
     buffer_size equ 4096
     printer_fd  resq 1
 
 section .data
     printer_dev1 db "/dev/usb/lp0", 0
     printer_dev2 db "/dev/lp0", 0
-    printer_err  db "lp: cannot open printer", WHITESPACE_NL
+printer_err  db "lp: cannot open printer", WHITESPACE_NL
     printer_err_len equ $ - printer_err
 
 section .text
-    global _start
-    global open_printer
-    global send_fd
+global _start
+global open_printer
+global send_fd
 
 _start:
-    pop         r12             ; argc
-    mov         rbx, rsp        ; argv pointer
-    dec         r12             ; skip program name
+    pop         r12                     ;argc
+    mov         rbx, rsp                ;argv pointer
+    dec         r12                     ;skip program name
 
     call        open_printer
 
@@ -31,7 +31,7 @@ _start:
 .arg_loop:
     cmp         r12, 0
     je          .done
-    mov         rdi, [rbx]      ; filename pointer
+    mov         rdi, [rbx]              ;filename pointer
     add         rbx, 8
     push        rbx
     push        r12
@@ -44,7 +44,7 @@ _start:
     mov         rdi, rax
     call        send_fd
     mov         rax, SYS_CLOSE
-    mov         rdi, rdi        ; fd already in rdi
+    mov         rdi, rdi                ;fd already in rdi
     syscall
     pop         r12
     pop         rbx

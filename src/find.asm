@@ -1,17 +1,17 @@
 ; src/find.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 8192
-%define DT_DIR 4
+    %define BUFFER_SIZE 8192
+    %define DT_DIR 4
 
-struc dirent64
+    struc dirent64
     .d_ino      resq 1
     .d_off      resq 1
     .d_reclen   resw 1
     .d_type     resb 1
     .d_name     resb 1
-endstruc
+    endstruc
 
 section .bss
     buffer      resb BUFFER_SIZE
@@ -22,18 +22,18 @@ section .data
     dot         db '.',0
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                ; argc
-    mov rsi, rsp           ; argv pointer
+    pop rcx                             ;argc
+    mov rsi, rsp                        ;argv pointer
     cmp rcx, 1
     je .use_dot
 
-    pop rdi                ; skip program name
+    pop rdi                             ;skip program name
 
 .arg_loop:
-    pop rdi                ; next path
+    pop rdi                             ;next path
     call find_dir
     dec rcx
     cmp rcx, 1
@@ -53,7 +53,7 @@ find_dir:
     push r14
     push r15
 
-    mov r14, rdi           ; save path pointer
+    mov r14, rdi                        ;save path pointer
     mov rsi, rdi
     call strlen
     mov rdx, rbx
@@ -88,7 +88,7 @@ find_dir:
     movzx r10, word [rbx + dirent64.d_reclen]
     lea rsi, [rbx + dirent64.d_name]
 
-    ; skip '.' and '..'
+; skip '.' and '..'
     cmp byte [rsi], '.'
     jne .not_special
     cmp byte [rsi + 1], 0

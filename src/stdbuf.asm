@@ -1,6 +1,6 @@
 ; src/stdbuf.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     buf_i      resb 64
@@ -8,7 +8,7 @@ section .bss
     buf_e      resb 64
 
 section .data
-    usage_msg  db "Usage: stdbuf [-i MODE] [-o MODE] [-e MODE] COMMAND [ARGS...]", 10
+usage_msg  db "Usage: stdbuf [-i MODE] [-o MODE] [-e MODE] COMMAND [ARGS...]", 10
     usage_len  equ $ - usage_msg
     prefix_i   db "_STDBUF_I="
     prefix_i_len equ $ - prefix_i
@@ -18,22 +18,22 @@ section .data
     prefix_e_len equ $ - prefix_e
 
 section .text
-    global _start
+global _start
 
 ;-----------------------------------------------------
 _start:
-    pop     rbx                 ; argc
-    mov     r12, rsp            ; argv pointer
-    lea     r13, [r12 + rbx*8 + 8]  ; envp pointer
+    pop     rbx                         ;argc
+    mov     r12, rsp                    ;argv pointer
+    lea     r13, [r12 + rbx*8 + 8]      ;envp pointer
     cmp     rbx, 2
     jl      show_usage
 
-    mov     r14, 0              ; ptr for _STDBUF_I
-    mov     r15, 0              ; ptr for _STDBUF_O
-    xor     r10, r10            ; ptr for _STDBUF_E (use r10)
+    mov     r14, 0                      ;ptr for _STDBUF_I
+    mov     r15, 0                      ;ptr for _STDBUF_O
+    xor     r10, r10                    ;ptr for _STDBUF_E (use r10)
 
-    add     r12, 8              ; skip program name
-    dec     rbx                 ; remaining args
+    add     r12, 8                      ;skip program name
+    dec     rbx                         ;remaining args
 
 parse_opts:
     cmp     rbx, 0
@@ -125,10 +125,10 @@ need_command:
     cmp     rbx, 1
     jl      show_usage
 
-    mov     rdi, [r12]          ; command path
-    mov     rsi, r12            ; argv pointer for exec
+    mov     rdi, [r12]                  ;command path
+    mov     rsi, r12                    ;argv pointer for exec
 
-    ; if no modifiers, exec with original env
+; if no modifiers, exec with original env
     mov     rdx, r13
     test    r14, r14
     jnz     build_env_array
@@ -138,7 +138,7 @@ need_command:
     jz      exec_cmd
 
 build_env_array:
-    ; count original env entries
+; count original env entries
     mov     rbx, 0
     mov     r11, r13
 count_loop:
@@ -163,10 +163,10 @@ co:
 ce:
     mov     rdx, rbx
     add     rdx, rcx
-    inc     rdx               ; for NULL
-    shl     rdx, 3            ; multiply by 8
+    inc     rdx                         ;for NULL
+    shl     rdx, 3                      ;multiply by 8
     sub     rsp, rdx
-    mov     r9, rsp            ; new envp pointer
+    mov     r9, rsp                     ;new envp pointer
     mov     rax, 0
 
     mov     r8, 0

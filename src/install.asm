@@ -1,39 +1,39 @@
 ; src/install.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 4096
+    %define BUFFER_SIZE 4096
 
 section .bss
     buffer      resb BUFFER_SIZE
     dest_ptr    resq 1
 
 section .data
-    usage_msg       db "Usage: install SOURCE DEST", 10
+usage_msg       db "Usage: install SOURCE DEST", 10
     usage_len       equ $ - usage_msg
-    chmod_err_msg   db "install: failed to set permissions", 10
+chmod_err_msg   db "install: failed to set permissions", 10
     chmod_err_len   equ $ - chmod_err_msg
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rcx                 ; argc
+    pop     rcx                         ;argc
     cmp     rcx, 3
     jne     usage_error
 
-    pop     rdi                 ; skip program name
+    pop     rdi                         ;skip program name
 
-    pop     rsi                 ; source path
+    pop     rsi                         ;source path
     mov     rdi, STDIN_FILENO
     call    open_file
-    mov     r8, rax             ; source fd
+    mov     r8, rax                     ;source fd
 
-    pop     rsi                 ; destination path
-    mov     [dest_ptr], rsi     ; save for chmod
+    pop     rsi                         ;destination path
+    mov     [dest_ptr], rsi             ;save for chmod
     mov     rdi, STDOUT_FILENO
     call    open_dest_file
-    mov     r9, rax             ; dest fd
+    mov     r9, rax                     ;dest fd
 
 copy_loop:
     mov     rax, SYS_READ

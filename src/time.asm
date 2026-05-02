@@ -1,19 +1,19 @@
 ; src/time.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    start_ts    resq 2                ; struct timespec for start
-    end_ts      resq 2                ; struct timespec for end
-    rusage_buf  resb 144              ; struct rusage
+    start_ts    resq 2                  ;struct timespec for start
+    end_ts      resq 2                  ;struct timespec for end
+    rusage_buf  resb 144                ;struct rusage
     argv_ptr    resq 1
     env_ptr     resq 1
     num_buf     resb 32
 
 section .data
-    usage_msg   db "Usage: time command [args...]", 10
+usage_msg   db "Usage: time command [args...]", 10
     usage_len   equ $ - usage_msg
-    exec_err    db "time: exec failed", 10
+exec_err    db "time: exec failed", 10
     exec_err_len equ $ - exec_err
     real_str    db "real ",0
     user_str    db "user ",0
@@ -21,46 +21,46 @@ section .data
     newline     db WHITESPACE_NL
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rax                 ; argc
-    mov     rbx, rsp            ; argv pointer
-    lea     r12, [rbx + rax*8 + 8] ; env pointer
+    pop     rax                         ;argc
+    mov     rbx, rsp                    ;argv pointer
+    lea     r12, [rbx + rax*8 + 8]      ;env pointer
     cmp     rax, 2
     jl      .usage
-    add     rbx, 8              ; argv[1]
+    add     rbx, 8                      ;argv[1]
     mov     [argv_ptr], rbx
     mov     [env_ptr], r12
 
-    ; get start time
+; get start time
     mov     rax, SYS_CLOCK_GETTIME
     mov     rdi, CLOCK_MONOTONIC
     mov     rsi, start_ts
     syscall
 
-    ; fork
+; fork
     mov     rax, SYS_FORK
     syscall
     test    rax, rax
     je      .child
-    mov     r12, rax            ; child pid
+    mov     r12, rax                    ;child pid
 
-    ; parent waits
+; parent waits
     mov     rax, SYS_WAIT4
-    mov     rdi, r12            ; pid
-    xor     rsi, rsi            ; status
-    xor     rdx, rdx            ; options
+    mov     rdi, r12                    ;pid
+    xor     rsi, rsi                    ;status
+    xor     rdx, rdx                    ;options
     mov     r10, rusage_buf
     syscall
 
-    ; end time
+; end time
     mov     rax, SYS_CLOCK_GETTIME
     mov     rdi, CLOCK_MONOTONIC
     mov     rsi, end_ts
     syscall
 
-    ; compute and print
+; compute and print
     write   STDOUT_FILENO, real_str, 5
     mov     rax, [end_ts]
     sub     rax, [start_ts]
@@ -84,7 +84,7 @@ _start:
     mov     rdi, [argv_ptr]
     mov     rsi, [argv_ptr]
     mov     rdx, [env_ptr]
-    mov     rdi, [rsi]          ; command path
+    mov     rdi, [rsi]                  ;command path
     mov     rax, SYS_EXECVE
     syscall
 

@@ -1,24 +1,24 @@
 ; src/groups.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    groups_buf  resd 256        ; buffer for group IDs (32-bit each)
-    numbuf      resb 16         ; temporary buffer for printing numbers
+    groups_buf  resd 256                ;buffer for group IDs (32-bit each)
+    numbuf      resb 16                 ;temporary buffer for printing numbers
 
 section .data
     newline     db 10
     space       db ' '
 
 section .text
-    global _start
+global _start
 
 _start:
     mov     rax, SYS_GETGID
     syscall
     test    rax, rax
     js      .error
-    mov     r13, rax            ; primary gid (match id -G ordering)
+    mov     r13, rax                    ;primary gid (match id -G ordering)
 
     mov     rax, SYS_GETEGID
     syscall
@@ -29,15 +29,15 @@ _start:
     call    print_num
 
     mov     rax, SYS_GETGROUPS
-    mov     rdi, 256            ; max groups
+    mov     rdi, 256                    ;max groups
     mov     rsi, groups_buf
     syscall
 
     test    rax, rax
     js      .error
 
-    mov     r12, rax            ; number of supplementary groups
-    xor     rbx, rbx            ; index
+    mov     r12, rax                    ;number of supplementary groups
+    xor     rbx, rbx                    ;index
 .next_group:
     cmp     rbx, r12
     je      .done

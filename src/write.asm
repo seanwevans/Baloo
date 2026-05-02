@@ -1,20 +1,20 @@
 ; src/write.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     buffer      resb 4096
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rax                ; argc
-    pop rbx                ; argv[0]
+    pop rax                             ;argc
+    pop rbx                             ;argv[0]
     cmp rax, 2
     jne .usage
 
-    pop rdi                ; tty path
+    pop rdi                             ;tty path
     mov rax, SYS_OPEN
     mov rsi, O_WRONLY
     xor rdx, rdx
@@ -23,7 +23,7 @@ _start:
     cmp rax, 0
     jl .fail_open
 
-    mov r12, rax           ; fd
+    mov r12, rax                        ;fd
 
 .read_loop:
     mov rax, SYS_READ
@@ -35,7 +35,7 @@ _start:
     test rax, rax
     jle .close_exit
 
-    mov r13, rax           ; bytes read
+    mov r13, rax                        ;bytes read
     mov rax, SYS_WRITE
     mov rdi, r12
     mov rsi, buffer

@@ -1,10 +1,10 @@
 ; src/id.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    groups_buf      resd 32     ; 32-bit group IDs
-    numbuf          resb 16     ; for printing numbers
+    groups_buf      resd 32             ;32-bit group IDs
+    numbuf          resb 16             ;for printing numbers
 
 section .data
     newline         db 10
@@ -15,14 +15,14 @@ section .data
     space           db " ", 0
 
 section .text
-    global          _start
+global          _start
 
 _start:
-    mov             rbx, [rsp]          ; argc
+    mov             rbx, [rsp]          ;argc
     cmp             rbx, 2
     jl              .mode_default
 
-    mov             rdi, [rsp + 16]     ; argv[1]
+    mov             rdi, [rsp + 16]     ;argv[1]
     call            parse_mode
     cmp             al, 'u'
     je              .mode_u
@@ -125,10 +125,10 @@ get_groups_count:
     ret
 
 print_groups_with_sep:
-    mov             r8, rdi             ; count
-    mov             r10, rsi            ; separator pointer
-    mov             r12, rdx            ; separator length
-    xor             r9, r9              ; index
+    mov             r8, rdi             ;count
+    mov             r10, rsi            ;separator pointer
+    mov             r12, rdx            ;separator length
+    xor             r9, r9              ;index
 .loop:
     cmp             r9, r8
     jae             .ret
@@ -148,12 +148,12 @@ print_groups_with_sep:
 .ret:
     ret
 
-print_num:    
+print_num:
     mov             rax, rdi
     mov             rsi, numbuf + 15
     mov             byte [rsi], 0
     mov             rcx, 10
-    
+
 .next_digit:
     xor             rdx, rdx
     div             rcx

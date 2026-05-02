@@ -1,21 +1,21 @@
 ; src/wait.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define SYS_WAIT4 61
+    %define SYS_WAIT4 61
 
 section .bss
     status  resd 1
 
 section .data
-    usage_msg db "Usage: wait [pid]", 10
+usage_msg db "Usage: wait [pid]", 10
     usage_len equ $ - usage_msg
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                ; argc
+    pop rcx                             ;argc
     mov rbp, rsp
     cmp rcx, 1
     je .no_args
@@ -24,15 +24,15 @@ _start:
     jmp .usage
 
 .no_args:
-    mov rdi, -1            ; wait for any child
+    mov rdi, -1                         ;wait for any child
     jmp .do_wait
 
 .one_arg:
-    mov rdi, [rbp]         ; skip prog name already at rbp?
-    ; Actually rbp currently points to argv[0]; so [rbp] -> argv0, we want argv1
-    ; Wait: after pop rcx, rbp points to argv0. So we need [rbp+8]
+    mov rdi, [rbp]                      ;skip prog name already at rbp?
+; Actually rbp currently points to argv[0]; so [rbp] -> argv0, we want argv1
+; Wait: after pop rcx, rbp points to argv0. So we need [rbp+8]
     mov rdi, [rbp+8]
-    call str_to_int        ; pid in rax
+    call str_to_int                     ;pid in rax
     mov rdi, rax
     jmp .do_wait
 
@@ -43,8 +43,8 @@ _start:
 .do_wait:
     mov rax, SYS_WAIT4
     mov rsi, status
-    xor rdx, rdx           ; options = 0
-    xor r10, r10           ; rusage = NULL
+    xor rdx, rdx                        ;options = 0
+    xor r10, r10                        ;rusage = NULL
     syscall
     test rax, rax
     js .error

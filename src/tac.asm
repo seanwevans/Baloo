@@ -1,5 +1,5 @@
 ; src/tac.asm
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     buffer      resb 65536
@@ -7,11 +7,11 @@ section .bss
     buffer_size equ 65536
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop r12             ; argc
-    pop rdi             ; skip program name
+    pop r12                             ;argc
+    pop rdi                             ;skip program name
     dec r12
     cmp r12, 0
     je read_stdin
@@ -19,7 +19,7 @@ _start:
 process_args:
     cmp r12, 0
     je exit_success
-    pop rdi             ; filename
+    pop rdi                             ;filename
     call tac_file
     dec r12
     jmp process_args
@@ -56,11 +56,11 @@ tac_fd:
     syscall
     cmp rax, 0
     jl error_exit
-    mov rbx, rax            ; bytes_read
+    mov rbx, rax                        ;bytes_read
 
-    mov qword [line_pos], 0 ; first line start index
-    mov rcx, 1              ; line count
-    xor r8, r8              ; current index
+    mov qword [line_pos], 0             ;first line start index
+    mov rcx, 1                          ;line count
+    xor r8, r8                          ;current index
 
 .scan_loop:
     cmp r8, rbx
@@ -71,7 +71,7 @@ tac_fd:
     mov r9, rbx
     dec r9
     cmp r8, r9
-    je .not_nl              ; newline at end -> ignore
+    je .not_nl                          ;newline at end -> ignore
     lea rax, [r8 + 1]
     mov [line_pos + rcx*8], rax
     inc rcx
@@ -80,14 +80,14 @@ tac_fd:
     jmp .scan_loop
 
 .scan_done:
-    mov r15, rcx            ; total line count
+    mov r15, rcx                        ;total line count
     mov r14, r15
-    dec r14                 ; r14 = last line index
+    dec r14                             ;r14 = last line index
 
 .output_loop:
     cmp r14, -1
     jle .done
-    mov r9, [line_pos + r14*8] ; start
+    mov r9, [line_pos + r14*8]          ;start
     mov r10, r14
     inc r10
     cmp r10, r15

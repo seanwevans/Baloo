@@ -1,13 +1,13 @@
 ; src/getopts.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     printed_flag    resb 1
     charbuf         resb 1
 
 section .data
-    usage_msg   db "Usage: getopts OPTSTRING [ARGS...]", 10
+usage_msg   db "Usage: getopts OPTSTRING [ARGS...]", 10
     usage_len   equ $ - usage_msg
     space_char  db ' '
     dash_char   db '-'
@@ -15,17 +15,17 @@ section .data
     newline     db 10
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                     ; argc
+    pop rcx                             ;argc
     cmp rcx, 2
-    jb  usage                   ; need at least OPTSTRING
+    jb  usage                           ;need at least OPTSTRING
 
-    pop rax                     ; skip program name
-    pop r14                     ; optstring
-    dec rcx                     ; remaining arg count
-    mov r13, rsp                ; pointer to args
+    pop rax                             ;skip program name
+    pop r14                             ;optstring
+    dec rcx                             ;remaining arg count
+    mov r13, rsp                        ;pointer to args
     mov byte [printed_flag], 0
 
 next_arg:
@@ -44,24 +44,24 @@ next_arg:
     cmp byte [rbx+2], 0
     jne short_opt
 
-    ; handle "--" terminator
+; handle "--" terminator
     call emit_space
     write STDOUT_FILENO, dashdash, 3
     jmp print_remaining
 
 short_opt:
     mov rsi, rbx
-    inc rsi                     ; point to first option char
+    inc rsi                             ;point to first option char
 opt_char_loop:
     mov bl, [rsi]
     test bl, bl
     jz  next_arg
 
-    mov rdi, r14                ; optstring
+    mov rdi, r14                        ;optstring
     mov dl, bl
     call find_option
     test rax, rax
-    jz  usage                   ; invalid option
+    jz  usage                           ;invalid option
 
     call emit_space
     mov dil, '-'
@@ -69,17 +69,17 @@ opt_char_loop:
     mov dil, bl
     call write_ch
 
-    cmp byte [rax+1], ':'       ; requires argument?
+cmp byte [rax+1], ':'       ; requires argument?
     jne no_argument
 
     inc rsi
-    mov rdx, rsi                ; possible attached argument
+    mov rdx, rsi                        ;possible attached argument
     mov bl, [rdx]
     test bl, bl
     jnz have_arg_same
 
     cmp rcx, 0
-    je  usage                   ; missing argument
+    je  usage                           ;missing argument
     mov rdx, [r13]
     add r13, 8
     dec rcx
@@ -102,7 +102,7 @@ non_option:
     jmp print_remaining
 
 print_remaining:
-    ; print rest of arguments
+; print rest of arguments
 print_loop:
     cmp rcx, 0
     je done
@@ -174,7 +174,7 @@ write_ch:
 ; write null terminated string at rdi
 write_str:
     mov rsi, rdi
-    call strlen                ; length -> rbx
+    call strlen                         ;length -> rbx
     write STDOUT_FILENO, rsi, rbx
     ret
 

@@ -1,23 +1,23 @@
 ; src/who.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     utmp_buf        resb UTMP_SIZE
 
 section .data
     utmp_file       db "/var/run/utmp", 0
-    errmsg_open     db "Error: Cannot open /var/run/utmp", 10
+errmsg_open     db "Error: Cannot open /var/run/utmp", 10
     errmsg_open_len equ $ - errmsg_open
-    errmsg_read     db "Error: Cannot read /var/run/utmp", 10
+errmsg_read     db "Error: Cannot read /var/run/utmp", 10
     errmsg_read_len equ $ - errmsg_read
     newline         db WHITESPACE_NL
     tab             db 9
 
 section .text
-    global          _start
+global          _start
 
-_start:    
+_start:
     mov             rax, SYS_OPEN
     mov             rdi, utmp_file
     mov             rsi, O_RDONLY
@@ -27,13 +27,13 @@ _start:
     cmp             rax, 0
     jl              .open_error
 
-    mov             r12, rax            ; file descriptor
+    mov             r12, rax            ;file descriptor
 
-.read_loop:    
+.read_loop:
     mov             rax, SYS_READ
-    mov             rdi, r12            ; file descriptor
-    mov             rsi, utmp_buf       ; buffer address
-    mov             rdx, UTMP_SIZE      ; size of one record
+    mov             rdi, r12            ;file descriptor
+    mov             rsi, utmp_buf       ;buffer address
+    mov             rdx, UTMP_SIZE      ;size of one record
     syscall
 
     cmp             rax, 0
@@ -41,33 +41,33 @@ _start:
 
     cmp             rax, UTMP_SIZE
     jne             .read_error
-    
+
     mov             ax, word [utmp_buf + UT_TYPE_OFF]
     cmp             ax, EMPTY
-    je              .read_loop          ; If it's an empty record, skip it and read the next
+    je              .read_loop          ;If it's an empty record, skip it and read the next
 
-    mov             rdi, utmp_buf + UT_USER_OFF ; Address of username field in buffer
-    mov             rsi, UT_NAMESIZE    ; Max size of the field
+    mov             rdi, utmp_buf + UT_USER_OFF ;Address of username field in buffer
+    mov             rsi, UT_NAMESIZE    ;Max size of the field
     call            print_field_padded
-    
+
     mov             rax, SYS_WRITE
     mov             rdi, STDOUT_FILENO
     mov             rsi, tab
     mov             rdx, 1
     syscall
-    
-    mov             rdi, utmp_buf + UT_LINE_OFF ; Address of line field in buffer
-    mov             rsi, UT_LINESIZE    ; Max size of the field
-    call            print_field_padded  ; Call helper function to print it
-    
+
+    mov             rdi, utmp_buf + UT_LINE_OFF ;Address of line field in buffer
+    mov             rsi, UT_LINESIZE    ;Max size of the field
+    call            print_field_padded  ;Call helper function to print it
+
     mov             rax, SYS_WRITE
     mov             rdi, STDOUT_FILENO
     mov             rsi, tab
     mov             rdx, 1
     syscall
-    
+
     mov             eax, dword [utmp_buf + UT_TV_OFF]
-    call            print_uint32_dec    ; Call helper to print unsigned int in eax
+    call            print_uint32_dec    ;Call helper to print unsigned int in eax
 
     mov             rax, SYS_WRITE
     mov             rdi, STDOUT_FILENO
@@ -75,11 +75,11 @@ _start:
     mov             rdx, 1
     syscall
 
-    jmp             .read_loop          ; Go back to read the next record
+    jmp             .read_loop          ;Go back to read the next record
 
-.done:    
-    cmp             rax, 0              ; Check rax from the last SYS_READ call
-    jl              .read_error         ; read error, jump to handler
+.done:
+    cmp             rax, 0              ;Check rax from the last SYS_READ call
+    jl              .read_error         ;read error, jump to handler
 
 .close_and_exit_ok:
     mov             rax, SYS_CLOSE
@@ -87,7 +87,7 @@ _start:
     syscall
     exit            0
 
-.open_error:    
+.open_error:
     mov             rax, SYS_WRITE
     mov             rdi, STDERR_FILENO
     mov             rsi, errmsg_open
@@ -101,9 +101,9 @@ _start:
     mov             rsi, errmsg_read
     mov             rdx, errmsg_read_len
     syscall
-    
+
     mov             rax, SYS_CLOSE
-    mov             rdi, r12            ; file descriptor
+    mov             rdi, r12            ;file descriptor
     syscall
     exit            1
 
@@ -115,24 +115,24 @@ print_field_padded:
 .scan_loop:
     cmp             rcx, 0
     je              .do_write
-    
-    cmp             byte [rsi], 0       ; Check if the current byte is a null terminator
+
+    cmp             byte [rsi], 0       ;Check if the current byte is a null terminator
     je              .do_write
-    
-    inc             rsi                 ; Move scan pointer to the next byte
-    inc             rdx                 ; Increment the length count
-    dec             rcx                 ; Decrement the max size counter
-    jmp             .scan_loop          ; Continue scanning
+
+    inc             rsi                 ;Move scan pointer to the next byte
+    inc             rdx                 ;Increment the length count
+    dec             rcx                 ;Decrement the max size counter
+    jmp             .scan_loop          ;Continue scanning
 
 .do_write:
     cmp             rdx, 0
     jle             .skip_write
-    
+
     mov             rax, SYS_WRITE
-    mov             rsi, rdi            ; buffer address
+    mov             rsi, rdi            ;buffer address
     mov             rdi, STDOUT_FILENO
     syscall
-    
+
 .skip_write:
     ret
 
@@ -145,25 +145,25 @@ print_uint32_dec:
     mov             ebx, 10
     test            eax, eax
     jnz             .conversion_loop
-        
+
     dec             rdi
     mov             byte [rdi], '0'
     jmp             .print_number
 
 .conversion_loop:
-    xor             edx, edx            ; Clear edx for 32-bit division (edx:eax / ebx)
-    div             ebx                 ; eax = quotient, edx = remainder
-    add             dl, '0'             ; Convert remainder (0-9) to ASCII ('0'-'9')
-    dec             rdi                 ; Move buffer pointer back
-    mov             [rdi], dl           ; Store ASCII digit in buffer
-    test            eax, eax            ; Check if quotient is zero
-    jnz             .conversion_loop    ; If not zero, continue loop
+xor             edx, edx            ; Clear edx for 32-bit division (edx:eax / ebx)
+    div             ebx                 ;eax = quotient, edx = remainder
+    add             dl, '0'             ;Convert remainder (0-9) to ASCII ('0'-'9')
+    dec             rdi                 ;Move buffer pointer back
+    mov             [rdi], dl           ;Store ASCII digit in buffer
+    test            eax, eax            ;Check if quotient is zero
+    jnz             .conversion_loop    ;If not zero, continue loop
 
-.print_number:    
+.print_number:
     sub             rcx, rdi
-    mov             rdx, rcx            ; length of the string    
+    mov             rdx, rcx            ;length of the string
     mov             rax, SYS_WRITE
-    mov             rsi, rdi            ; start of digits
+    mov             rsi, rdi            ;start of digits
     mov             rdi, STDOUT_FILENO
     syscall
 

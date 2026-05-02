@@ -1,10 +1,10 @@
 ; src/tty.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    termios_buf resb 32             ; dummy termios struct
-    result_buf  resb 128            ; for readlink result
+    termios_buf resb 32                 ;dummy termios struct
+    result_buf  resb 128                ;for readlink result
 
 section .data
     fd_path     db "/proc/self/fd/0", 0
@@ -12,30 +12,30 @@ section .data
     newline     db WHITESPACE_NL
 
 section .text
-    global      _start
+global      _start
 
-_start:    
+_start:
     mov         rax, SYS_IOCTL
     mov         rdi, STDIN_FILENO
-    mov         rsi, 0x5401         ; TCGETS
+    mov         rsi, 0x5401             ;TCGETS
     lea         rdx, [termios_buf]
     syscall
 
     test        rax, rax
-    js          .notty              ; not a tty if ioctl fails
-    
-    mov         rax, SYS_READLINK   ; readlink("/proc/self/fd/0") → result_buf
+    js          .notty                  ;not a tty if ioctl fails
+
+    mov         rax, SYS_READLINK       ;readlink("/proc/self/fd/0") → result_buf
     lea         rdi, [fd_path]
     lea         rsi, [result_buf]
     mov         rdx, 128
     syscall
 
     test        rax, rax
-    js          .notty              ; should never happen here
-    
+    js          .notty                  ;should never happen here
+
     mov         rdi, STDOUT_FILENO
     mov         rsi, result_buf
-    mov         rdx, rax            ; bytes read
+    mov         rdx, rax                ;bytes read
     mov         rax, SYS_WRITE
     syscall
 

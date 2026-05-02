@@ -1,8 +1,8 @@
 ; src/cksum.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 4096
+    %define BUFFER_SIZE 4096
 
 section .bss
     buffer      resb BUFFER_SIZE
@@ -48,23 +48,23 @@ crc_table:
     dd 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                    ; argc
-    mov rbp, rsp               ; argv pointer
+    pop rcx                             ;argc
+    mov rbp, rsp                        ;argv pointer
     cmp rcx, 1
     jle use_stdin
 
     mov rbx, rbp
-    add rbx, 8                 ; skip program name
+    add rbx, 8                          ;skip program name
 
 .arg_loop:
-    mov rsi, [rbx]             ; filename pointer
+    mov rsi, [rbx]                      ;filename pointer
     mov rdi, STDIN_FILENO
-    call open_file             ; returns fd in rax
-    mov r8, rax                ; fd
-    call do_cksum              ; compute and print
+    call open_file                      ;returns fd in rax
+    mov r8, rax                         ;fd
+    call do_cksum                       ;compute and print
     cmp r8, STDIN_FILENO
     je .skip_close
     mov rax, SYS_CLOSE
@@ -88,8 +88,8 @@ use_stdin:
 do_cksum:
     push rbp
     mov rbp, rsp
-    mov r12d, 0xFFFFFFFF       ; crc
-    xor r13, r13               ; total bytes
+    mov r12d, 0xFFFFFFFF                ;crc
+    xor r13, r13                        ;total bytes
 .read_loop:
     mov rax, SYS_READ
     mov rdi, r8

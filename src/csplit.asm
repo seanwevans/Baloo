@@ -1,9 +1,9 @@
 ; src/csplit.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    buffer       resb 1            ; byte buffer
+    buffer       resb 1                 ;byte buffer
     in_fd        resq 1
     out_fd       resq 1
     line_count   resq 1
@@ -13,32 +13,32 @@ section .bss
 section .data
     file1        db "xaa", 0
     file2        db "xab", 0
-    usage_msg    db "Usage: csplit FILE NUM", 10
+usage_msg    db "Usage: csplit FILE NUM", 10
     usage_len    equ $ - usage_msg
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rbx                     ; argc
+    pop     rbx                         ;argc
     cmp     rbx, 3
     jne     usage
 
-    pop     rax                     ; skip program name
-    pop     rsi                     ; filename
+    pop     rax                         ;skip program name
+    pop     rsi                         ;filename
     mov     rdi, STDIN_FILENO
-    call    open_file               ; -> rax
+    call    open_file                   ;-> rax
     mov     [in_fd], rax
 
-    pop     rdi                     ; NUM
-    call    atoi                    ; -> rax
+    pop     rdi                         ;NUM
+    call    atoi                        ;-> rax
     test    rax, rax
     jle     usage
     mov     [split_after], rax
 
     mov     rdi, STDOUT_FILENO
     mov     rsi, file1
-    call    open_dest_file          ; -> rax
+    call    open_dest_file              ;-> rax
     mov     [out_fd], rax
     xor     rcx, rcx
     mov     [line_count], rcx
@@ -79,7 +79,7 @@ read_loop:
     cmp     qword [line_count], rax
     jne     read_loop
 
-    ; switch to the second file only if we actually read more input
+; switch to the second file only if we actually read more input
     mov     byte [pending_cut], 1
     jmp     read_loop
 

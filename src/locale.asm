@@ -1,6 +1,6 @@
 ; src/locale.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
 
@@ -11,23 +11,23 @@ section .data
     lc_prefix       db "LC_",0
 
 section .text
-    global _start
+global _start
 
 _start:
     mov     rsi, rsp
-    mov     rdi, [rsi]      ; argc
-    add     rsi, 8          ; skip argc
+    mov     rdi, [rsi]                  ;argc
+    add     rsi, 8                      ;skip argc
 
 .skip_argv:
     cmp     rdi, 0
     jle     .find_env_null
-    add     rsi, 8          ; skip argv[i]
+    add     rsi, 8                      ;skip argv[i]
     dec     rdi
     jmp     .skip_argv
 
 .find_env_null:
-    add     rsi, 8          ; skip NULL after argv
-    mov     r12, rsi        ; r12 points to envp[0]
+    add     rsi, 8                      ;skip NULL after argv
+    mov     r12, rsi                    ;r12 points to envp[0]
 
 .loop_env:
     mov     rbx, [r12]
