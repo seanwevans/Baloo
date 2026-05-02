@@ -38,7 +38,7 @@ Commands:
 - [`ar`](src/ar.asm) ✅ Creates and maintains libraries
 - [`arch`](src/arch.asm) ✅ Prints machine hardware name
 - [`at`](src/at.asm) ✅ Executes commands at a later time
-- [`awk`](src/awk.asm) ⛔️ Pattern scanning and processing language
+- `awk` ⛔️ Pattern scanning and processing language
 - [`b2sum`](src/b2sum.asm) ✅ Computes and checks BLAKE2b message digest
 - [`base32`](src/base32.asm) ✅ Encodes or decodes Base32, and prints result to standard output
 - [`base64`](src/base64.asm) ✅ Encodes or decodes Base64, and prints result to standard output
@@ -69,7 +69,7 @@ Commands:
 - [`dirname`](src/dirname.asm) ✅ Strips non-directory suffix from file name
 - [`du`](src/du.asm) ✅ Shows disk usage on file systems
 - [`echo`](src/echo.asm) ✅ Displays a specified line of text
-- [`ed`](src/ed.asm) ⛔️ The standard text editor
+- `ed` ⛔️ The standard text editor
 - [`env`](src/env.asm) ✅ Run a program in a modified environment
 - [`expand`](src/expand.asm) ✅ Converts tabs to spaces
 - [`expr`](src/expr.asm) ✅ Evaluates expressions
@@ -102,7 +102,7 @@ Commands:
 - [`lp`](src/lp.asm) ✅ Send files to a printer
 - [`ls`](src/ls.asm) ✅ List directory contents with formatting
 - [`m4`](src/m4.asm) ✅ Macro processor
-- [`mailx`](src/mailx.asm) ⛔️ Process messages
+- `mailx` ⛔️ Process messages
 - [`man`](src/man.asm) ✅ Display system documentation
 - [`md5sum`](src/md5sum.asm) ✅ Computes and checks MD5 message digest
 - [`mesg`](src/mesg.asm) ✅ Permit or deny messages
@@ -110,7 +110,7 @@ Commands:
 - [`mkfifo`](src/mkfifo.asm) ✅ Makes named pipes (FIFOs)
 - [`mknod`](src/mknod.asm) ✅ Makes block or character special files
 - [`mktemp`](src/mktemp.asm) ✅ Creates a temporary file or directory
-- [`msgfmt`](src/msgfmt.asm) ⛔️ Create messages objects from messages object files
+- `msgfmt` ⛔️ Create messages objects from messages object files
 - [`mv`](src/mv.asm) ✅ Moves files or rename files
 - [`newgrp`](src/newgrp.asm) ✅ Change to a new group
 - [`ngettext`](src/ngettext.asm) ✅ Retrieve text string from messages object with plural form
@@ -120,41 +120,41 @@ Commands:
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors
 - [`numfmt`](src/numfmt.asm) ✅ Reformat numbers
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats
-- [`paste`](src/paste.asm) ⛔️ Merge corresponding or subsequent lines of files
-- [`patch`](src/patch.asm) ⛔️ Apply changes to files
-- [`pathchk`](src/pathchk.asm) ⛔️ Checks whether file names are valid or portable
-- [`pax`](src/pax.asm) ⛔️ Portable archive interchange
+- `paste` ⛔️ Merge corresponding or subsequent lines of files
+- `patch` ⛔️ Apply changes to files
+- `pathchk` ⛔️ Checks whether file names are valid or portable
+- `pax` ⛔️ Portable archive interchange
 - [`pinky`](src/pinky.asm) ✅ A lightweight version of finger
-- [`pr`](src/pr.asm) ⛔️ Paginate or columnate files for printing
+- `pr` ⛔️ Paginate or columnate files for printing
 - [`printenv`](src/printenv.asm) ✅ Prints environment variables
 - [`printf`](src/printf.asm) ✅ Formats and prints data
 - [`ps`](src/ps.asm) ✅ Report process status
-- [`ptx`](src/ptx.asm) ⛔️ Produces a permuted index of file contents
+- `ptx` ⛔️ Produces a permuted index of file contents
 - [`pwd`](src/pwd.asm) ✅ Prints the current working directory
-- [`read`](src/read.asm) ⛔️ Read a line from standard input
+- `read` ⛔️ Read a line from standard input
 - [`readlink`](src/readlink.asm) ✅ Print destination of a symbolic link
-- [`realpath`](src/realpath.asm) ⛔️ Returns the resolved absolute or relative path for a file
+- `realpath` ⛔️ Returns the resolved absolute or relative path for a file
 - [`renice`](src/renice.asm) ✅ Set nice values of running processes
 - [`rm`](src/rm.asm) ✅ Removes files/directories
 - [`rmdir`](src/rmdir.asm) ✅ Removes empty directories
-- [`runcon`](src/runcon.asm) ⛔️ Run command with specified security context
-- [`sed`](src/sed.asm) ⛔️ Stream editor
+- `runcon` ⛔️ Run command with specified security context
+- `sed` ⛔️ Stream editor
 - [`seq`](src/seq.asm) ✅ Prints a sequence of numbers
-- [`sh`](src/sh.asm) ⛔️ Shell, the standard command language interpreter
-- [`sha1sum`](src/sha1sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- [`sha224sum`](src/sha224sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- [`sha256sum`](src/sha256sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- [`sha384sum`](src/sha384sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- [`sha512sum`](src/sha512sum.asm) ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- `sh` ⛔️ Shell, the standard command language interpreter
+- `sha1sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- `sha224sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- `sha256sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- `sha384sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- `sha512sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
-- [`shuf`](src/shuf.asm) ⛔️ generates random permutations
+- `shuf` ⛔️ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
-- [`sort`](src/sort.asm) ⛔️ Sorts lines of text files
+- `sort` ⛔️ Sorts lines of text files
 - [`split`](src/split.asm) ✅ Splits a file into pieces
-- [`stat`](src/stat.asm) ⛔️ Returns data about an inode
+- `stat` ⛔️ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ✅ Controls buffering for commands that use stdio
 - [`strings`](src/strings.asm) ✅ Find printable strings in files
-- [`stty`](src/stty.asm) ⛔️ Changes and prints terminal line settings
+- `stty` ⛔️ Changes and prints terminal line settings
 - [`sum`](src/sum.asm) ✅ Checksums and counts the blocks in a file
 - [`sync`](src/sync.asm) ✅ Flushes file system buffers
 - [`tabs`](src/tabs.asm) ✅ Set terminal tabs
@@ -165,7 +165,7 @@ Commands:
 - [`time`](src/time.asm) ✅ Display elapsed, system and kernel time
 - [`timeout`](src/timeout.asm) ✅ Runs a command with a time limit
 - [`touch`](src/touch.asm) ✅ Changes file timestamps; creates file
-- [`tput`](src/tput.asm) ⛔️ Change terminal characteristics
+- `tput` ⛔️ Change terminal characteristics
 - [`tr`](src/tr.asm) ✅ Translates or deletes characters
 - [`true`](src/true.asm) ✅ Does nothing, but exits successfully
 - [`truncate`](src/truncate.asm) ✅ Shrink the size of a file to the specified size

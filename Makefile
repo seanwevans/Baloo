@@ -31,5 +31,8 @@ lint-format:
 test: all
 	bats --timing tests/test_all.bats
 
+check-readme-links:
+	python3 scripts/check_readme_links.py
+
 clean:
 	rm -f build/*.o bin/*

@@ -32,6 +32,10 @@ jobs:
       # make clean is unnecessary on a fresh GitHub-hosted runner, went straight to make
       run: make
 
+
+    - name: Verify README catalog links
+      run: make check-readme-links
+
     - name: Run Tests
       timeout-minutes: 5
       # Removed the 'timeout' utility wrapper since GitHub Actions provides native step timeouts

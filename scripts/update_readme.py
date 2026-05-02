@@ -5,10 +5,25 @@ import re
 from pathlib import Path
 
 
+def catalog_entry_line(entry: dict[str, object], src_dir: Path) -> str:
+    name = str(entry["name"])
+    asm_path = src_dir / f"{name}.asm"
+    status = "✅" if entry["isDone"] else "⛔️"
+    description = str(entry["description"])
+
+    if asm_path.exists():
+        name_rendered = f"[`{name}`](src/{name}.asm)"
+    else:
+        name_rendered = f"`{name}`"
+
+    return f"- {name_rendered} {status} {description}"
+
+
 def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     json_path = repo_root / "Baloo.json"
     readme_path = repo_root / "README.md"
+    src_dir = repo_root / "src"
 
     data = json.loads(json_path.read_text())
     total = len(data)
@@ -40,10 +55,7 @@ def main() -> None:
     if start is None or end is None:
         raise RuntimeError("Failed to locate catalog section in README")
 
-    catalog_lines = [
-        f"- [`{entry['name']}`](src/{entry['name']}.asm) {'✅' if entry['isDone'] else '⛔️'} {entry['description']}"
-        for entry in data
-    ]
+    catalog_lines = [catalog_entry_line(entry, src_dir) for entry in data]
 
     lines[start:end] = catalog_lines
     readme_path.write_text("\n".join(lines) + "\n")
