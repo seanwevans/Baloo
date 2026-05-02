@@ -1,8 +1,8 @@
 ; src/od.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 16
+    %define BUFFER_SIZE 16
 
 section .bss
     buffer      resb BUFFER_SIZE
@@ -15,17 +15,17 @@ section .data
     newline      db WHITESPACE_NL
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rdi                 ; argc
-    pop rsi                 ; argv[0]
+    pop rdi                             ;argc
+    pop rsi                             ;argv[0]
     cmp rdi, 1
     jle use_stdin
-    pop rsi                 ; filename
+    pop rsi                             ;filename
     mov rdi, STDIN_FILENO
-    call open_file          ; open file or use stdin
-    mov r12, rax            ; file descriptor
+    call open_file                      ;open file or use stdin
+    mov r12, rax                        ;file descriptor
     jmp read_loop
 
 use_stdin:
@@ -42,7 +42,7 @@ read_loop:
     cmp rax, 0
     jle done
 
-    mov rbx, rax            ; bytes read
+    mov rbx, rax                        ;bytes read
 
     mov rax, [offset]
     call print_int

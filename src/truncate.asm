@@ -1,29 +1,29 @@
 ; src/truncate.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     filesize    resq 1
 
 section .data
-    usage_msg   db "Usage: truncate -s <size> <file>", 10
+usage_msg   db "Usage: truncate -s <size> <file>", 10
     usage_len   equ $ - usage_msg
-    error_msg   db "Error: Could not truncate file", 10
+error_msg   db "Error: Could not truncate file", 10
     error_len   equ $ - error_msg
     opt_s       db "-s", 0
 
 section .text
-    global      _start
+global      _start
 
 _start:
-    pop         rcx                     ; argc
-    cmp         rcx, 4                  ; Need program name + -s + size + file
+    pop         rcx                     ;argc
+    cmp         rcx, 4                  ;Need program name + -s + size + file
     jne         print_usage
 
-    pop         rdi                     ; Drop program name
-    pop         r12                     ; option
-    pop         r13                     ; size
-    pop         r14                     ; file
+    pop         rdi                     ;Drop program name
+    pop         r12                     ;option
+    pop         r13                     ;size
+    pop         r14                     ;file
 
     mov         rdi, r12
     mov         rsi, opt_s
@@ -32,14 +32,14 @@ _start:
     jz          print_usage
 
     mov         rdi, r13
-    call        string_to_uint          ; size in rax, success in rdx
+    call        string_to_uint          ;size in rax, success in rdx
     test        rdx, rdx
     jz          print_usage
 
     mov         [filesize], rax
-    mov         rax, SYS_TRUNCATE       ; truncate syscall
-    mov         rdi, r14                ; pathname
-    mov         rsi, [filesize]         ; length
+    mov         rax, SYS_TRUNCATE       ;truncate syscall
+    mov         rdi, r14                ;pathname
+    mov         rsi, [filesize]         ;length
     syscall
 
     test        rax, rax

@@ -1,17 +1,17 @@
 ; src/rm.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
 
 section .data
-    usage_msg       db "Usage: rm [file]", 10
+usage_msg       db "Usage: rm [file]", 10
     usage_msg_len   equ $ - usage_msg
-    error_msg       db "Error: Could not remove file", 10
+error_msg       db "Error: Could not remove file", 10
     error_msg_len   equ $ - error_msg
 
 section .text
-    global          _start
+global          _start
 
 _start:
     pop             rdi

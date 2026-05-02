@@ -1,6 +1,6 @@
 ; src/uname.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     uts         resb 390
@@ -8,22 +8,22 @@ section .bss
 
 section .data
     newline     db WHITESPACE_NL
-    usage_msg   db "Usage: uname [-s]", WHITESPACE_NL
+usage_msg   db "Usage: uname [-s]", WHITESPACE_NL
     usage_len   equ $ - usage_msg
 
 section .text
-    global      _start
+global      _start
 
 _start:
-    pop         rcx                     ; argc
+    pop         rcx                     ;argc
     mov         byte [sys_only], 0
     cmp         rcx, 1
     je          .print_default
     cmp         rcx, 2
     jne         .usage
 
-    pop         rax                     ; skip argv[0]
-    pop         rdi                     ; argv[1]
+    pop         rax                     ;skip argv[0]
+    pop         rdi                     ;argv[1]
     cmp         byte [rdi], '-'
     jne         .usage
     cmp         byte [rdi + 1], 's'
@@ -35,7 +35,7 @@ _start:
     jmp         .do_uname
 
 .print_default:
-    ; default behavior: print full uname fields
+; default behavior: print full uname fields
     jmp         .do_uname
 
 .do_uname:
@@ -44,22 +44,22 @@ _start:
     syscall
 
 .print_sysname:
-    lea         rsi, [uts + 0]      ; sysname
+    lea         rsi, [uts + 0]          ;sysname
     call        print_line
 
     cmp         byte [sys_only], 1
     je          .exit_ok
 
-    lea         rsi, [uts + 65]     ; nodename
+    lea         rsi, [uts + 65]         ;nodename
     call        print_line
 
-    lea         rsi, [uts + 130]    ; release
+    lea         rsi, [uts + 130]        ;release
     call        print_line
 
-    lea         rsi, [uts + 195]    ; version
+    lea         rsi, [uts + 195]        ;version
     call        print_line
 
-    lea         rsi, [uts + 260]    ; machine
+    lea         rsi, [uts + 260]        ;machine
     call        print_line
 
 .exit_ok:

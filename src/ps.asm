@@ -1,16 +1,16 @@
 ; src/ps.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 8192
+    %define BUFFER_SIZE 8192
 
-struc dirent64
+    struc dirent64
     .d_ino      resq 1
     .d_off      resq 1
     .d_reclen   resw 1
     .d_type     resb 1
     .d_name     resb 1
-endstruc
+    endstruc
 
 section .bss
     buffer      resb BUFFER_SIZE
@@ -25,7 +25,7 @@ section .data
     newline     db WHITESPACE_NL
 
 section .text
-    global _start
+global _start
 
 _start:
     mov     rax, SYS_OPEN
@@ -45,8 +45,8 @@ read_dir:
     syscall
     cmp     rax, 0
     jle     close_exit
-    mov     r12, rax                ; bytes read
-    xor     r13, r13                ; offset
+    mov     r12, rax                    ;bytes read
+    xor     r13, r13                    ;offset
 
 next_entry:
     cmp     r13, r12
@@ -59,7 +59,7 @@ next_entry:
     test    al, al
     jz      skip_entry
 
-    ; Build path /proc/<pid>/comm
+; Build path /proc/<pid>/comm
     mov     rdi, path_buf
     mov     rsi, proc_prefix
     call    copy_string
@@ -134,7 +134,7 @@ copy_string:
 ; rdi = string pointer
 write_str:
     mov     rsi, rdi
-    call    strlen                 ; length -> rbx
+    call    strlen                      ;length -> rbx
     mov     rdx, rbx
     mov     rax, SYS_WRITE
     mov     rdi, STDOUT_FILENO

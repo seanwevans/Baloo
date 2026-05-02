@@ -1,6 +1,6 @@
 ; src/date.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     num_buffer  resb 32
@@ -10,43 +10,43 @@ section .data
     newline     db WHITESPACE_NL
     dash        db '-'
     space       db ' '
-    colon       db ':'
+colon       db ':'
     month_len   db 31,28,31,30,31,30,31,31,30,31,30,31
 
 section .text
-    global _start
+global _start
 
 _start:
-    ; get current time
+; get current time
     mov     rax, SYS_TIME
     xor     rdi, rdi
     syscall
-    mov     rbx, rax                ; seconds since epoch
+    mov     rbx, rax                    ;seconds since epoch
 
-    ; days and remainder seconds
+; days and remainder seconds
     mov     rcx, 86400
     xor     rdx, rdx
     div     rcx
-    mov     r8, rax                 ; days since epoch
-    mov     r9, rdx                 ; seconds in current day
+    mov     r8, rax                     ;days since epoch
+    mov     r9, rdx                     ;seconds in current day
 
-    ; hours
+; hours
     mov     rax, r9
     mov     rcx, 3600
     xor     rdx, rdx
     div     rcx
-    mov     r10, rax                ; hours
+    mov     r10, rax                    ;hours
     mov     r9, rdx
 
-    ; minutes
+; minutes
     mov     rax, r9
     mov     rcx, 60
     xor     rdx, rdx
     div     rcx
-    mov     rbx, rax                ; minutes
-    mov     r12, rdx                ; seconds
+    mov     rbx, rax                    ;minutes
+    mov     r12, rdx                    ;seconds
 
-    ; compute year
+; compute year
     mov     r13, 1970
 .year_loop:
     mov     rdi, r13
@@ -59,17 +59,17 @@ _start:
 .got_year:
     mov     rdi, r13
     call    is_leap
-    mov     r14, rax                ; leap flag
+    mov     r14, rax                    ;leap flag
 
-    ; compute month and day
-    xor     rcx, rcx                ; month index
+; compute month and day
+    xor     rcx, rcx                    ;month index
 .month_loop:
     movzx   rax, byte [month_len + rcx]
     cmp     rcx, 1
     jne     .chk_days
     test    r14, r14
     jz      .chk_days
-    inc     rax                     ; February in leap year
+    inc     rax                         ;February in leap year
 .chk_days:
     cmp     r8, rax
     jb      .got_month
@@ -77,19 +77,19 @@ _start:
     inc     rcx
     jmp     .month_loop
 .got_month:
-    mov     r15, rcx                ; month (0-based)
-    mov     r8, r8                  ; day remains in r8 (0-based)
+    mov     r15, rcx                    ;month (0-based)
+    mov     r8, r8                      ;day remains in r8 (0-based)
 
-    ; print year
+; print year
     mov     rax, r13
     call    print_num
     write   STDOUT_FILENO, dash, 1
     mov     rax, r15
-    inc     rax                     ; month number
+    inc     rax                         ;month number
     call    print_two
     write   STDOUT_FILENO, dash, 1
     mov     rax, r8
-    inc     rax                     ; day number
+    inc     rax                         ;day number
     call    print_two
     write   STDOUT_FILENO, space, 1
     mov     rax, r10

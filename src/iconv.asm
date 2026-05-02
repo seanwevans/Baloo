@@ -1,6 +1,6 @@
 ; src/iconv.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     buffer      resb 4096
@@ -10,7 +10,7 @@ section .bss
     to_enc      resb 1
 
 section .data
-    usage_msg   db "Usage: iconv -f FROM -t TO [FILE]", 10
+usage_msg   db "Usage: iconv -f FROM -t TO [FILE]", 10
     usage_len   equ $ - usage_msg
     invalid_msg db "Unsupported encoding", 10
     invalid_len equ $ - invalid_msg
@@ -19,16 +19,16 @@ section .data
     ascii_str   db "ASCII", 0
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rcx                 ; argc
-    mov     rbx, rsp            ; argv pointer
+    pop     rcx                         ;argc
+    mov     rbx, rsp                    ;argv pointer
     mov     byte [from_enc], 0
     mov     byte [to_enc], 0
     mov     qword [fd], STDIN_FILENO
 
-    dec     rcx                 ; skip program name
+    dec     rcx                         ;skip program name
     cmp     rcx, 0
     jle     .check_enc
 

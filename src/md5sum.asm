@@ -1,40 +1,40 @@
 ; src/md5sum.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 4096
+    %define BUFFER_SIZE 4096
 
 section .bss
-    buffer      resb BUFFER_SIZE        ; read buffer
-    digest      resb 16                 ; MD5 result
-    hex_output  resb 32                 ; hex string
+    buffer      resb BUFFER_SIZE        ;read buffer
+    digest      resb 16                 ;MD5 result
+    hex_output  resb 32                 ;hex string
     newline     resb 1
 
 section .data
     hex_chars   db "0123456789abcdef"
 
-    sockaddr:
-        dw AF_ALG                      ; salg_family
-        db 'hash',0,0,0,0,0,0,0,0,0,0   ; salg_type[14]
-        dd 0                           ; salg_feat
-        dd 0                           ; salg_mask
-        db 'md5',0
-        times (64-4) db 0
+sockaddr:
+    dw AF_ALG                           ;salg_family
+    db 'hash',0,0,0,0,0,0,0,0,0,0       ;salg_type[14]
+    dd 0                                ;salg_feat
+    dd 0                                ;salg_mask
+    db 'md5',0
+    times (64-4) db 0
     sockaddr_len equ $ - sockaddr
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                     ; argc
-    pop rbx                     ; argv[0]
+    pop rcx                             ;argc
+    pop rbx                             ;argv[0]
     dec rcx
     jz  .use_stdin
 
-    pop rsi                     ; filename
+    pop rsi                             ;filename
     mov rdi, STDIN_FILENO
     call open_file
-    mov r14, rax                ; input fd
+    mov r14, rax                        ;input fd
     jmp .setup_socket
 
 .use_stdin:
@@ -65,7 +65,7 @@ _start:
     syscall
     cmp rax, 0
     jl  .error
-    mov r13, rax                ; op fd
+    mov r13, rax                        ;op fd
 
 .read_loop:
     mov rax, SYS_READ
@@ -108,7 +108,7 @@ _start:
     mov rdi, r15
     syscall
 
-    ; convert digest to hex
+; convert digest to hex
     lea rdi, [digest]
     lea rsi, [hex_output]
     mov rcx, 16

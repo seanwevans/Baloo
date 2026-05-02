@@ -1,31 +1,31 @@
 ; src/chgrp.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .data
-    usage_msg       db "Usage: chgrp GROUP FILE", 10
+usage_msg       db "Usage: chgrp GROUP FILE", 10
     usage_msg_len   equ $ - usage_msg
     fail_msg        db "Failed to change group", 10
     fail_msg_len    equ $ - fail_msg
 
 section .text
-    global          _start
+global          _start
 
 _start:
-    mov             rbx, [rsp]              ; argc
+    mov             rbx, [rsp]          ;argc
     cmp             rbx, 3
     jne             .usage
 
-    mov             rsi, [rsp + 16]         ; argv[1] = group
+    mov             rsi, [rsp + 16]     ;argv[1] = group
     call            parse_group
-    cmp             eax, -1                 ; parse failure
+    cmp             eax, -1             ;parse failure
     je              .usage
 
-    mov             edi, eax                ; gid
+    mov             edi, eax            ;gid
 
-    mov             rsi, [rsp + 24]         ; argv[2] = file
+    mov             rsi, [rsp + 24]     ;argv[2] = file
     call            chgrp
-    
+
     cmp             rax, 0
     jl              .fail
 
@@ -40,9 +40,9 @@ _start:
     exit            1
 
 parse_group:
-    xor             rax, rax                ; result = 0
-    xor             rcx, rcx                ; temp
-    xor             rdx, rdx                ; parsed digit count
+    xor             rax, rax            ;result = 0
+    xor             rcx, rcx            ;temp
+    xor             rdx, rdx            ;parsed digit count
 
 .parse_loop:
     mov             cl, byte [rsi]
@@ -69,10 +69,10 @@ parse_group:
     ret
 
 chgrp:
-    mov             r8d, edi         ; preserve parsed gid
+    mov             r8d, edi            ;preserve parsed gid
     mov             rax, SYS_CHOWN
-    mov             rdi, rsi         ; rdi = filename
-    mov             rsi, -1          ; rsi = uid unchanged
-    mov             edx, r8d         ; rdx = original gid
+    mov             rdi, rsi            ;rdi = filename
+    mov             rsi, -1             ;rsi = uid unchanged
+    mov             edx, r8d            ;rdx = original gid
     syscall
     ret

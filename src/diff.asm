@@ -1,8 +1,8 @@
 ; src/diff.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define LINE_SIZE 1024
+    %define LINE_SIZE 1024
 
 section .bss
     line1       resb LINE_SIZE
@@ -12,7 +12,7 @@ section .bss
     diff_found  resb 1
 
 section .data
-    usage_msg       db "Usage: diff file1 file2", 10
+usage_msg       db "Usage: diff file1 file2", 10
     usage_len       equ $ - usage_msg
     prefix_left     db '< ', 0
     prefix_left_len equ $ - prefix_left
@@ -21,20 +21,20 @@ section .data
     newline         db 10
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                          ; argc
+    pop rcx                             ;argc
     cmp rcx, 3
     jne print_usage
 
-    pop rax                          ; skip program name
+    pop rax                             ;skip program name
     pop rax
-    mov [fd1], rax                   ; temporarily store path pointer
+    mov [fd1], rax                      ;temporarily store path pointer
     pop rbx
-    mov [fd2], rbx                   ; temporarily store path pointer
+    mov [fd2], rbx                      ;temporarily store path pointer
 
-    ; open first file
+; open first file
     mov rdi, [fd1]
     mov rax, SYS_OPEN
     mov rsi, O_RDONLY
@@ -43,7 +43,7 @@ _start:
     jl open_error
     mov [fd1], rax
 
-    ; open second file
+; open second file
     mov rdi, [fd2]
     mov rax, SYS_OPEN
     mov rsi, O_RDONLY
@@ -58,12 +58,12 @@ main_loop:
     mov rdi, [fd1]
     mov rsi, line1
     call read_line
-    mov r8, rax                      ; length of line1 or -1
+    mov r8, rax                         ;length of line1 or -1
 
     mov rdi, [fd2]
     mov rsi, line2
     call read_line
-    mov r9, rax                      ; length of line2 or -1
+    mov r9, rax                         ;length of line2 or -1
 
     cmp r8, -1
     je handle_eof1
@@ -145,9 +145,9 @@ read_line:
     push rdi
     push rsi
     xor rcx, rcx
-    mov r8, rsi                    ; buffer start
+    mov r8, rsi                         ;buffer start
 read_byte:
-    mov rdi, [rsp + 8]             ; fd
+    mov rdi, [rsp + 8]                  ;fd
     mov rsi, r8
     add rsi, rcx
     mov rax, SYS_READ

@@ -1,6 +1,6 @@
 ; src/tabs.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .data
     clear_cmd  db 0x1b, '[3g', 13
@@ -12,17 +12,17 @@ section .data
     cr         db 13
 
 section .text
-    global _start
+global _start
 
 _start:
-    ; clear existing tab stops
+; clear existing tab stops
     mov rax, SYS_WRITE
     mov rdi, STDOUT_FILENO
     mov rsi, clear_cmd
     mov rdx, clear_len
     syscall
 
-    ; set default tabs every 8 columns (11 stops)
+; set default tabs every 8 columns (11 stops)
     mov rbx, 11
 .loop:
     mov rax, SYS_WRITE
@@ -40,7 +40,7 @@ _start:
     dec rbx
     jnz .loop
 
-    ; return cursor to column 1
+; return cursor to column 1
     mov rax, SYS_WRITE
     mov rdi, STDOUT_FILENO
     mov rsi, cr

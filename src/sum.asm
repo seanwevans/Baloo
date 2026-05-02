@@ -1,8 +1,8 @@
 ; src/sum.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 4096
+    %define BUFFER_SIZE 4096
 
 section .bss
     buffer  resb BUFFER_SIZE
@@ -16,26 +16,26 @@ section .data
     space   db " "
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                    ; argc
-    mov rbp, rsp               ; argv pointer
+    pop rcx                             ;argc
+    mov rbp, rsp                        ;argv pointer
     cmp rcx, 1
     jle use_stdin
 
     mov rbx, rbp
-    add rbx, 8                 ; skip program name
-    dec rcx                    ; filename count (argc - 1)
+    add rbx, 8                          ;skip program name
+    dec rcx                             ;filename count (argc - 1)
 .arg_loop:
-    mov rsi, [rbx]             ; filename pointer
+    mov rsi, [rbx]                      ;filename pointer
     test rsi, rsi
     jz .done_args
     push rcx
-    mov r9, rsi                ; preserve filename across open_file
+    mov r9, rsi                         ;preserve filename across open_file
     mov rdi, STDIN_FILENO
-    call open_file             ; returns fd in rax
-    mov r8, rax                ; fd
+    call open_file                      ;returns fd in rax
+    mov r8, rax                         ;fd
     mov rsi, r9
     call do_sum
     cmp r8, STDIN_FILENO
@@ -65,8 +65,8 @@ do_sum:
     mov rbp, rsp
     mov [sum_fd], r8
     mov [sum_name], rsi
-    xor r12d, r12d               ; checksum
-    xor r13, r13                 ; total bytes
+    xor r12d, r12d                      ;checksum
+    xor r13, r13                        ;total bytes
 .read_loop:
     mov rax, SYS_READ
     mov rdi, [sum_fd]
@@ -95,7 +95,7 @@ do_sum:
 .finish:
     mov rax, r13
     add rax, 1023
-    shr rax, 10                  ; block count
+    shr rax, 10                         ;block count
     mov [sum_blocks], rax
     mov rdi, r12
     call print_decimal

@@ -1,23 +1,23 @@
 ; src/nice.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define PRIO_PROCESS 0
+    %define PRIO_PROCESS 0
 
 section .bss
     argc        resq 1
     argv_ptr    resq 1
     env_ptr     resq 1
     adjust      resq 1
-    
+
 section .data
-    usage_msg       db "Usage: nice [-n adjustment] command [args...]", 10
+usage_msg       db "Usage: nice [-n adjustment] command [args...]", 10
     usage_len       equ $ - usage_msg
-    exec_err_msg    db "Error: execve failed", 10
+exec_err_msg    db "Error: execve failed", 10
     exec_err_len    equ $ - exec_err_msg
 
 section .text
-    global  _start
+global  _start
 
 _start:
     pop     rax                         ;argc
@@ -54,14 +54,14 @@ _start:
 .set_cmd:
     mov     [argv_ptr], rdx
 
-    ; adjust current priority using setpriority
+; adjust current priority using setpriority
     mov     rax, SYS_GETPRIORITY
     mov     rdi, PRIO_PROCESS
-    xor     rsi, rsi                ; current process
+    xor     rsi, rsi                    ;current process
     syscall
-    mov     rbx, rax                ; current nice value
+    mov     rbx, rax                    ;current nice value
     mov     rax, [adjust]
-    add     rbx, rax                ; new nice value
+    add     rbx, rax                    ;new nice value
 
     mov     rax, SYS_SETPRIORITY
     mov     rdi, PRIO_PROCESS

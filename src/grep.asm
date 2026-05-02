@@ -1,43 +1,43 @@
 ; src/grep.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 4096
+    %define BUFFER_SIZE 4096
 
 section .bss
-    buffer      resb BUFFER_SIZE       ; line buffer
+    buffer      resb BUFFER_SIZE        ;line buffer
     fd          resq 1
     line_len    resq 1
     pattern_ptr resq 1
     pattern_len resq 1
 
 section .data
-    usage_msg   db "Usage: grep PATTERN [FILE]", 10
+usage_msg   db "Usage: grep PATTERN [FILE]", 10
     usage_len   equ $ - usage_msg
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rdi                 ; argc
+    pop     rdi                         ;argc
     cmp     rdi, 2
     jb      show_usage
-    pop     rax                 ; skip program name
-    pop     rsi                 ; pattern argument
+    pop     rax                         ;skip program name
+    pop     rsi                         ;pattern argument
     mov     [pattern_ptr], rsi
     call    strlen
     mov     [pattern_len], rbx
     mov     qword [fd], STDIN_FILENO
-    dec     rdi                 ; remaining args after pattern
+    dec     rdi                         ;remaining args after pattern
     cmp     rdi, 1
     jb      read_loop
-    pop     rsi                 ; filename
-    mov     rdi, STDIN_FILENO   ; default fd if none
-    call    open_file           ; open file -> rax
+    pop     rsi                         ;filename
+    mov     rdi, STDIN_FILENO           ;default fd if none
+    call    open_file                   ;open file -> rax
     mov     [fd], rax
 
 read_loop:
-    xor     r12, r12            ; current line length
+    xor     r12, r12                    ;current line length
 
 .next_char:
     mov     rax, SYS_READ

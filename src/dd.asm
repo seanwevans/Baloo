@@ -1,9 +1,9 @@
 ; src/dd.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define DEFAULT_BS 512
-%define BUFFER_MAX 65536
+    %define DEFAULT_BS 512
+    %define BUFFER_MAX 65536
 
 section .bss
     buffer      resb BUFFER_MAX
@@ -13,18 +13,18 @@ section .bss
     out_fd      resq 1
 
 section .text
-    global _start
+global _start
 
 _start:
-    ; default settings
+; default settings
     mov qword [bs_value], DEFAULT_BS
     mov qword [count_value], -1
     mov qword [in_fd], STDIN_FILENO
     mov qword [out_fd], STDOUT_FILENO
 
-    pop rcx                    ; argc
-    dec rcx                    ; skip program name
-    mov rbx, rsp               ; argv pointer
+    pop rcx                             ;argc
+    dec rcx                             ;skip program name
+    mov rbx, rsp                        ;argv pointer
 
 .parse_args:
     cmp rcx, 0
@@ -33,7 +33,7 @@ _start:
     add rbx, 8
     dec rcx
 
-    ; check if=FILE
+; check if=FILE
     cmp byte [rdi], 'i'
     jne .check_of
     cmp byte [rdi+1], 'f'

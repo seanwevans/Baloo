@@ -1,8 +1,8 @@
 ; src/at.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define CMD_BUF_SIZE 8192
+    %define CMD_BUF_SIZE 8192
 
 section .bss
     cmd_buffer  resb CMD_BUF_SIZE
@@ -12,28 +12,28 @@ section .bss
 section .data
     sh_path     db "/bin/sh", 0
     dash_c      db "-c", 0
-    usage_msg   db "Usage: at <seconds>\n", 0
+usage_msg   db "Usage: at <seconds>\n", 0
     usage_len   equ $ - usage_msg
-    exec_fail   db "Error: execve failed", WHITESPACE_NL
+exec_fail   db "Error: execve failed", WHITESPACE_NL
     exec_fail_len equ $ - exec_fail
 
 section .text
-    global _start
+global _start
 
 _start:
-    ; retrieve argc and envp
-    pop     rbx             ; argc
-    mov     rax, rsp        ; pointer to argv[0]
-    lea     r12, [rax + rbx*8 + 8]  ; envp pointer
+; retrieve argc and envp
+    pop     rbx                         ;argc
+    mov     rax, rsp                    ;pointer to argv[0]
+    lea     r12, [rax + rbx*8 + 8]      ;envp pointer
     dec     rbx
     cmp     rbx, 1
     jl      .usage
 
-    pop     rdi             ; seconds argument
+    pop     rdi                         ;seconds argument
     call    str_to_int
     mov     [ts_sec], rax
 
-    ; read commands from stdin
+; read commands from stdin
     mov     r8, cmd_buffer
     mov     r9, CMD_BUF_SIZE-1
 .read_loop:
@@ -52,13 +52,13 @@ _start:
 .done_read:
     mov     byte [r8], 0
 
-    ; sleep for the specified seconds
-    mov     rax, 35             ; SYS_nanosleep
+; sleep for the specified seconds
+    mov     rax, 35                     ;SYS_nanosleep
     lea     rdi, [ts_sec]
     xor     rsi, rsi
     syscall
 
-    ; prepare argv for execve("/bin/sh", ["sh","-c",cmd], envp)
+; prepare argv for execve("/bin/sh", ["sh","-c",cmd], envp)
     sub     rsp, 32
     mov     qword [rsp], sh_path
     mov     qword [rsp+8], dash_c
@@ -72,7 +72,7 @@ _start:
     mov     rax, SYS_EXECVE
     syscall
 
-    ; on failure
+; on failure
     write STDERR_FILENO, exec_fail, exec_fail_len
     exit 1
 
