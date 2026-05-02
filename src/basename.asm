@@ -1,28 +1,28 @@
 ; src/basename.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
 
 section .data
     nl          db WHITESPACE_NL
-    err_msg     db "basename: missing operand", 10
+err_msg     db "basename: missing operand", 10
     err_len     equ $ - err_msg
 
 section .text
-    global      _start
+global      _start
 
 _start:
     mov         rsi, rsp
-    mov         rdi, [rsi]         ; argc
-    cmp         rdi, 2             ; need at least 1 argument after program name
+    mov         rdi, [rsi]              ;argc
+    cmp         rdi, 2                  ;need at least 1 argument after program name
     jl          missing_operand
 
-    add         rsi, 8             ; skip argc
-    add         rsi, 8             ; skip argv[0]
-    mov         rsi, [rsi]         ; rsi = argv[1]
+    add         rsi, 8                  ;skip argc
+    add         rsi, 8                  ;skip argv[0]
+    mov         rsi, [rsi]              ;rsi = argv[1]
     call        find_basename
-    
+
     mov         rbx, rsi
     call        strlen
 
@@ -36,7 +36,7 @@ missing_operand:
 
 find_basename:
     mov         rbx, rsi
-    
+
 .next:
     cmp         byte [rbx], 0
     je          .done
@@ -44,10 +44,10 @@ find_basename:
     jne         .advance
     mov         rsi, rbx
     inc         rsi
-    
+
 .advance:
     inc         rbx
     jmp         .next
-    
+
 .done:
     ret

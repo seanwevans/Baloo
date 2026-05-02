@@ -1,29 +1,29 @@
 ; src/numfmt.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    num_buffer  resb 32                ; Buffer for integer conversion
-    unit_buf    resb 1                 ; Buffer for unit suffix
+    num_buffer  resb 32                 ;Buffer for integer conversion
+    unit_buf    resb 1                  ;Buffer for unit suffix
 
 section .data
     decimal_base dq 10
     units       db 0, 'K', 'M', 'G', 'T', 'P', 'E'
-    usage_msg   db "Usage: numfmt NUMBER", 10
+usage_msg   db "Usage: numfmt NUMBER", 10
     usage_len   equ $ - usage_msg
     newline     db WHITESPACE_NL
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rdi                         ; argc
-    cmp rdi, 2                      ; expect one argument
+    pop rdi                             ;argc
+    cmp rdi, 2                          ;expect one argument
     jne print_usage
 
-    pop rax                         ; skip argv[0]
-    pop rdi                         ; pointer to number string
-    call parse_number               ; rax = number
+    pop rax                             ;skip argv[0]
+    pop rdi                             ;pointer to number string
+    call parse_number                   ;rax = number
     call human_format
     exit 0
 
@@ -33,19 +33,19 @@ print_usage:
 
 ; rax = number to format
 human_format:
-    mov rcx, 0                      ; unit index
+    mov rcx, 0                          ;unit index
     mov rbx, 1024
 .convert_loop:
     cmp rax, 1024
     jb .done
     xor rdx, rdx
-    div rbx                         ; divide by 1024
+    div rbx                             ;divide by 1024
     inc rcx
-    cmp rcx, 6                      ; up to 'E'
+    cmp rcx, 6                          ;up to 'E'
     jl .convert_loop
 .done:
     push rcx
-    call print_int                  ; print number
+    call print_int                      ;print number
     pop rcx
     cmp rcx, 0
     je .newline
@@ -62,7 +62,7 @@ human_format:
 parse_number:
     xor rax, rax
     xor rcx, rcx
-    xor r8, r8                      ; sign flag
+    xor r8, r8                          ;sign flag
     movzx rbx, byte [rdi]
     cmp bl, '-'
     jne .check_plus

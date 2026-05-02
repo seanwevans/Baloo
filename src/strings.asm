@@ -1,29 +1,29 @@
 ; src/strings.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    bytebuf          resb 1                ; single byte buffer
-    strbuf      resb 1024             ; buffer for current string
-    fd          resq 1                ; file descriptor
-    len         resq 1                ; length of string in buffer
+    bytebuf          resb 1             ;single byte buffer
+    strbuf      resb 1024               ;buffer for current string
+    fd          resq 1                  ;file descriptor
+    len         resq 1                  ;length of string in buffer
 
 section .data
-    usage_msg   db "Usage: strings [FILE]", WHITESPACE_NL
+usage_msg   db "Usage: strings [FILE]", WHITESPACE_NL
     usage_len   equ $ - usage_msg
     nl          db WHITESPACE_NL
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rbx                     ; argc
+    pop     rbx                         ;argc
     mov     qword [fd], STDIN_FILENO
-    pop     rax                     ; skip program name
+    pop     rax                         ;skip program name
     dec     rbx
     cmp     rbx, 0
     jle     process
-    pop     rsi                     ; filename
+    pop     rsi                         ;filename
     dec     rbx
     mov     rdi, STDIN_FILENO
     call    open_file
@@ -33,7 +33,7 @@ _start:
     jmp     show_usage
 
 process:
-    xor     r12, r12                ; current length
+    xor     r12, r12                    ;current length
 
 read_loop:
     mov     rax, SYS_READ
@@ -55,7 +55,7 @@ read_loop:
     cmp     r12, 1023
     jl      read_loop
 
-    ; buffer full, flush if long enough
+; buffer full, flush if long enough
     mov     byte [strbuf + r12], 0
     cmp     r12, 4
     jl      reset

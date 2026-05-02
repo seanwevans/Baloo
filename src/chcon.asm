@@ -1,34 +1,34 @@
 ; src/chcon.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .data
-    usage_msg   db "Usage: chcon CONTEXT FILE", 10
+usage_msg   db "Usage: chcon CONTEXT FILE", 10
     usage_len   equ $ - usage_msg
-    fail_msg    db "chcon: setxattr failed", 10
+fail_msg    db "chcon: setxattr failed", 10
     fail_len    equ $ - fail_msg
     attr_name   db "security.selinux", 0
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rcx             ; argc
+    pop     rcx                         ;argc
     cmp     rcx, 3
     jne     .usage
 
-    pop     rax             ; discard argv[0]
-    pop     rsi             ; context string
-    pop     rdi             ; file path
+    pop     rax                         ;discard argv[0]
+    pop     rsi                         ;context string
+    pop     rdi                         ;file path
 
-    call    strlen          ; length -> rbx
-    inc     rbx             ; include NUL terminator in xattr value size
+    call    strlen                      ;length -> rbx
+    inc     rbx                         ;include NUL terminator in xattr value size
 
     mov     rax, SYS_SETXATTR
-    mov     rdx, rsi        ; value
-    mov     rsi, attr_name  ; name
-    mov     r10, rbx        ; size
-    xor     r8, r8          ; flags
+    mov     rdx, rsi                    ;value
+    mov     rsi, attr_name              ;name
+    mov     r10, rbx                    ;size
+    xor     r8, r8                      ;flags
     syscall
 
     test    rax, rax

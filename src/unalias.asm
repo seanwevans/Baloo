@@ -1,6 +1,6 @@
 ; src/unalias.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .data
     alias_path  db "/tmp/alias.txt", 0
@@ -13,18 +13,18 @@ section .bss
     arg_ptrs    resq 32
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rax                 ; argc
-    pop     rbx                 ; skip argv[0]
-    dec     rax                 ; arg count
+    pop     rax                         ;argc
+    pop     rbx                         ;skip argv[0]
+    dec     rax                         ;arg count
     cmp     rax, 1
     jl      usage_error
-    mov     r12, rax            ; number of names
-    mov     r13, rsp            ; pointer to arg list
+    mov     r12, rax                    ;number of names
+    mov     r13, rsp                    ;pointer to arg list
 
-    ; store argument pointers
+; store argument pointers
     xor     rcx, rcx
 .store_args:
     cmp     rcx, r12
@@ -35,7 +35,7 @@ _start:
     jmp     .store_args
 
 open_files:
-    ; open original file for reading
+; open original file for reading
     mov     rax, SYS_OPEN
     mov     rdi, alias_path
     mov     rsi, O_RDONLY
@@ -43,9 +43,9 @@ open_files:
     syscall
     cmp     rax, 0
     jl      error_exit
-    mov     r14, rax            ; input fd
+    mov     r14, rax                    ;input fd
 
-    ; open temporary file for writing
+; open temporary file for writing
     mov     rax, SYS_OPEN
     mov     rdi, temp_path
     mov     rsi, O_WRONLY | O_CREAT | O_TRUNC
@@ -53,9 +53,9 @@ open_files:
     syscall
     cmp     rax, 0
     jl      close_in_error
-    mov     r15, rax            ; output fd
+    mov     r15, rax                    ;output fd
 
-    xor     rbx, rbx            ; line length
+    xor     rbx, rbx                    ;line length
 read_loop:
     mov     rax, SYS_READ
     mov     rdi, r14
@@ -73,7 +73,7 @@ read_loop:
     cmp     al, 10
     jne     read_loop
 
-    mov     rdi, rbx            ; length
+    mov     rdi, rbx                    ;length
     call    process_line
     xor     rbx, rbx
     jmp     read_loop
@@ -85,14 +85,14 @@ process_last:
     call    process_line
 
 finish:
-    ; close files
+; close files
     mov     rax, SYS_CLOSE
     mov     rdi, r14
     syscall
     mov     rax, SYS_CLOSE
     mov     rdi, r15
     syscall
-    ; rename temp file
+; rename temp file
     mov     rax, SYS_RENAME
     mov     rdi, temp_path
     mov     rsi, alias_path

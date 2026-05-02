@@ -1,10 +1,10 @@
 ; src/du.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
-    stat_buf    resb 144           ; struct stat buffer
-    numbuf      resb 16            ; buffer for number printing
+    stat_buf    resb 144                ;struct stat buffer
+    numbuf      resb 16                 ;buffer for number printing
 
 section .data
     newline     db WHITESPACE_NL
@@ -12,20 +12,20 @@ section .data
     dot         db '.',0
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                     ; argc
-    pop rdx                     ; skip program name
+    pop rcx                             ;argc
+    pop rdx                             ;skip program name
     dec rcx
     cmp rcx, 0
     je  .use_default
 
 .loop_args:
-    pop rdi                     ; path pointer
-    push rcx                    ; save counter
-    mov rsi, rdi                ; save for printing
-    call get_size               ; rax = size
+    pop rdi                             ;path pointer
+    push rcx                            ;save counter
+    mov rsi, rdi                        ;save for printing
+    call get_size                       ;rax = size
     mov rdi, rax
     call print_num
     write   STDOUT_FILENO, tab, 1

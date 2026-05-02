@@ -1,27 +1,27 @@
 ; src/renice.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define PRIO_PROCESS 0
+    %define PRIO_PROCESS 0
 
 section .data
-    usage_msg   db "Usage: renice PRIORITY PID...", 10
+usage_msg   db "Usage: renice PRIORITY PID...", 10
     usage_len   equ $ - usage_msg
 
 section .bss
     newprio     resq 1
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop     rcx                     ; argc
-    mov     rbx, rsp                ; argv pointer
+    pop     rcx                         ;argc
+    mov     rbx, rsp                    ;argv pointer
     cmp     rcx, 3
     jl      .usage
-    mov     r14, rcx                ; stable argc tracker
+    mov     r14, rcx                    ;stable argc tracker
 
-    mov     rdi, [rbx + 8]          ; argv[1] priority
+    mov     rdi, [rbx + 8]              ;argv[1] priority
     test    rdi, rdi
     jz      .usage
     call    parse_number
@@ -29,8 +29,8 @@ _start:
     je      .usage
     mov     [newprio], rax
 
-    lea     rbx, [rbx + 16]         ; first pid arg
-    sub     r14, 2                  ; number of pids
+    lea     rbx, [rbx + 16]             ;first pid arg
+    sub     r14, 2                      ;number of pids
 
 .next_pid:
     cmp     r14, 0
@@ -41,7 +41,7 @@ _start:
     call    parse_number
     cmp     rax, -1
     je      .usage
-    mov     r10, rax                ; pid
+    mov     r10, rax                    ;pid
     mov     rax, SYS_SETPRIORITY
     mov     rdi, PRIO_PROCESS
     mov     rsi, r10
@@ -69,8 +69,8 @@ _start:
 ; Returns -1 on error
 parse_number:
     xor     rax, rax
-    xor     rcx, rcx                 ; digit count
-    xor     r8, r8                   ; sign flag
+    xor     rcx, rcx                    ;digit count
+    xor     r8, r8                      ;sign flag
     movzx   r9, byte [rdi]
     cmp     r9b, '-'
     jne     .check_plus

@@ -1,6 +1,6 @@
 ; src/yes.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
 
@@ -9,7 +9,7 @@ section .data
     len     equ $ - msg
 
 section .text
-    global  _start
+global  _start
 
 _start:
 .loop:

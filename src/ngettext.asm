@@ -6,11 +6,11 @@ section .bss
 
 section .data
     newline     db WHITESPACE_NL
-    err_msg     db "ngettext: missing operand", 10
+err_msg     db "ngettext: missing operand", 10
     err_len     equ $ - err_msg
 
 section .text
-    global _start
+global _start
 
 _start:
     mov     rsi, rsp                    ;argc pointer

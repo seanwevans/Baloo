@@ -1,9 +1,9 @@
 ; src/comm.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 4096
-%define LINE_BUFFER_SIZE 1024
+    %define BUFFER_SIZE 4096
+    %define LINE_BUFFER_SIZE 1024
 
 section .bss
     buffer1     resb BUFFER_SIZE
@@ -27,25 +27,25 @@ section .bss
     arg2_ptr    resq 1
 
 section .data
-    usage_msg   db "Usage: comm [-123] FILE1 FILE2", 10
+usage_msg   db "Usage: comm [-123] FILE1 FILE2", 10
     usage_len   equ $ - usage_msg
     tab_char    db WHITESPACE_TAB
 
 section .text
-    global _start
+global _start
 
 _start:
-    ; initialize
+; initialize
     mov byte [show1], 1
     mov byte [show2], 1
     mov byte [show3], 1
     mov qword [arg1_ptr], 0
     mov qword [arg2_ptr], 0
 
-    mov rcx, [rsp]          ; argc
-    lea rsi, [rsp+8]        ; pointer to argv[0]
-    add rsi, 8              ; point to argv[1]
-    dec rcx                 ; number of args after program name
+    mov rcx, [rsp]                      ;argc
+    lea rsi, [rsp+8]                    ;pointer to argv[0]
+    add rsi, 8                          ;point to argv[1]
+    dec rcx                             ;number of args after program name
 
 parse_loop:
     test rcx, rcx
@@ -104,7 +104,7 @@ args_done:
     test rax, rax
     jz print_usage
 
-    ; open files
+; open files
     mov rsi, [arg1_ptr]
     mov rdi, STDIN_FILENO
     call open_file
@@ -128,7 +128,7 @@ main_loop:
     jne check_eof2
     cmp byte [eof2], 1
     je done
-    ; only file2 has data
+; only file2 has data
     mov rsi, line2
     mov rdx, [len2]
     mov bl, 2
@@ -139,7 +139,7 @@ main_loop:
 check_eof2:
     cmp byte [eof2], 1
     jne compare_lines
-    ; only file1 has data
+; only file1 has data
     mov rsi, line1
     mov rdx, [len1]
     mov bl, 1
@@ -154,7 +154,7 @@ compare_lines:
     cmp rax, 0
     je lines_equal
     jl line1_less
-    ; line2 less
+; line2 less
     mov rsi, line2
     mov rdx, [len2]
     mov bl, 2
@@ -258,7 +258,7 @@ output_line:
     je .col1
     cmp bl, 2
     je .col2
-    ; column 3
+; column 3
     cmp byte [show3], 0
     je .ret
     xor r10d, r10d

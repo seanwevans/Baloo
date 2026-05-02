@@ -1,8 +1,8 @@
 ; src/uuencode.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define LINE_BUF 45
+    %define LINE_BUF 45
 
 section .bss
     inbuf       resb LINE_BUF
@@ -19,35 +19,35 @@ section .data
     endmsg_len  equ $ - endmsg
 
 section .text
-    global _start
+global _start
 
 _start:
-    pop rcx                     ; argc
-    mov rbx, rsp                ; argv pointer
+    pop rcx                             ;argc
+    mov rbx, rsp                        ;argv pointer
     cmp rcx, 2
-    jl  exit_error              ; need dest name
+    jl  exit_error                      ;need dest name
     cmp rcx, 3
     jl  .stdin_only
 
-    mov rdi, [rbx+8]            ; argv[1] input file
+    mov rdi, [rbx+8]                    ;argv[1] input file
     mov rax, SYS_OPEN
     mov rsi, O_RDONLY
     xor rdx, rdx
     syscall
     cmp rax, 0
     jl  exit_error
-    mov r14, rax                ; file descriptor
-    mov rsi, [rbx+16]           ; argv[2] dest name
+    mov r14, rax                        ;file descriptor
+    mov rsi, [rbx+16]                   ;argv[2] dest name
     jmp .have_input
 
 .stdin_only:
     mov r14, STDIN_FILENO
-    mov rsi, [rbx+8]            ; argv[1] dest name
+    mov rsi, [rbx+8]                    ;argv[1] dest name
 
 .have_input:
     mov [destname], rsi
 
-    ; print header
+; print header
     write STDOUT_FILENO, header, header_len
     mov rsi, [destname]
     call strlen
@@ -64,7 +64,7 @@ read_loop:
     jl exit_error
     je finish
 
-    mov rcx, rax                ; bytes read
+    mov rcx, rax                        ;bytes read
     mov r8b, cl
     add r8b, 32
     mov byte [outbuf], r8b
@@ -98,10 +98,10 @@ exit_error:
 encode_line:
     push rbp
     mov rbp, rsp
-    xor rax, rax                ; output count
-    mov r8, rcx                 ; remaining bytes
-    mov r9, rdi                 ; src pointer
-    mov r10, rsi                ; dest pointer
+    xor rax, rax                        ;output count
+    mov r8, rcx                         ;remaining bytes
+    mov r9, rdi                         ;src pointer
+    mov r10, rsi                        ;dest pointer
 
 .loop:
     cmp r8, 0
@@ -124,7 +124,7 @@ encode_line:
     dec r8
     inc r9
 .pack:
-    mov r11d, edx               ; pack bytes
+    mov r11d, edx                       ;pack bytes
     shl r11d, 16
     mov r12d, ebx
     shl r12d, 8

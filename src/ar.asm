@@ -1,41 +1,41 @@
 ; src/ar.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define AR_HDR_SIZE 60
-%define SEEK_CUR 1
+    %define AR_HDR_SIZE 60
+    %define SEEK_CUR 1
 
 section .bss
-    header      resb AR_HDR_SIZE       ; archive header buffer
-    namebuf     resb 17                ; filename buffer (null terminated)
-    size_val    resq 1                 ; temporary for file size
+    header      resb AR_HDR_SIZE        ;archive header buffer
+    namebuf     resb 17                 ;filename buffer (null terminated)
+    size_val    resq 1                  ;temporary for file size
 
 section .data
     magic       db '!<arch>', 10
     magic_len   equ $ - magic
     nl          db WHITESPACE_NL
-    usage_msg   db "Usage: ar t ARCHIVE", 10
+usage_msg   db "Usage: ar t ARCHIVE", 10
     usage_len   equ $ - usage_msg
-    invalid_msg db "ar: invalid archive", 10
+invalid_msg db "ar: invalid archive", 10
     invalid_len equ $ - invalid_msg
 
 section .text
-    global _start
+global _start
 
 _start:
     mov     rsi, rsp
-    mov     rdi, [rsi]         ; argc
+    mov     rdi, [rsi]                  ;argc
     cmp     rdi, 2
     jl      .show_usage
 
-    add     rsi, 8             ; skip argc
-    add     rsi, 8             ; skip argv[0]
-    mov     rsi, [rsi]         ; argv[1] = archive
+    add     rsi, 8                      ;skip argc
+    add     rsi, 8                      ;skip argv[0]
+    mov     rsi, [rsi]                  ;argv[1] = archive
     mov     rdi, STDIN_FILENO
     call    open_file
-    mov     r12, rax           ; fd
+    mov     r12, rax                    ;fd
 
-    ; read and validate magic header
+; read and validate magic header
     mov     rax, SYS_READ
     mov     rdi, r12
     mov     rsi, header
@@ -48,7 +48,7 @@ _start:
     jne     .invalid
 
 .read_loop:
-    ; read file header
+; read file header
     mov     rax, SYS_READ
     mov     rdi, r12
     mov     rsi, header
@@ -59,7 +59,7 @@ _start:
     cmp     rax, AR_HDR_SIZE
     jne     .invalid
 
-    ; copy filename (up to '/')
+; copy filename (up to '/')
     lea     rsi, [header]
     lea     rdi, [namebuf]
     mov     rcx, 16
@@ -81,7 +81,7 @@ _start:
     write   STDOUT_FILENO, namebuf, rbx
     write   STDOUT_FILENO, nl, 1
 
-    ; parse size from header[48:58]
+; parse size from header[48:58]
     lea     rsi, [header + 48]
     mov     rcx, 10
     xor     rax, rax
@@ -100,13 +100,13 @@ _start:
     jnz     .parse_loop
     mov     [size_val], rax
 
-    ; skip file data
+; skip file data
     mov     rax, SYS_LSEEK
     mov     rdi, r12
     mov     rsi, [size_val]
     mov     rdx, SEEK_CUR
     syscall
-    ; align to even
+; align to even
     test    byte [size_val], 1
     jz      .read_loop
     mov     rax, SYS_LSEEK

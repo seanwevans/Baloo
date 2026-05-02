@@ -1,10 +1,10 @@
 ; src/tsort.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define MAX_NODES 128
-%define MAX_EDGES 256
-%define MAX_NAME_LEN 32
+    %define MAX_NODES 128
+    %define MAX_EDGES 256
+    %define MAX_NAME_LEN 32
 
 section .bss
     char_buf        resb 1
@@ -19,11 +19,11 @@ section .bss
 
 section .data
     newline         db WHITESPACE_NL
-    cycle_msg       db "tsort: cycle detected", WHITESPACE_NL
+cycle_msg       db "tsort: cycle detected", WHITESPACE_NL
     cycle_len       equ $ - cycle_msg
 
 section .text
-    global _start
+global _start
 
 _start:
     mov     qword [node_count], 0
@@ -33,17 +33,17 @@ read_pairs:
     call    get_token
     cmp     rax, -1
     je      build_graph
-    ; token in token_buf, length rax
+; token in token_buf, length rax
     mov     rsi, token_buf
     call    get_node_id
-    mov     r12, rax            ; from node id
+    mov     r12, rax                    ;from node id
 
     call    get_token
     cmp     rax, -1
-    je      build_graph         ; odd token count -> treat as vertex only
+    je      build_graph                 ;odd token count -> treat as vertex only
     mov     rsi, token_buf
     call    get_node_id
-    mov     r13, rax            ; to node id
+    mov     r13, rax                    ;to node id
 
     mov     rax, [edge_count]
     cmp     rax, MAX_EDGES
@@ -55,7 +55,7 @@ read_pairs:
     jmp     read_pairs
 
 build_graph:
-    ; initialize indegree and processed arrays
+; initialize indegree and processed arrays
     mov     rcx, [node_count]
     xor     rbx, rbx
 zero_loop:
@@ -78,14 +78,14 @@ edge_loop:
     jmp     edge_loop
 
 sort_start:
-    xor     r14, r14            ; processed count
+    xor     r14, r14                    ;processed count
 
 sort_outer:
     mov     rcx, [node_count]
     cmp     r14, rcx
     je      done
 
-    mov     r15, -1             ; candidate index
+    mov     r15, -1                     ;candidate index
     xor     rbx, rbx
 find_zero:
     cmp     rbx, rcx
@@ -105,15 +105,15 @@ check_cycle:
     je      cycle_error
 found:
     mov     rax, r15
-    shl     rax, 5                  ; r15 * MAX_NAME_LEN
+    shl     rax, 5                      ;r15 * MAX_NAME_LEN
     lea     rsi, [names + rax]
-    call    strlen              ; rbx = length
+    call    strlen                      ;rbx = length
     write   STDOUT_FILENO, rsi, rbx
     write   STDOUT_FILENO, newline, 1
     mov     byte [processed + r15], 1
     inc     r14
 
-    ; decrease indegree for outgoing edges
+; decrease indegree for outgoing edges
     mov     rcx, [edge_count]
     xor     rbx, rbx
 update_edges:
@@ -138,7 +138,7 @@ done:
 ; -------- helper: get_token --------
 ; returns length in rax, -1 on EOF
 get_token:
-    ; skip whitespace
+; skip whitespace
 .skip_ws:
     call    read_char
     cmp     rax, -1
@@ -150,7 +150,7 @@ get_token:
     je      .skip_ws
     cmp     dl, WHITESPACE_TAB
     je      .skip_ws
-    ; start token
+; start token
     mov     rdi, token_buf
     xor     rcx, rcx
 .store_loop:
@@ -218,12 +218,12 @@ get_node_id:
     cmp     rbx, rcx
     je      .add
     mov     rax, rbx
-    shl     rax, 5                  ; rbx * MAX_NAME_LEN
+    shl     rax, 5                      ;rbx * MAX_NAME_LEN
     lea     rdi, [names + rax]
     push    rsi
     mov     rsi, rdi
     lea     rdi, [token_buf]
-    call    strings_equal       ; rax = 1 if equal
+    call    strings_equal               ;rax = 1 if equal
     pop     rsi
     cmp     rax, 1
     je      .found
@@ -232,9 +232,9 @@ get_node_id:
 
 .add:
     cmp     rcx, MAX_NODES
-    jae     .found              ; if full, just return last index
+    jae     .found                      ;if full, just return last index
     mov     rax, rcx
-    shl     rax, 5                  ; rcx * MAX_NAME_LEN
+    shl     rax, 5                      ;rcx * MAX_NAME_LEN
     lea     rdi, [names + rax]
     call    copy_string
     mov     rax, rcx

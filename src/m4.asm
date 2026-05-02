@@ -1,14 +1,14 @@
 ; src/m4.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-%define BUFFER_SIZE 4096
+    %define BUFFER_SIZE 4096
 
 section .bss
     buffer  resb BUFFER_SIZE
 
 section .text
-    global _start
+global _start
 
 _start:
 read_loop:

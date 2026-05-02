@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: baloo-asmfmt
+        name: baloo asm formatter check
+        entry: python3 scripts/asmfmt.py --check
+        language: system
+        files: '^(src/.*\.asm|include/.*\.inc)$'

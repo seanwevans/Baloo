@@ -1,6 +1,6 @@
 ; src/pinky.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
 section .bss
     num_buffer  resb 32
@@ -10,7 +10,7 @@ section .data
     newline db WHITESPACE_NL
 
 section .text
-    global _start
+global _start
 
 _start:
     mov rax, SYS_GETEUID

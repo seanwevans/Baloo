@@ -23,8 +23,15 @@ Install `bats`, `bats-assert`, and `bats-support` then run:
 
 ## 📐 Formatting
 
-Use `scripts/asmfmt.py` to keep assembly files consistent. By default it indents instructions with four spaces and aligns comments to column 40.
-`python3 scripts/asmfmt.py src/example.asm`
+Canonical style rules:
+- Makefile recipe lines use **tabs**.
+- No trailing whitespace in tracked text files.
+- NASM labels/directives stay at column 0; instructions use 4-space indentation; inline comments are aligned to column 40.
+
+Commands:
+- Apply formatting: `make format`
+- Validate formatting only: `make lint-format`
+- Single file: `python3 scripts/asmfmt.py src/example.asm`
 
 ## Catalog
 - [`alias`](src/alias.asm) ✅ Defines or displays aliases

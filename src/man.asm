@@ -1,37 +1,37 @@
 ; src/man.asm
 
-%include "include/sysdefs.inc"
+    %include "include/sysdefs.inc"
 
-SECTION .bss
+    SECTION .bss
     buffer      resb 4096
     path_buf    resb 256
     fd          resq 1
     topic_ptr   resq 1
 
-SECTION .data
+    SECTION .data
     prefix      db "/usr/share/man/man1/",0
     prefix_len  equ $ - prefix
     suffix      db ".1",0
     suffix_len  equ $ - suffix
-    usage_msg   db "Usage: man TOPIC",10
+usage_msg   db "Usage: man TOPIC",10
     usage_len   equ $ - usage_msg
-    no_entry1   db "man: ",0
+no_entry1   db "man: ",0
     no_entry1_len equ $ - no_entry1
-    no_entry2   db ": No manual entry",10
+no_entry2   db ": No manual entry",10
     no_entry2_len equ $ - no_entry2
 
-SECTION .text
-    global _start
+    SECTION .text
+global _start
 
 _start:
-    pop     rcx                 ; argc
+    pop     rcx                         ;argc
     cmp     rcx, 2
     jne     usage_error
-    pop     rax                 ; skip program name
-    pop     rdi                 ; topic pointer
+    pop     rax                         ;skip program name
+    pop     rdi                         ;topic pointer
     mov     [topic_ptr], rdi
 
-    ; build path = prefix + topic + suffix
+; build path = prefix + topic + suffix
     lea     rsi, [path_buf]
     mov     rdi, prefix
     call    copy_string
@@ -41,12 +41,12 @@ _start:
     call    copy_string
 
     mov     rsi, [topic_ptr]
-    call    strlen              ; rbx = length of topic
+    call    strlen                      ;rbx = length of topic
     lea     rsi, [path_buf + prefix_len + rbx]
     mov     rdi, suffix
     call    copy_string
 
-    ; open the man file
+; open the man file
     mov     rax, SYS_OPEN
     lea     rdi, [path_buf]
     mov     rsi, O_RDONLY
