@@ -7,7 +7,7 @@ section .bss
     username    resb UT_NAMESIZE        ;username
 
 section .data
-    utmp_path   db "/var/run/utmp", 0   ;Path to the utmp file
+    default_utmp_path db "/run/utmp", 0 ;Default utmp file
     space       db " ", 0               ;Space delimiter between usernames
     newline     db 10, WHITESPACE_NL
 
@@ -15,8 +15,13 @@ section .text
 global      _start
 
 _start:
+    mov         rdi, default_utmp_path  ;Default path to the utmp file
+    cmp         qword [rsp], 2
+    jl          open_utmp
+    mov         rdi, [rsp + 16]         ;Optional FILE argument
+
+open_utmp:
     mov         rax, SYS_OPEN
-    mov         rdi, utmp_path          ;Path to the file
     mov         rsi, O_RDONLY           ;Read-only
     xor         rdx, rdx
     syscall
