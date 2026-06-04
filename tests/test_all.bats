@@ -545,6 +545,33 @@ PY
   assert_output "alice bob"
 }
 
+
+@test "xargs — default echo is resolved via PATH" {
+  cat >"$TMP/echo" <<'SH'
+#!/bin/sh
+printf 'path-echo:%s\n' "$*"
+SH
+  chmod +x "$TMP/echo"
+
+  run env PATH="$TMP:$PATH" "$BIN/xargs" <<<'alpha beta'
+
+  assert_success
+  assert_output "path-echo:alpha beta"
+}
+
+@test "xargs — explicit command is resolved via PATH" {
+  cat >"$TMP/collect" <<'SH'
+#!/bin/sh
+printf 'collected:%s\n' "$*"
+SH
+  chmod +x "$TMP/collect"
+
+  run env PATH="$TMP:$PATH" "$BIN/xargs" collect prefix <<<'alpha beta'
+
+  assert_success
+  assert_output "collected:prefix alpha beta"
+}
+
 @test "wc — counts lines" {
   printf 'a\nb\n' >"$TMP/w"
   run "$BIN/wc" -l "$TMP/w"
