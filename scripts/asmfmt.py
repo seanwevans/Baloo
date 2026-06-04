@@ -14,6 +14,31 @@ def normalize_whitespace_prefix(line: str) -> str:
     return expanded
 
 
+def find_comment(raw: str) -> int:
+    """Return the index of the comment-introducing ';' in ``raw``.
+
+    Semicolons that appear inside single-, double-, or back-quoted string
+    literals are not comment delimiters and are ignored. Back-quoted NASM
+    strings honour C-style backslash escapes. Returns -1 when there is no
+    comment on the line.
+    """
+    quote = None
+    escaped = False
+    for i, ch in enumerate(raw):
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif quote == '`' and ch == '\\':
+                escaped = True
+            elif ch == quote:
+                quote = None
+        elif ch in '"\'`':
+            quote = ch
+        elif ch == ';':
+            return i
+    return -1
+
+
 def format_line(line: str, indent: int, comment_col: int) -> str:
     raw = normalize_whitespace_prefix(line.rstrip('\n')).rstrip()
     stripped = raw.lstrip()
@@ -32,11 +57,11 @@ def format_line(line: str, indent: int, comment_col: int) -> str:
     if stripped.startswith(('section', 'global', 'extern')):
         return stripped
 
-    # Split code and comment
-    if ';' in raw:
-        code_part, comment_part = raw.split(';', 1)
-        code = code_part.strip()
-        comment = ';' + comment_part.strip()
+    # Split code and comment, ignoring ';' inside string literals
+    comment_idx = find_comment(raw)
+    if comment_idx != -1:
+        code = raw[:comment_idx].strip()
+        comment = ';' + raw[comment_idx + 1:].strip()
     else:
         code = raw.strip()
         comment = ''
