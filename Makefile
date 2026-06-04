@@ -11,6 +11,11 @@ TEST_FLAGS ?= --timing
 
 .PHONY: all setup clean test format lint-format check-readme-links
 
+# Preserve intermediate object files. Without this, GNU Make treats
+# build/%.o as an intermediate (made only to produce bin/%) and deletes
+# them after each build, forcing a full recompile every time.
+.SECONDARY: $(OBJ)
+
 all: setup $(BIN)
 
 setup:

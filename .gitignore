@@ -1,4 +1,5 @@
 bin/*
+build/*
 *.txt
 *.log
 *.bak
