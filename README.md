@@ -3,7 +3,11 @@
 
 ![Progress](https://img.shields.io/badge/progress-129%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/makefile.yml/badge.svg)
 
-Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
+Just the bear utilities in x86_64 assembly using direct syscalls only — no libc and no external libraries.
+
+> A few utilities depend on an external program at runtime: `chroot`, `newgrp`, and `xargs`
+> exec a shell or command as part of their normal behavior, and `at`, `batch`, and `bc`
+> currently shell out (to `/bin/sh` and `/usr/bin/bc`).
 
 ## 🛠 Build Instructions
 simply run
