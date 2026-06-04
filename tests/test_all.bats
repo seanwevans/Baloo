@@ -313,6 +313,20 @@ PY
   assert_output "36979 1 $TMP/sumfile"
 }
 
+@test "m4 — expands simple macros" {
+  printf "define(`name',`Baloo')Hello, name\n" >"$TMP/input.m4"
+  run "$BIN/m4" "$TMP/input.m4"
+  assert_success
+  assert_output "Hello, Baloo"
+}
+
+@test "m4 — supports undefine and ifdef" {
+  printf "ifdef(`name',`yes',`no')\ndefine(`name',`Baloo')ifdef(`name',`yes',`no')\nundefine(`name')ifdef(`name',`yes',`no')\n" >"$TMP/input.m4"
+  run "$BIN/m4" "$TMP/input.m4"
+  assert_success
+  assert_output $'no\nyes\nno'
+}
+
 @test "mkdir — creates directory" {
   run "$BIN/mkdir" "$TMP/dir"
   assert_success
