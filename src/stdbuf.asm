@@ -197,8 +197,7 @@ copy_env:
     mov     rdx, r9
 
 exec_cmd:
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
 show_usage:
     write   STDERR_FILENO, usage_msg, usage_len

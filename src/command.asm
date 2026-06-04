@@ -21,8 +21,7 @@ _start:
     add     rbx, 8                      ;skip program name
     mov     rsi, rbx                    ;argv for execve
     mov     rdi, [rsi]                  ;command path
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
     write   STDERR_FILENO, execve_fail_msg, execve_fail_len
     exit    1

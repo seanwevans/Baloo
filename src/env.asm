@@ -43,8 +43,7 @@ _start:
     mov     rsi, rsp                    ;argv for execve (command and args)
     mov     rdx, r13                    ;envp pointer
     mov     rdi, [rsi]                  ;command path
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
     write   STDERR_FILENO, exec_fail_msg, exec_fail_len
     exit    1
