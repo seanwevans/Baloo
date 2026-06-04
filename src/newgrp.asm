@@ -12,7 +12,6 @@ setgid_fail_msg db "Error: setgid failed", 10
     setgid_fail_len equ $ - setgid_fail_msg
 exec_fail_msg   db "Error: execve failed", 10
     exec_fail_len   equ $ - exec_fail_msg
-    shell_path      db "/bin/sh", 0
 
 section .text
 global _start
@@ -38,14 +37,20 @@ _start:
     cmp r10, 2
     jg exec_command
 
-    sub rsp, 24                         ;space for argv[0], argv[1], NULL
-    mov rdi, shell_path
-    mov [rsp], rdi
+    mov rdi, __shell_prefix
+    mov rsi, [env_ptr]
+    call __find_env
+    test rax, rax
+    jnz .have_shell
+    mov rax, __default_shell
+.have_shell:
+    sub rsp, 24                         ;space for argv[0], NULL
+    mov [rsp], rax
     mov qword [rsp+8], 0
+    mov rdi, rax
     mov rsi, rsp
     mov rdx, [env_ptr]
-    mov rax, SYS_EXECVE
-    syscall
+    call __path_execve
     jmp exec_error
 
 exec_command:
@@ -53,8 +58,7 @@ exec_command:
     mov rsi, rbx                        ;argv array for command
     mov rdi, [rbx]                      ;command path
     mov rdx, [env_ptr]
-    mov rax, SYS_EXECVE
-    syscall
+    call __path_execve
     jmp exec_error
 
 usage_error:

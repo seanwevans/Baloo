@@ -45,7 +45,9 @@ _start:
     jl      .usage
     add     rdx, 8                      ;value string
     mov     rdi, [rdx]
+    push    rdx                         ;parse_number clobbers rdx
     call    parse_number
+    pop     rdx
     cmp     rax, -1
     je      .usage
     mov     [adjust], rax
@@ -73,8 +75,7 @@ _start:
     mov     rdi, [rdx]
     mov     rsi, rdx
     mov     rdx, [env_ptr]
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
 .exec_error:
     write   STDERR_FILENO, exec_err_msg, exec_err_len

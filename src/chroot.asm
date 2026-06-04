@@ -17,7 +17,6 @@ chdir_fail_msg  db "Error: chdir failed", 10, 0
     chdir_fail_len  equ $ - chdir_fail_msg
 not_root_msg    db "Error: Must be run as root (UID 0)", 10, 0
     not_root_len    equ $ - not_root_msg
-    shell_path      db "/bin/sh", 0
     root_path       db "/", 0
 
 section .text
@@ -54,15 +53,20 @@ _start:
     cmp             r10, 3              ;If argc >= 3, we have a command to execute
     jge             exec_command
 
-    sub             rsp, 24             ;Space for 3 pointers (NULL terminated)
-mov             rdi, shell_path     ; First argument: path to shell
-    mov             [rsp], rdi          ;argv[0] = shell_path
-    mov             QWORD [rsp+8], 0    ;argv[1] = NULL
-mov             rsi, rsp            ; Second argument: argv array
-mov             rdx, [env_ptr]      ; Third argument: environment variables
-
-    mov             rax, SYS_EXECVE
-    syscall
+    sub             rsp, 24
+    mov             rdi, __shell_prefix
+    mov             rsi, [env_ptr]
+    call            __find_env
+    test            rax, rax
+    jnz             .have_shell
+    mov             rax, __default_shell
+.have_shell:
+    mov             [rsp], rax
+    mov             qword [rsp+8], 0
+    mov             rdi, rax
+    mov             rsi, rsp
+    mov             rdx, [env_ptr]
+    call            __path_execve
 
     jmp             execve_error
 
@@ -73,8 +77,7 @@ exec_command:
     mov             rdi, [rbx]          ;command path
     mov             rdx, [env_ptr]      ;envp
 
-    mov             rax, SYS_EXECVE
-    syscall
+    call            __path_execve
 
     jmp             execve_error
 

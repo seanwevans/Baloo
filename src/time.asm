@@ -85,8 +85,7 @@ _start:
     mov     rsi, [argv_ptr]
     mov     rdx, [env_ptr]
     mov     rdi, [rsi]                  ;command path
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
     write   STDERR_FILENO, exec_err, exec_err_len
     exit    1

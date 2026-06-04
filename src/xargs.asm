@@ -10,7 +10,7 @@ section .bss
     arg_list    resq MAX_ARGS + 1       ;pointers to args
 
 section .data
-    default_cmd db "/bin/echo", 0
+    default_cmd db "echo", 0
 exec_fail   db "xargs: exec failed", WHITESPACE_NL
     exec_fail_len equ $ - exec_fail
 
@@ -103,8 +103,7 @@ _start:
     mov     rdi, [arg_list]
     mov     rsi, arg_list
     mov     rdx, r12
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
     write   STDERR_FILENO, exec_fail, exec_fail_len
     exit    1
