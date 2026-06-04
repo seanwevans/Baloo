@@ -1,6 +1,3 @@
 bin/*
-*.txt
 *.log
 *.bak
-
-fixasm.py
