@@ -18,6 +18,26 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/basename" "/usr/local/bin/foo"
   assert_output "foo"
 }
+@test "bc — evaluates expressions without delegating to system bc" {
+  printf '2+2
+(3+4)*5
+2^8
+7/2
+' >"$TMP/bc.in"
+
+  run "$BIN/bc" "$TMP/bc.in"
+  assert_success
+  assert_output $'4
+35
+256
+3'
+
+  if command -v strings >/dev/null 2>&1; then
+    run strings "$BIN/bc"
+    refute_output --partial "/usr/bin/bc"
+  fi
+}
+
 
 @test "cat — echoes file contents" {
   echo "hello, baloo" >"$TMP/file"
