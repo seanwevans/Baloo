@@ -6,10 +6,10 @@ section .bss
     utmp_buf        resb UTMP_SIZE
 
 section .data
-    utmp_file       db "/var/run/utmp", 0
-errmsg_open     db "Error: Cannot open /var/run/utmp", 10
+    default_utmp_file db "/run/utmp", 0
+errmsg_open     db "who: cannot open utmp file", 10
     errmsg_open_len equ $ - errmsg_open
-errmsg_read     db "Error: Cannot read /var/run/utmp", 10
+errmsg_read     db "who: cannot read utmp file", 10
     errmsg_read_len equ $ - errmsg_read
     newline         db WHITESPACE_NL
     tab             db 9
@@ -18,8 +18,13 @@ section .text
 global          _start
 
 _start:
+    mov             rdi, default_utmp_file
+    cmp             qword [rsp], 2
+    jl              .open_utmp
+    mov             rdi, [rsp + 16]     ;Optional FILE argument
+
+.open_utmp:
     mov             rax, SYS_OPEN
-    mov             rdi, utmp_file
     mov             rsi, O_RDONLY
     mov             rdx, 0
     syscall
