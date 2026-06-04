@@ -7,8 +7,9 @@ BIN := $(patsubst src/%.asm,bin/%,$(SRC))
 
 FMT_FILES := $(SRC) $(INC)
 FMT_SCRIPT := scripts/asmfmt.py
+TEST_FLAGS ?= --timing
 
-.PHONY: all setup clean test format lint-format
+.PHONY: all setup clean test format lint-format check-readme-links
 
 all: setup $(BIN)
 
@@ -29,7 +30,7 @@ lint-format:
 	python3 -m compileall -q scripts/asmfmt.py
 
 test: all
-	bats --timing tests/test_all.bats
+	bats $(TEST_FLAGS) tests/test_all.bats
 
 check-readme-links:
 	python3 scripts/check_readme_links.py
