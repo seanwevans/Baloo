@@ -73,6 +73,10 @@ teardown(){ rm -rf "$TMP"; }
     skip "strace is required for syscall argument regression check"
   fi
 
+  if [ "$(id -u)" -eq 0 ]; then
+    skip "requires non-root: root may change group ownership freely, so chgrp will not fail"
+  fi
+
   touch "$TMP/testfile"
   gid=12345
   run strace -e trace=chown "$BIN/chgrp" "$gid" "$TMP/testfile"
@@ -90,6 +94,9 @@ teardown(){ rm -rf "$TMP"; }
 }
 
 @test "chown — (non‑root) returns EPERM" {
+  if [ "$(id -u)" -eq 0 ]; then
+    skip "requires non-root: root can change ownership without EPERM"
+  fi
   touch "$TMP/f"
   run "$BIN/chown" 0 "$TMP/f"
   assert_failure
