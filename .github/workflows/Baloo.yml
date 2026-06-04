@@ -36,6 +36,9 @@ jobs:
     - name: Verify README catalog links
       run: make check-readme-links
 
+    - name: Check formatting
+      run: make lint-format
+
     - name: Run Tests
       timeout-minutes: 5
       # Removed the 'timeout' utility wrapper since GitHub Actions provides native step timeouts

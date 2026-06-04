@@ -6,6 +6,26 @@ load 'test_helper/bats-assert/load'
 setup()  { BIN="${BATS_TEST_DIRNAME}/../bin"; TMP=$(mktemp -d); }
 teardown(){ rm -rf "$TMP"; }
 
+make_utmp_fixture() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import struct
+import sys
+
+path = sys.argv[1]
+UTMP_SIZE = 384
+records = []
+for user, line, when in ((b"alice", b"pts/0", 1234567890), (b"bob", b"tty1", 1234567891)):
+    rec = bytearray(UTMP_SIZE)
+    struct.pack_into("<h", rec, 0, 7)
+    rec[8:8 + len(line)] = line
+    rec[44:44 + len(user)] = user
+    struct.pack_into("<I", rec, 340, when)
+    records.append(rec)
+open(path, "wb").write(b"".join(records))
+PY
+}
+
 # ----------  SINGLE‑TEST SMOKE CHECKS FOR EVERY ✅ PROGRAM ---------- #
 
 @test "arch — prints hardware name" {
@@ -18,6 +38,26 @@ teardown(){ rm -rf "$TMP"; }
   run "$BIN/basename" "/usr/local/bin/foo"
   assert_output "foo"
 }
+@test "bc — evaluates expressions without delegating to system bc" {
+  printf '2+2
+(3+4)*5
+2^8
+7/2
+' >"$TMP/bc.in"
+
+  run "$BIN/bc" "$TMP/bc.in"
+  assert_success
+  assert_output $'4
+35
+256
+3'
+
+  if command -v strings >/dev/null 2>&1; then
+    run strings "$BIN/bc"
+    refute_output --partial "/usr/bin/bc"
+  fi
+}
+
 
 @test "cat — echoes file contents" {
   echo "hello, baloo" >"$TMP/file"
@@ -477,10 +517,11 @@ teardown(){ rm -rf "$TMP"; }
   assert_output --partial "load"
 }
 
-@test "users — prints current user" {
-  skip "Temporarily disabled"
-  run "$BIN/users"
-  assert_output --partial "$(whoami)"
+@test "users — reads an explicit utmp file" {
+  make_utmp_fixture "$TMP/utmp"
+  run "$BIN/users" "$TMP/utmp"
+  assert_success
+  assert_output "alice bob"
 }
 
 @test "wc — counts lines" {
@@ -489,9 +530,12 @@ teardown(){ rm -rf "$TMP"; }
   assert_output "2 $TMP/w"
 }
 
-@test "who — lists users" {
-  run "$BIN/who"
+@test "who — reads an explicit utmp file" {
+  make_utmp_fixture "$TMP/utmp"
+  run "$BIN/who" "$TMP/utmp"
   assert_success
+  assert_output $'alice\tpts/0\t1234567890
+bob\ttty1\t1234567891'
 }
 
 @test "whoami — matches whoami(1)" {
