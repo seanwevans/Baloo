@@ -6,10 +6,9 @@ section .bss
     utmp_buf        resb UTMP_SIZE
 
 section .data
+    utmp_run        db "/run/utmp", 0
     utmp_file       db "/var/run/utmp", 0
-errmsg_open     db "Error: Cannot open /var/run/utmp", 10
-    errmsg_open_len equ $ - errmsg_open
-errmsg_read     db "Error: Cannot read /var/run/utmp", 10
+errmsg_read     db "Error: Cannot read utmp", 10
     errmsg_read_len equ $ - errmsg_read
     newline         db WHITESPACE_NL
     tab             db 9
@@ -19,14 +18,22 @@ global          _start
 
 _start:
     mov             rax, SYS_OPEN
-    mov             rdi, utmp_file
+    mov             rdi, utmp_run       ;try modern path first
     mov             rsi, O_RDONLY
     mov             rdx, 0
     syscall
-
     cmp             rax, 0
-    jl              .open_error
+    jge             .opened
 
+    mov             rax, SYS_OPEN
+    mov             rdi, utmp_file      ;fall back to legacy path
+    mov             rsi, O_RDONLY
+    mov             rdx, 0
+    syscall
+    cmp             rax, 0
+    jl              .no_utmp            ;no utmp -> no logged-in users
+
+.opened:
     mov             r12, rax            ;file descriptor
 
 .read_loop:
@@ -87,13 +94,8 @@ _start:
     syscall
     exit            0
 
-.open_error:
-    mov             rax, SYS_WRITE
-    mov             rdi, STDERR_FILENO
-    mov             rsi, errmsg_open
-    mov             rdx, errmsg_open_len
-    syscall
-    exit            1
+.no_utmp:
+    exit            0
 
 .read_error:
     mov             rax, SYS_WRITE

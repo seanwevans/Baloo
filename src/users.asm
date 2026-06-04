@@ -7,7 +7,8 @@ section .bss
     username    resb UT_NAMESIZE        ;username
 
 section .data
-    utmp_path   db "/var/run/utmp", 0   ;Path to the utmp file
+    utmp_run    db "/run/utmp", 0       ;Modern utmp path
+    utmp_path   db "/var/run/utmp", 0   ;Legacy utmp path
     space       db " ", 0               ;Space delimiter between usernames
     newline     db 10, WHITESPACE_NL
 
@@ -16,14 +17,22 @@ global      _start
 
 _start:
     mov         rax, SYS_OPEN
-    mov         rdi, utmp_path          ;Path to the file
-    mov         rsi, O_RDONLY           ;Read-only
+    mov         rdi, utmp_run           ;Try modern path first
+    mov         rsi, O_RDONLY
     xor         rdx, rdx
     syscall
-
     test        rax, rax
-    js          exit_error              ;(error)
+    jns         opened
 
+    mov         rax, SYS_OPEN
+    mov         rdi, utmp_path          ;Fall back to legacy path
+    mov         rsi, O_RDONLY
+    xor         rdx, rdx
+    syscall
+    test        rax, rax
+    js          no_utmp                 ;No utmp -> no logged-in users
+
+opened:
     mov         r15, rax
 
 read_loop:
@@ -91,3 +100,6 @@ end_read:
 
 exit_error:
     exit        1
+
+no_utmp:
+    exit        0
