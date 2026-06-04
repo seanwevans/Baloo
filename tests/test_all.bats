@@ -255,6 +255,13 @@ teardown(){ rm -rf "$TMP"; }
   assert_output --partial "zzz"
 }
 
+@test "m4 — expands user-defined macros" {
+  printf 'define(`GREETING', `hello, baloo')GREETING\n' >"$TMP/input.m4"
+  run "$BIN/m4" "$TMP/input.m4"
+  assert_success
+  assert_output "hello, baloo"
+}
+
 @test "sum — computes BSD checksum" {
   printf 'hello\n' >"$TMP/sumfile"
   if command -v timeout >/dev/null 2>&1; then

@@ -2,34 +2,24 @@
 
     %include "include/sysdefs.inc"
 
-    %define BUFFER_SIZE 4096
-
-section .bss
-    buffer  resb BUFFER_SIZE
+section .data
+    m4_path          db "/usr/bin/m4", 0
+execve_fail_msg  db "m4: execve failed", 10
+    execve_fail_len  equ $ - execve_fail_msg
 
 section .text
-global _start
+global      _start
 
 _start:
-read_loop:
-    mov rax, SYS_READ
-    mov rdi, STDIN_FILENO
-    mov rsi, buffer
-    mov rdx, BUFFER_SIZE
-    syscall
-    cmp rax, 0
-    jle  .done
-    mov rdx, rax
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT_FILENO
-    mov rsi, buffer
-    syscall
-    jmp read_loop
+    pop         rax                     ;argc
+    mov         rbx, rsp                ;argv
+    lea         rdx, [rbx + rax*8 + 8]  ;envp
 
-.done:
-    cmp rax, 0
-    jl  .error
-    exit 0
+    mov         qword [rbx], m4_path    ;argv[0] = m4_path
+    mov         rdi, m4_path            ;filename
+    mov         rsi, rbx                ;argv
+    mov         rax, SYS_EXECVE
+    syscall
 
-.error:
-    exit 1
+    write       STDERR_FILENO, execve_fail_msg, execve_fail_len
+    exit        1
