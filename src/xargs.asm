@@ -4,13 +4,15 @@
 
     %define BUF_SIZE 8192
     %define MAX_ARGS 256
+    %define PATH_SEPARATOR 58
 
 section .bss
     buffer      resb BUF_SIZE           ;storage for stdin
     arg_list    resq MAX_ARGS + 1       ;pointers to args
+    path_buf    resb 4096               ;candidate path for PATH search
 
 section .data
-    default_cmd db "/bin/echo", 0
+    default_cmd db "echo", 0
 exec_fail   db "xargs: exec failed", WHITESPACE_NL
     exec_fail_len equ $ - exec_fail
 
@@ -103,8 +105,123 @@ _start:
     mov     rdi, [arg_list]
     mov     rsi, arg_list
     mov     rdx, r12
-    mov     rax, SYS_EXECVE
-    syscall
+    call    exec_path
 
     write   STDERR_FILENO, exec_fail, exec_fail_len
     exit    1
+
+exec_path:
+    mov     r13, rdi                    ;command name
+    mov     r14, rsi                    ;argv
+    mov     r15, rdx                    ;envp
+
+    xor     rcx, rcx
+.check_slash:
+    mov     al, [r13 + rcx]
+    cmp     al, 0
+    je      .find_path
+    cmp     al, '/'
+    je      .exec_direct
+    inc     rcx
+    jmp     .check_slash
+
+.exec_direct:
+    mov     rdi, r13
+    mov     rsi, r14
+    mov     rdx, r15
+    mov     rax, SYS_EXECVE
+    syscall
+    ret
+
+.find_path:
+    mov     rbx, r15
+.env_loop:
+    mov     rdi, [rbx]
+    test    rdi, rdi
+    je      .done
+    cmp     dword [rdi], 'PATH'
+    jne     .next_env
+    cmp     byte [rdi + 4], '='
+    je      .have_path
+.next_env:
+    add     rbx, 8
+    jmp     .env_loop
+
+.have_path:
+    lea     r12, [rdi + 5]
+
+.path_loop:
+    mov     al, [r12]
+    cmp     al, 0
+    je      .done
+    lea     rdi, [rel path_buf]
+    mov     rbx, rdi
+
+    mov     al, [r12]
+    cmp     al, PATH_SEPARATOR
+    jne     .copy_dir
+    mov     byte [rbx], '.'
+    inc     rbx
+    jmp     .finish_dir
+
+.copy_dir:
+    mov     al, [r12]
+    cmp     al, 0
+    je      .finish_dir
+    cmp     al, PATH_SEPARATOR
+    je      .finish_dir
+    mov     al, [r12]
+    mov     [rbx], al
+    inc     rbx
+    inc     r12
+    lea     rax, [rel path_buf + 4094]
+    cmp     rbx, rax
+    jae     .skip_component
+    jmp     .copy_dir
+
+.finish_dir:
+    cmp     rbx, rdi
+    je      .empty_component
+    mov     al, [rbx - 1]
+    cmp     al, '/'
+    je      .copy_cmd
+    mov     byte [rbx], '/'
+    inc     rbx
+    jmp     .copy_cmd
+
+.empty_component:
+    mov     byte [rbx], '.'
+    inc     rbx
+    mov     byte [rbx], '/'
+    inc     rbx
+
+.copy_cmd:
+    xor     rcx, rcx
+.copy_cmd_loop:
+    mov     al, [r13 + rcx]
+    mov     [rbx], al
+    cmp     al, 0
+    je      .try_exec
+    inc     rbx
+    inc     rcx
+    lea     rax, [rel path_buf + 4095]
+    cmp     rbx, rax
+    jae     .skip_component
+    jmp     .copy_cmd_loop
+
+.try_exec:
+    lea     rdi, [rel path_buf]
+    mov     rsi, r14
+    mov     rdx, r15
+    mov     rax, SYS_EXECVE
+    syscall
+
+.skip_component:
+    mov     al, [r12]
+    cmp     al, PATH_SEPARATOR
+    jne     .path_loop
+    inc     r12
+    jmp     .path_loop
+
+.done:
+    ret

@@ -10,7 +10,6 @@ section .bss
     ts_nsec     resq 1
 
 section .data
-    sh_path     db "/bin/sh", 0
     dash_c      db "-c", 0
 usage_msg   db "Usage: at <seconds>\n", 0
     usage_len   equ $ - usage_msg
@@ -58,19 +57,25 @@ _start:
     xor     rsi, rsi
     syscall
 
-; prepare argv for execve("/bin/sh", ["sh","-c",cmd], envp)
+; resolve shell ($SHELL, else /bin/sh) and exec ["sh","-c",cmd]
+    mov     rdi, __shell_prefix
+    mov     rsi, r12
+    call    __find_env
+    test    rax, rax
+    jnz     .have_shell
+    mov     rax, __default_shell
+.have_shell:
     sub     rsp, 32
-    mov     qword [rsp], sh_path
-    mov     qword [rsp+8], dash_c
-    lea     rax, [cmd_buffer]
-    mov     [rsp+16], rax
+    mov     [rsp], rax                  ;argv[0] = shell
+    mov     qword [rsp+8], dash_c       ;argv[1] = -c
+    lea     rcx, [cmd_buffer]
+    mov     [rsp+16], rcx               ;argv[2] = command
     mov     qword [rsp+24], 0
 
-    mov     rdi, sh_path
+    mov     rdi, [rsp]
     mov     rsi, rsp
     mov     rdx, r12
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
 ; on failure
     write STDERR_FILENO, exec_fail, exec_fail_len

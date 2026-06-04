@@ -28,8 +28,7 @@ _start:
     lea     rdx, [rbx + r12*8 + 8]      ;env pointer
     mov     rdi, [rbx + 16]             ;command
     lea     rsi, [rbx + 16]             ;argv for command
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
     write   STDERR_FILENO, exec_err_msg, exec_err_len
     exit    1

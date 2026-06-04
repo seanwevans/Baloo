@@ -67,8 +67,7 @@ _start:
     mov     rdi, [rbx + 8]
     lea     rsi, [rbx + 8]
     mov     rdx, r13
-    mov     rax, SYS_EXECVE
-    syscall
+    call    __path_execve
 
     write   STDERR_FILENO, exec_fail, exec_fail_len
     exit    1

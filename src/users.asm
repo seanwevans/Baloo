@@ -16,6 +16,12 @@ section .text
 global      _start
 
 _start:
+    mov         rdi, default_utmp_path  ;Default path to the utmp file
+    cmp         qword [rsp], 2
+    jl          open_utmp
+    mov         rdi, [rsp + 16]         ;Optional FILE argument
+
+open_utmp:
     mov         rax, SYS_OPEN
     mov         rdi, utmp_run           ;Try modern path first
     mov         rsi, O_RDONLY
