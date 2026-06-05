@@ -919,6 +919,12 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "read — echoes the first line of input" {
+  run bash -c "printf 'first\nsecond\n' | '$BIN/read'"
+  assert_success
+  assert_output "first"
+}  
+
 @test "realpath — canonicalizes an existing path" {
   mkdir -p "$TMP/d/sub"; touch "$TMP/d/sub/f"
   run "$BIN/realpath" "$TMP/d/./sub/../sub/f"

@@ -585,7 +585,7 @@
     "name": "read",
     "description": "Read a line from standard input",
     "glyph": "📖",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "readlink",

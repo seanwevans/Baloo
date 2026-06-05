@@ -134,7 +134,7 @@ Commands:
 - [`ps`](src/ps.asm) ✅ Report process status
 - `ptx` ⛔️ Produces a permuted index of file contents
 - [`pwd`](src/pwd.asm) ✅ Prints the current working directory
-- `read` ⛔️ Read a line from standard input
+- [`read`](src/read.asm) ✅ Read a line from standard input
 - [`readlink`](src/readlink.asm) ✅ Print destination of a symbolic link
 - [`realpath`](src/realpath.asm) ✅ Returns the resolved absolute or relative path for a file
 - [`renice`](src/renice.asm) ✅ Set nice values of running processes
