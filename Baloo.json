@@ -663,7 +663,7 @@
     "name": "sha384sum",
     "description": "Computes and checks SHA-1/SHA-2 message digests",
     "glyph": "🔓",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "sha512sum",

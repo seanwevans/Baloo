@@ -147,7 +147,7 @@ Commands:
 - [`sha1sum`](src/sha1sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
 - `sha224sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`sha256sum`](src/sha256sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
-- `sha384sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- [`sha384sum`](src/sha384sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
 - `sha512sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
 - `shuf` ⛔️ generates random permutations
