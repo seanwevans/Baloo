@@ -6,7 +6,8 @@ section .bss
     utmp_buf        resb UTMP_SIZE
 
 section .data
-    default_utmp_file db "/run/utmp", 0
+    utmp_run        db "/run/utmp", 0
+    utmp_file       db "/var/run/utmp", 0
 errmsg_open     db "who: cannot open utmp file", 10
     errmsg_open_len equ $ - errmsg_open
 errmsg_read     db "who: cannot read utmp file", 10
@@ -18,27 +19,32 @@ section .text
 global          _start
 
 _start:
-    mov             rdi, default_utmp_file
     cmp             qword [rsp], 2
-    jl              .open_utmp
+    jl              .open_default_utmp
     mov             rdi, [rsp + 16]     ;Optional FILE argument
+    call            .open_named_utmp
+    cmp             rax, 0
+    jl              .read_error
+    jmp             .opened
 
-.open_utmp:
-    mov             rax, SYS_OPEN
+.open_default_utmp:
     mov             rdi, utmp_run       ;try modern path first
-    mov             rsi, O_RDONLY
-    mov             rdx, 0
-    syscall
+    call            .open_named_utmp
     cmp             rax, 0
     jge             .opened
 
-    mov             rax, SYS_OPEN
     mov             rdi, utmp_file      ;fall back to legacy path
+    call            .open_named_utmp
+    cmp             rax, 0
+    jl              .no_utmp            ;no utmp -> no logged-in users
+    jmp             .opened
+
+.open_named_utmp:
+    mov             rax, SYS_OPEN
     mov             rsi, O_RDONLY
     mov             rdx, 0
     syscall
-    cmp             rax, 0
-    jl              .no_utmp            ;no utmp -> no logged-in users
+    ret
 
 .opened:
     mov             r12, rax            ;file descriptor

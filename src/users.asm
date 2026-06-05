@@ -16,27 +16,32 @@ section .text
 global      _start
 
 _start:
-    mov         rdi, default_utmp_path  ;Default path to the utmp file
     cmp         qword [rsp], 2
-    jl          open_utmp
+    jl          open_default_utmp
     mov         rdi, [rsp + 16]         ;Optional FILE argument
+    call        open_named_utmp
+    test        rax, rax
+    js          exit_error
+    jmp         opened
 
-open_utmp:
-    mov         rax, SYS_OPEN
+open_default_utmp:
     mov         rdi, utmp_run           ;Try modern path first
-    mov         rsi, O_RDONLY
-    xor         rdx, rdx
-    syscall
+    call        open_named_utmp
     test        rax, rax
     jns         opened
 
-    mov         rax, SYS_OPEN
     mov         rdi, utmp_path          ;Fall back to legacy path
+    call        open_named_utmp
+    test        rax, rax
+    js          no_utmp                 ;No utmp -> no logged-in users
+    jmp         opened
+
+open_named_utmp:
+    mov         rax, SYS_OPEN
     mov         rsi, O_RDONLY
     xor         rdx, rdx
     syscall
-    test        rax, rax
-    js          no_utmp                 ;No utmp -> no logged-in users
+    ret
 
 opened:
     mov         r15, rax
