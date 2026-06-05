@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-129%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -146,7 +146,7 @@ Commands:
 - `sh` ⛔️ Shell, the standard command language interpreter
 - `sha1sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - `sha224sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha256sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- [`sha256sum`](src/sha256sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
 - `sha384sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - `sha512sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
 - [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
