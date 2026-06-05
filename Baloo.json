@@ -519,7 +519,7 @@
     "name": "paste",
     "description": "Merge corresponding or subsequent lines of files",
     "glyph": "📌",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "patch",

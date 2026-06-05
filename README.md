@@ -123,7 +123,7 @@ Commands:
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors
 - [`numfmt`](src/numfmt.asm) ✅ Reformat numbers
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats
-- `paste` ⛔️ Merge corresponding or subsequent lines of files
+- [`paste`](src/paste.asm) ✅ Merge corresponding or subsequent lines of files
 - `patch` ⛔️ Apply changes to files
 - [`pathchk`](src/pathchk.asm) ✅ Checks whether file names are valid or portable
 - `pax` ⛔️ Portable archive interchange

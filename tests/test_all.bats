@@ -919,6 +919,14 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "paste — merges lines with tabs" {
+  printf 'a\nb\nc\n' >"$TMP/1"
+  printf 'x\ny\nz\n' >"$TMP/2"
+  run "$BIN/paste" "$TMP/1" "$TMP/2"
+  assert_success
+  assert_output "$(paste "$TMP/1" "$TMP/2")"
+}
+
 @test "pathchk — accepts a valid name, rejects an empty one" {
   run "$BIN/pathchk" "valid/path/name"
   assert_success
