@@ -19,24 +19,23 @@ _start:
     cmp         qword [rsp], 2
     jl          open_default_utmp
     mov         rdi, [rsp + 16]         ;Optional FILE argument
-    call        open_named_utmp
-    test        rax, rax
-    js          exit_error
-    jmp         opened
+    jmp         open_selected_utmp
 
 open_default_utmp:
     mov         rdi, utmp_run           ;Try modern path first
-    call        open_named_utmp
+    call        try_open_utmp
     test        rax, rax
     jns         opened
 
     mov         rdi, utmp_path          ;Fall back to legacy path
-    call        open_named_utmp
+
+open_selected_utmp:
+    call        try_open_utmp
     test        rax, rax
     js          no_utmp                 ;No utmp -> no logged-in users
     jmp         opened
 
-open_named_utmp:
+try_open_utmp:
     mov         rax, SYS_OPEN
     mov         rsi, O_RDONLY
     xor         rdx, rdx
@@ -87,8 +86,11 @@ first_username:
     repne       scasb                   ;Scan for NULL (0)
     mov         rdx, UT_NAMESIZE
     sub         rdx, rcx
-    dec         rdx                     ;username length
+    test        rcx, rcx
+    jz          write_username          ;full-width username without NUL
+    dec         rdx                     ;exclude the NUL terminator
 
+write_username:
     mov         rax, SYS_WRITE
     mov         rdi, STDOUT_FILENO
     mov         rsi, username

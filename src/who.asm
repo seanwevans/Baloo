@@ -22,24 +22,23 @@ _start:
     cmp             qword [rsp], 2
     jl              .open_default_utmp
     mov             rdi, [rsp + 16]     ;Optional FILE argument
-    call            .open_named_utmp
-    cmp             rax, 0
-    jl              .read_error
-    jmp             .opened
+    jmp             .open_selected_utmp
 
 .open_default_utmp:
     mov             rdi, utmp_run       ;try modern path first
-    call            .open_named_utmp
+    call            .try_open_utmp
     cmp             rax, 0
     jge             .opened
 
     mov             rdi, utmp_file      ;fall back to legacy path
-    call            .open_named_utmp
+
+.open_selected_utmp:
+    call            .try_open_utmp
     cmp             rax, 0
     jl              .no_utmp            ;no utmp -> no logged-in users
     jmp             .opened
 
-.open_named_utmp:
+.try_open_utmp:
     mov             rax, SYS_OPEN
     mov             rsi, O_RDONLY
     mov             rdx, 0
