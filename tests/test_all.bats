@@ -925,3 +925,10 @@ bob\ttty1\t1234567891'
   assert_success
   assert_output "$(sha1sum "$TMP/f")"
 }
+
+@test "sha256sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha256sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha256sum "$TMP/f")"
+}
