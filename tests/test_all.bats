@@ -904,6 +904,8 @@ bob\ttty1\t1234567891'
   run bash -c "'$BIN/yes' | head -n2"
   assert_success
   assert_output $'y\ny'
+}
+
 @test "printf — interprets format specifiers, width, and escapes" {
   run "$BIN/printf" '%s=%d\n' answer 42
   assert_output 'answer=42'
