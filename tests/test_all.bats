@@ -1,6 +1,15 @@
 #!/usr/bin/env bats
-load 'test_helper/bats-support/load'
-load 'test_helper/bats-assert/load'
+if [ -e "${BATS_TEST_DIRNAME}/test_helper/bats-support/load.bash" ]; then
+  load 'test_helper/bats-support/load'
+else
+  bats_load_library bats-support
+fi
+
+if [ -e "${BATS_TEST_DIRNAME}/test_helper/bats-assert/load.bash" ]; then
+  load 'test_helper/bats-assert/load'
+else
+  bats_load_library bats-assert
+fi
 
 # Directory with Baloo binaries ------------------------------------------------
 setup()  { BIN="${BATS_TEST_DIRNAME}/../bin"; TMP=$(mktemp -d); }
@@ -314,14 +323,20 @@ PY
 }
 
 @test "m4 — expands simple macros" {
-  printf "define(`name',`Baloo')Hello, name\n" >"$TMP/input.m4"
+  cat >"$TMP/input.m4" <<'EOF'
+define(`name',`Baloo')Hello, name
+EOF
   run "$BIN/m4" "$TMP/input.m4"
   assert_success
   assert_output "Hello, Baloo"
 }
 
 @test "m4 — supports undefine and ifdef" {
-  printf "ifdef(`name',`yes',`no')\ndefine(`name',`Baloo')ifdef(`name',`yes',`no')\nundefine(`name')ifdef(`name',`yes',`no')\n" >"$TMP/input.m4"
+  cat >"$TMP/input.m4" <<'EOF'
+ifdef(`name',`yes',`no')
+define(`name',`Baloo')ifdef(`name',`yes',`no')
+undefine(`name')ifdef(`name',`yes',`no')
+EOF
   run "$BIN/m4" "$TMP/input.m4"
   assert_success
   assert_output $'no\nyes\nno'
