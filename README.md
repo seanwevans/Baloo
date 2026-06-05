@@ -5,6 +5,8 @@
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
+<img src="https://github.com/user-attachments/assets/d1c3e5c4-eb85-4277-817c-f83df6958538" />
+
 ## 🛠 Build Instructions
 simply run
 ```
