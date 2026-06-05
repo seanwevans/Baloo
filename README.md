@@ -1,6 +1,4 @@
-# Baloo 🐻 
-
-![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+# Baloo 🐻 ![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
