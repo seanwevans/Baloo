@@ -918,3 +918,11 @@ bob\ttty1\t1234567891'
   run "$BIN/printf" '%s\n' a b c
   assert_output $'a\nb\nc'
 }
+
+@test "paste — merges lines with tabs" {
+  printf 'a\nb\nc\n' >"$TMP/1"
+  printf 'x\ny\nz\n' >"$TMP/2"
+  run "$BIN/paste" "$TMP/1" "$TMP/2"
+  assert_success
+  assert_output "$(paste "$TMP/1" "$TMP/2")"
+}
