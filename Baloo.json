@@ -597,7 +597,7 @@
     "name": "realpath",
     "description": "Returns the resolved absolute or relative path for a file",
     "glyph": "🛣️",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "renice",
