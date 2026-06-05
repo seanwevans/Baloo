@@ -17,8 +17,7 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        sudo apt-get update
-        # Combined installation of build, test, and debugging tools
+        sudo apt-get update        
         sudo apt-get install -y nasm bats strace
 
     - name: Install bats helpers
