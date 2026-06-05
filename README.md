@@ -123,9 +123,9 @@ Commands:
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors
 - [`numfmt`](src/numfmt.asm) ✅ Reformat numbers
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats
-- `paste` ⛔️ Merge corresponding or subsequent lines of files
+- [`paste`](src/paste.asm) ✅ Merge corresponding or subsequent lines of files
 - `patch` ⛔️ Apply changes to files
-- `pathchk` ⛔️ Checks whether file names are valid or portable
+- [`pathchk`](src/pathchk.asm) ✅ Checks whether file names are valid or portable
 - `pax` ⛔️ Portable archive interchange
 - [`pinky`](src/pinky.asm) ✅ A lightweight version of finger
 - `pr` ⛔️ Paginate or columnate files for printing
@@ -144,13 +144,13 @@ Commands:
 - `sed` ⛔️ Stream editor
 - [`seq`](src/seq.asm) ✅ Prints a sequence of numbers
 - `sh` ⛔️ Shell, the standard command language interpreter
-- `sha1sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha224sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha256sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha384sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha512sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- [`sha1sum`](src/sha1sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha224sum`](src/sha224sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha256sum`](src/sha256sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha384sum`](src/sha384sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha512sum`](src/sha512sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
 - [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
-- `shuf` ⛔️ generates random permutations
+- [`shuf`](src/shuf.asm) ✅ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
 - `sort` ⛔️ Sorts lines of text files
 - [`split`](src/split.asm) ✅ Splits a file into pieces
