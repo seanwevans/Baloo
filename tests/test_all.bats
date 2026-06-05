@@ -925,3 +925,31 @@ bob\ttty1\t1234567891'
   assert_success
   assert_output "$(sha512sum "$TMP/f")"
 }
+
+@test "sha224sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha224sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha224sum "$TMP/f")"
+}
+
+@test "sha384sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha384sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha384sum "$TMP/f")"
+}
+
+@test "sha1sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha1sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha1sum "$TMP/f")"
+}
+
+@test "sha256sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha256sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha256sum "$TMP/f")"
+}
