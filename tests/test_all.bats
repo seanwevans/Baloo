@@ -919,6 +919,13 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "sha512sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha512sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha512sum "$TMP/f")"
+}
+
 @test "sha224sum — matches coreutils" {
   printf 'hello world\n' >"$TMP/f"
   run "$BIN/sha224sum" "$TMP/f"
