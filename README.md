@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-129%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -125,7 +125,7 @@ Commands:
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats
 - `paste` ⛔️ Merge corresponding or subsequent lines of files
 - `patch` ⛔️ Apply changes to files
-- `pathchk` ⛔️ Checks whether file names are valid or portable
+- [`pathchk`](src/pathchk.asm) ✅ Checks whether file names are valid or portable
 - `pax` ⛔️ Portable archive interchange
 - [`pinky`](src/pinky.asm) ✅ A lightweight version of finger
 - `pr` ⛔️ Paginate or columnate files for printing

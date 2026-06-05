@@ -918,3 +918,10 @@ bob\ttty1\t1234567891'
   run "$BIN/printf" '%s\n' a b c
   assert_output $'a\nb\nc'
 }
+
+@test "pathchk — accepts a valid name, rejects an empty one" {
+  run "$BIN/pathchk" "valid/path/name"
+  assert_success
+  run "$BIN/pathchk" ""
+  assert_failure
+}
