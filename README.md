@@ -189,8 +189,6 @@ Commands:
 - [`write`](src/write.asm) ✅ Write to another user's terminal
 - [`xargs`](src/xargs.asm) ✅ Construct argument lists and invoke utility
 - [`yes`](src/yes.asm) ✅ Prints a string repeatedly
+
 ## Benchmark
 Run `make` to build all binaries, then execute `tests/benchmark.sh` to compare a few Baloo programs against the system implementations using `hyperfine`.
-
-## License
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
