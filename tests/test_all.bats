@@ -919,6 +919,14 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "shuf — outputs a permutation of the input" {
+  seq 1 20 >"$TMP/in"
+  run "$BIN/shuf" "$TMP/in"
+  assert_success
+  sorted="$(printf '%s\n' "$output" | sort -n)"
+  assert_equal "$sorted" "$(seq 1 20)"
+}
+
 @test "paste — merges lines with tabs" {
   printf 'a\nb\nc\n' >"$TMP/1"
   printf 'x\ny\nz\n' >"$TMP/2"

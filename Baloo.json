@@ -681,7 +681,7 @@
     "name": "shuf",
     "description": "generates random permutations",
     "glyph": "🎲",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "sleep",
