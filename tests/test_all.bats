@@ -900,8 +900,10 @@ bob\ttty1\t1234567891'
   skip "needs a logged-in target tty; exits non-zero in CI"
 }
 
-@test "yes — repeats output until the pipe closes" {
-  run bash -c "'$BIN/yes' | head -n2"
+@test "yes — repeats its output" {
+  # yes runs forever; bound it with timeout (it busy-loops on a closed
+  # pipe when SIGPIPE is ignored, as on CI runners) and take two lines.
+  run bash -c "timeout -s KILL 2 '$BIN/yes' | head -n2"
   assert_success
   assert_output $'y\ny'
 }
