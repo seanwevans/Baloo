@@ -918,3 +918,11 @@ bob\ttty1\t1234567891'
   run "$BIN/printf" '%s\n' a b c
   assert_output $'a\nb\nc'
 }
+
+@test "shuf — outputs a permutation of the input" {
+  seq 1 20 >"$TMP/in"
+  run "$BIN/shuf" "$TMP/in"
+  assert_success
+  sorted="$(printf '%s\n' "$output" | sort -n)"
+  assert_equal "$sorted" "$(seq 1 20)"
+}
