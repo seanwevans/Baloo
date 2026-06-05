@@ -16,31 +16,27 @@ section .text
 global      _start
 
 _start:
+    mov         rdi, default_utmp_path  ;Default path to the utmp file
     cmp         qword [rsp], 2
-    jl          open_default_utmp
+    jl          open_utmp
     mov         rdi, [rsp + 16]         ;Optional FILE argument
-    jmp         open_selected_utmp
 
-open_default_utmp:
-    mov         rdi, utmp_run           ;Try modern path first
-    call        try_open_utmp
-    test        rax, rax
-    jns         opened
-
-    mov         rdi, utmp_path          ;Fall back to legacy path
-
-open_selected_utmp:
-    call        try_open_utmp
-    test        rax, rax
-    js          no_utmp                 ;No utmp -> no logged-in users
-    jmp         opened
-
-try_open_utmp:
+open_utmp:
     mov         rax, SYS_OPEN
+    mov         rdi, utmp_run           ;Try modern path first
     mov         rsi, O_RDONLY
     xor         rdx, rdx
     syscall
-    ret
+    test        rax, rax
+    jns         opened
+
+    mov         rax, SYS_OPEN
+    mov         rdi, utmp_path          ;Fall back to legacy path
+    mov         rsi, O_RDONLY
+    xor         rdx, rdx
+    syscall
+    test        rax, rax
+    js          no_utmp                 ;No utmp -> no logged-in users
 
 opened:
     mov         r15, rax
@@ -86,11 +82,8 @@ first_username:
     repne       scasb                   ;Scan for NULL (0)
     mov         rdx, UT_NAMESIZE
     sub         rdx, rcx
-    test        rcx, rcx
-    jz          write_username          ;full-width username without NUL
-    dec         rdx                     ;exclude the NUL terminator
+    dec         rdx                     ;username length
 
-write_username:
     mov         rax, SYS_WRITE
     mov         rdi, STDOUT_FILENO
     mov         rsi, username
