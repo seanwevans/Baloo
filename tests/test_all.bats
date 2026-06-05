@@ -918,3 +918,9 @@ bob\ttty1\t1234567891'
   run "$BIN/printf" '%s\n' a b c
   assert_output $'a\nb\nc'
 }
+
+@test "read — echoes the first line of input" {
+  run bash -c "printf 'first\nsecond\n' | '$BIN/read'"
+  assert_success
+  assert_output "first"
+}

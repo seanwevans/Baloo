@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-129%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -134,7 +134,7 @@ Commands:
 - [`ps`](src/ps.asm) ✅ Report process status
 - `ptx` ⛔️ Produces a permuted index of file contents
 - [`pwd`](src/pwd.asm) ✅ Prints the current working directory
-- `read` ⛔️ Read a line from standard input
+- [`read`](src/read.asm) ✅ Read a line from standard input
 - [`readlink`](src/readlink.asm) ✅ Print destination of a symbolic link
 - `realpath` ⛔️ Returns the resolved absolute or relative path for a file
 - [`renice`](src/renice.asm) ✅ Set nice values of running processes
