@@ -919,6 +919,13 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "pathchk — accepts a valid name, rejects an empty one" {
+  run "$BIN/pathchk" "valid/path/name"
+  assert_success
+  run "$BIN/pathchk" ""
+  assert_failure
+}
+
 @test "sha512sum — matches coreutils" {
   printf 'hello world\n' >"$TMP/f"
   run "$BIN/sha512sum" "$TMP/f"

@@ -531,7 +531,7 @@
     "name": "pathchk",
     "description": "Checks whether file names are valid or portable",
     "glyph": "✓",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "pax",
