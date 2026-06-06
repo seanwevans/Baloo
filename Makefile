@@ -7,9 +7,10 @@ BIN := $(patsubst src/%.asm,bin/%,$(SRC))
 
 FMT_FILES := $(SRC) $(INC)
 FMT_SCRIPT := scripts/asmfmt.py
+README_SCRIPT := scripts/update_readme.py
 TEST_FLAGS ?= --timing
 
-.PHONY: all setup clean test format lint-format check-readme-links
+.PHONY: all setup clean test format lint-format update-readme check-readme check-readme-links
 
 .SECONDARY: $(OBJ)
 
@@ -27,9 +28,15 @@ bin/%: build/%.o
 format:
 	python3 $(FMT_SCRIPT) $(FMT_FILES)
 
+update-readme:
+	python3 $(README_SCRIPT)
+
+check-readme: update-readme
+	git diff --exit-code README.md
+
 lint-format:
 	python3 $(FMT_SCRIPT) --check $(FMT_FILES)
-	python3 -m compileall -q scripts/asmfmt.py
+	python3 -m compileall -q scripts/asmfmt.py $(README_SCRIPT)
 
 test: all
 	bats $(TEST_FLAGS) tests/test_all.bats
