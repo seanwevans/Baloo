@@ -29,6 +29,9 @@ jobs:
     - name: Compile      
       run: make
 
+    - name: Verify README is up to date
+      run: make check-readme
+
     - name: Verify README catalog links
       run: make check-readme-links
 
