@@ -919,6 +919,13 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "stat — -c format matches coreutils" {
+  echo hi >"$TMP/f"
+  run "$BIN/stat" -c '%s %i %u %g %a %A %F' "$TMP/f"
+  assert_success
+  assert_output "$(stat -c '%s %i %u %g %a %A %F' "$TMP/f")"
+}
+
 @test "sort — orders lines like LC_ALL=C sort" {
   printf 'banana\napple\ncherry\napple\n' >"$TMP/f"
   run "$BIN/sort" "$TMP/f"

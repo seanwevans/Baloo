@@ -705,7 +705,7 @@
     "name": "stat",
     "description": "Returns data about an inode",
     "glyph": "📊",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "stdbuf",
