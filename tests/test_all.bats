@@ -523,6 +523,41 @@ EOF
   assert_failure
 }
 
+@test "tput - cols/lines fall back to the terminfo entry off a terminal" {
+  [ -e /usr/share/terminfo/x/xterm ] || skip "no xterm terminfo entry installed"
+  run env -u COLUMNS TERM=xterm "$BIN/tput" cols </dev/null
+  assert_success
+  assert_output "80"
+  run env -u LINES TERM=xterm "$BIN/tput" lines </dev/null
+  assert_success
+  assert_output "24"
+}
+
+@test "tput - reads the live size from a terminal" {
+  command -v python3 >/dev/null 2>&1 || skip "python3 needed to allocate a pty"
+  run python3 -c '
+import sys, os, pty, fcntl, termios, struct, subprocess, time
+m, s = pty.openpty()
+fcntl.ioctl(s, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 123, 0, 0))
+subprocess.run([sys.argv[1], "cols"], stdout=s, stdin=subprocess.DEVNULL, env={"TERM": "xterm"})
+os.set_blocking(m, False); time.sleep(0.05)
+sys.stdout.write(os.read(m, 50).decode().strip())
+' "$BIN/tput"
+  assert_output "123"
+}
+
+@test "tput - diagnoses an unknown terminal" {
+  run env -u TERMINFO TERM=definitely_not_a_terminal "$BIN/tput" cols </dev/null
+  assert_failure 3
+  assert_output --partial "unknown terminal"
+}
+
+@test "tput - rejects an unsupported capability" {
+  run env TERM=xterm "$BIN/tput" no_such_cap </dev/null
+  assert_failure 4
+  assert_output --partial "unknown terminfo capability"
+}
+
 @test "umask — prints current mask" {
   run "$BIN/umask"
   assert_success

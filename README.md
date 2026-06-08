@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-143%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-144%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -168,7 +168,7 @@ Commands:
 - [`time`](src/time.asm) ✅ Display elapsed, system and kernel time
 - [`timeout`](src/timeout.asm) ✅ Runs a command with a time limit
 - [`touch`](src/touch.asm) ✅ Changes file timestamps; creates file
-- `tput` ⛔️ Change terminal characteristics
+- [`tput`](src/tput.asm) ✅ Change terminal characteristics
 - [`tr`](src/tr.asm) ✅ Translates or deletes characters
 - [`true`](src/true.asm) ✅ Does nothing, but exits successfully
 - [`truncate`](src/truncate.asm) ✅ Shrink the size of a file to the specified size
