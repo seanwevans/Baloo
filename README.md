@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-149%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-150%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -105,7 +105,7 @@ Commands:
 - [`lp`](src/lp.asm) ✅ Send files to a printer
 - [`ls`](src/ls.asm) ✅ List directory contents with formatting
 - [`m4`](src/m4.asm) ✅ Macro processor
-- `mailx` ⛔️ Process messages
+- [`mailx`](src/mailx.asm) ✅ Process messages
 - [`man`](src/man.asm) ✅ Display system documentation
 - [`md5sum`](src/md5sum.asm) ✅ Computes and checks MD5 message digest
 - [`mesg`](src/mesg.asm) ✅ Permit or deny messages

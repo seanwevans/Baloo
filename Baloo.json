@@ -411,7 +411,7 @@
     "name": "mailx",
     "description": "Process messages",
     "glyph": "📧",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "man",
