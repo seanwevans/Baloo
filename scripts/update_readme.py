@@ -57,7 +57,7 @@ def main() -> None:
 
     catalog_lines = [catalog_entry_line(entry, src_dir) for entry in data]
 
-    lines[start:end] = catalog_lines
+    lines[start:end] = catalog_lines + [""]
     readme_path.write_text("\n".join(lines) + "\n")
 
 
