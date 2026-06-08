@@ -918,3 +918,13 @@ bob\ttty1\t1234567891'
   run "$BIN/printf" '%s\n' a b c
   assert_output $'a\nb\nc'
 }
+
+@test "ptx — permuted index matches coreutils (fitting input)" {
+  if ! command -v ptx >/dev/null 2>&1; then
+    skip "coreutils ptx not available"
+  fi
+  printf 'the quick brown fox\n' >"$TMP/f"
+  run "$BIN/ptx" "$TMP/f"
+  assert_success
+  assert_output "$(LC_ALL=C ptx "$TMP/f")"
+}

@@ -573,7 +573,7 @@
     "name": "ptx",
     "description": "Produces a permuted index of file contents",
     "glyph": "📇",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "pwd",
