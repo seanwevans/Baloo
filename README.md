@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-150%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-150%2F150%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -41,7 +41,6 @@ Commands:
 - [`ar`](src/ar.asm) ✅ Creates and maintains libraries
 - [`arch`](src/arch.asm) ✅ Prints machine hardware name
 - [`at`](src/at.asm) ✅ Executes commands at a later time
-- `awk` ⛔️ Pattern scanning and processing language
 - [`b2sum`](src/b2sum.asm) ✅ Computes and checks BLAKE2b message digest
 - [`base32`](src/base32.asm) ✅ Encodes or decodes Base32, and prints result to standard output
 - [`base64`](src/base64.asm) ✅ Encodes or decodes Base64, and prints result to standard output
@@ -72,7 +71,6 @@ Commands:
 - [`dirname`](src/dirname.asm) ✅ Strips non-directory suffix from file name
 - [`du`](src/du.asm) ✅ Shows disk usage on file systems
 - [`echo`](src/echo.asm) ✅ Displays a specified line of text
-- `ed` ⛔️ The standard text editor
 - [`env`](src/env.asm) ✅ Run a program in a modified environment
 - [`expand`](src/expand.asm) ✅ Converts tabs to spaces
 - [`expr`](src/expr.asm) ✅ Evaluates expressions
@@ -141,9 +139,7 @@ Commands:
 - [`rm`](src/rm.asm) ✅ Removes files/directories
 - [`rmdir`](src/rmdir.asm) ✅ Removes empty directories
 - [`runcon`](src/runcon.asm) ✅ Run command with specified security context
-- `sed` ⛔️ Stream editor
 - [`seq`](src/seq.asm) ✅ Prints a sequence of numbers
-- `sh` ⛔️ Shell, the standard command language interpreter
 - [`sha1sum`](src/sha1sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
 - [`sha224sum`](src/sha224sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
 - [`sha256sum`](src/sha256sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
