@@ -348,6 +348,39 @@ EOF
   assert [ -d "$TMP/dir" ]
 }
 
+@test "mailx - delivers a composed message to an mbox" {
+  run bash -c "printf 'line one\nline two\n' | '$BIN/mailx' -s 'Greetings' -f '$TMP/box' alice@example.com"
+  assert_success
+  run cat "$TMP/box"
+  assert_line --index 0 --regexp '^From '
+  assert_line "To: alice@example.com"
+  assert_line "Subject: Greetings"
+  assert_line "line one"
+  assert_line "line two"
+}
+
+@test "mailx - appends a valid mbox Python can parse" {
+  command -v python3 >/dev/null 2>&1 || skip "python3 needed to parse the mbox"
+  printf 'first body\n'  | "$BIN/mailx" -s "One" -f "$TMP/box" a@b
+  printf 'second body\n' | "$BIN/mailx" -s "Two" -f "$TMP/box" c@d
+  run python3 -c '
+import sys, mailbox
+mb = mailbox.mbox(sys.argv[1])
+subs = [m["subject"] for m in mb]
+assert len(mb) == 2, len(mb)
+assert subs == ["One", "Two"], subs
+print("ok")
+' "$TMP/box"
+  assert_success
+  assert_output "ok"
+}
+
+@test "mailx - fails when no recipient is given" {
+  run bash -c "printf body | '$BIN/mailx' -s subj"
+  assert_failure
+  assert_output --partial "no recipients"
+}
+
 @test "mkfifo — makes named pipe" {
   run "$BIN/mkfifo" "$TMP/p"
   assert_success
