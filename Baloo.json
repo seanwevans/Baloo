@@ -693,7 +693,7 @@
     "name": "sort",
     "description": "Sorts lines of text files",
     "glyph": "🔠",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "split",

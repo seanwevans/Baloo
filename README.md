@@ -150,7 +150,7 @@ Commands:
 - [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
 - [`shuf`](src/shuf.asm) ✅ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
-- `sort` ⛔️ Sorts lines of text files
+- [`sort`](src/sort.asm) ✅ Sorts lines of text files
 - [`split`](src/split.asm) ✅ Splits a file into pieces
 - `stat` ⛔️ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ✅ Controls buffering for commands that use stdio

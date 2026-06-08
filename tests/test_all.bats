@@ -919,6 +919,13 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "sort — orders lines like LC_ALL=C sort" {
+  printf 'banana\napple\ncherry\napple\n' >"$TMP/f"
+  run "$BIN/sort" "$TMP/f"
+  assert_success
+  assert_output "$(LC_ALL=C sort "$TMP/f")"
+}
+
 @test "read — echoes the first line of input" {
   run bash -c "printf 'first\nsecond\n' | '$BIN/read'"
   assert_success
