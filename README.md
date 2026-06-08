@@ -128,7 +128,7 @@ Commands:
 - [`pathchk`](src/pathchk.asm) ✅ Checks whether file names are valid or portable
 - `pax` ⛔️ Portable archive interchange
 - [`pinky`](src/pinky.asm) ✅ A lightweight version of finger
-- `pr` ⛔️ Paginate or columnate files for printing
+- [`pr`](src/pr.asm) ✅ Paginate or columnate files for printing
 - [`printenv`](src/printenv.asm) ✅ Prints environment variables
 - [`printf`](src/printf.asm) ✅ Formats and prints data
 - [`ps`](src/ps.asm) ✅ Report process status
