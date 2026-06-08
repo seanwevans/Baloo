@@ -58,7 +58,7 @@ for file in "$BALOO_BIN_DIR"/*; do
             TOTAL_SKIP=$((TOTAL_SKIP + S_COUNT))
 
             printf "%-15s | %-6d | %-6d | %-6d\n" "$UTIL" "$P_COUNT" "$F_COUNT" "$S_COUNT" >> "$SUMMARY_FILE"
-            echo " -> Tested $UTIL: $F_COUNT failures"
+            echo " -> Tested $UTIL: $P_COUNT passed"
         fi
     fi
 done
