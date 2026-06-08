@@ -621,7 +621,7 @@
     "name": "runcon",
     "description": "Run command with specified security context",
     "glyph": "🔓",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "sed",
