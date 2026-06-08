@@ -1091,6 +1091,28 @@ sys.exit(r.returncode)
   assert_failure
 }
 
+@test "pax - writes a ustar archive that tar can extract" {
+  command -v tar >/dev/null 2>&1 || skip "tar needed to verify the archive"
+  printf 'hello\nworld\n' >"$TMP/greet.txt"
+  ( cd "$TMP" && "$BIN/pax" -w greet.txt >a.tar )
+  run tar tf "$TMP/a.tar"
+  assert_success
+  assert_output "greet.txt"
+  mkdir "$TMP/ex"
+  ( cd "$TMP/ex" && tar xf ../a.tar )
+  run diff -q "$TMP/greet.txt" "$TMP/ex/greet.txt"
+  assert_success
+}
+
+@test "pax - lists archive members like tar tf" {
+  command -v tar >/dev/null 2>&1 || skip "tar needed to build the archive"
+  printf 'one\n' >"$TMP/a"; printf 'two\n' >"$TMP/b"
+  ( cd "$TMP" && tar --format=ustar -cf t.tar a b )
+  run "$BIN/pax" -f "$TMP/t.tar"
+  assert_success
+  assert_output "$(tar tf "$TMP/t.tar")"
+}
+
 @test "patch - applies a unified diff like GNU patch" {
   command -v diff >/dev/null 2>&1 || skip "diff needed to build the test patch"
   printf 'one\ntwo\nthree\nfour\nfive\n' >"$TMP/orig"

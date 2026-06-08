@@ -126,7 +126,7 @@ Commands:
 - [`paste`](src/paste.asm) ✅ Merge corresponding or subsequent lines of files
 - [`patch`](src/patch.asm) ✅ Apply changes to files
 - [`pathchk`](src/pathchk.asm) ✅ Checks whether file names are valid or portable
-- `pax` ⛔️ Portable archive interchange
+- [`pax`](src/pax.asm) ✅ Portable archive interchange
 - [`pinky`](src/pinky.asm) ✅ A lightweight version of finger
 - [`pr`](src/pr.asm) ✅ Paginate or columnate files for printing
 - [`printenv`](src/printenv.asm) ✅ Prints environment variables

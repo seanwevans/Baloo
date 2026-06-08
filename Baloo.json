@@ -537,7 +537,7 @@
     "name": "pax",
     "description": "Portable archive interchange",
     "glyph": "📦",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "pinky",
