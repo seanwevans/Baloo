@@ -1060,6 +1060,30 @@ sys.exit(r.returncode)
   assert_failure
 }
 
+@test "patch - applies a unified diff like GNU patch" {
+  command -v diff >/dev/null 2>&1 || skip "diff needed to build the test patch"
+  printf 'one\ntwo\nthree\nfour\nfive\n' >"$TMP/orig"
+  printf 'one\n2\nthree\nfour\nFIVE\nsix\n' >"$TMP/new"
+  ( cd "$TMP" && diff -u orig new | sed 's/orig/f/g; s/new/f/g' >p.diff )
+  cp "$TMP/orig" "$TMP/f"
+  run "$BIN/patch" "$TMP/f" -i "$TMP/p.diff"
+  assert_success
+  assert_output "patching file $TMP/f"
+  run diff -q "$TMP/f" "$TMP/new"
+  assert_success
+}
+
+@test "patch - reads the diff from standard input" {
+  printf 'a\nb\nc\n' >"$TMP/orig"
+  printf 'a\nB\nc\n' >"$TMP/new"
+  ( cd "$TMP" && diff -u orig new | sed 's/orig/f/g; s/new/f/g' >p.diff )
+  cp "$TMP/orig" "$TMP/f"
+  run bash -c "'$BIN/patch' '$TMP/f' < '$TMP/p.diff'"
+  assert_success
+  run diff -q "$TMP/f" "$TMP/new"
+  assert_success
+}
+
 @test "sha512sum — matches coreutils" {
   printf 'hello world\n' >"$TMP/f"
   run "$BIN/sha512sum" "$TMP/f"

@@ -525,7 +525,7 @@
     "name": "patch",
     "description": "Apply changes to files",
     "glyph": "🩹",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "pathchk",
