@@ -168,7 +168,7 @@ Commands:
 - [`time`](src/time.asm) ✅ Display elapsed, system and kernel time
 - [`timeout`](src/timeout.asm) ✅ Runs a command with a time limit
 - [`touch`](src/touch.asm) ✅ Changes file timestamps; creates file
-- `tput` ⛔️ Change terminal characteristics
+- [`tput`](src/tput.asm) ✅ Change terminal characteristics
 - [`tr`](src/tr.asm) ✅ Translates or deletes characters
 - [`true`](src/true.asm) ✅ Does nothing, but exits successfully
 - [`truncate`](src/truncate.asm) ✅ Shrink the size of a file to the specified size
