@@ -124,7 +124,7 @@ Commands:
 - [`numfmt`](src/numfmt.asm) ✅ Reformat numbers
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats
 - [`paste`](src/paste.asm) ✅ Merge corresponding or subsequent lines of files
-- `patch` ⛔️ Apply changes to files
+- [`patch`](src/patch.asm) ✅ Apply changes to files
 - [`pathchk`](src/pathchk.asm) ✅ Checks whether file names are valid or portable
 - `pax` ⛔️ Portable archive interchange
 - [`pinky`](src/pinky.asm) ✅ A lightweight version of finger
