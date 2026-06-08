@@ -366,6 +366,37 @@ EOF
   [[ "$output" =~ /tmp/ ]]
 }
 
+@test "msgfmt - compiles a .po into a .mo Python gettext can read" {
+  command -v python3 >/dev/null 2>&1 || skip "python3 needed to read the .mo"
+  cat >"$TMP/m.po" <<'PO'
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "hello"
+msgstr "bonjour"
+
+msgid "world"
+msgstr "monde"
+PO
+  run "$BIN/msgfmt" -o "$TMP/m.mo" "$TMP/m.po"
+  assert_success
+  run python3 -c '
+import sys, gettext, struct
+data = open(sys.argv[1], "rb").read()
+magic, ver, n, o, t, s, h = struct.unpack("<IIIIIII", data[:28])
+assert magic == 0x950412de, "bad magic"
+origs = [data[off:off+l] for l, off in
+         (struct.unpack("<II", data[o+8*i:o+8*i+8]) for i in range(n))]
+assert origs == sorted(origs), "originals not sorted"
+tr = gettext.GNUTranslations(open(sys.argv[1], "rb"))
+assert tr.gettext("hello") == "bonjour", "hello"
+assert tr.gettext("world") == "monde", "world"
+print("ok")
+' "$TMP/m.mo"
+  assert_success
+  assert_output "ok"
+}
+
 @test "mv — moves file" {
   echo move >"$TMP/m"
   run "$BIN/mv" "$TMP/m" "$TMP/n"
@@ -1080,6 +1111,53 @@ sys.exit(r.returncode)
   run "$BIN/pax" -f "$TMP/t.tar"
   assert_success
   assert_output "$(tar tf "$TMP/t.tar")"
+}
+
+@test "patch - applies a unified diff like GNU patch" {
+  command -v diff >/dev/null 2>&1 || skip "diff needed to build the test patch"
+  printf 'one\ntwo\nthree\nfour\nfive\n' >"$TMP/orig"
+  printf 'one\n2\nthree\nfour\nFIVE\nsix\n' >"$TMP/new"
+  ( cd "$TMP" && diff -u orig new | sed 's/orig/f/g; s/new/f/g' >p.diff )
+  cp "$TMP/orig" "$TMP/f"
+  run "$BIN/patch" "$TMP/f" -i "$TMP/p.diff"
+  assert_success
+  assert_output "patching file $TMP/f"
+  run diff -q "$TMP/f" "$TMP/new"
+  assert_success
+}
+
+@test "patch - reads the diff from standard input" {
+  printf 'a\nb\nc\n' >"$TMP/orig"
+  printf 'a\nB\nc\n' >"$TMP/new"
+  ( cd "$TMP" && diff -u orig new | sed 's/orig/f/g; s/new/f/g' >p.diff )
+  cp "$TMP/orig" "$TMP/f"
+  run bash -c "'$BIN/patch' '$TMP/f' < '$TMP/p.diff'"
+  assert_success
+  run diff -q "$TMP/f" "$TMP/new"
+  assert_success
+}
+
+@test "pr - paginates with a header matching coreutils" {
+  printf 'a\nb\nc\n' >"$TMP/f"
+  touch -d '2020-01-02 03:04:05' "$TMP/f"
+  run env TZ=UTC0 "$BIN/pr" "$TMP/f"
+  assert_success
+  assert_output "$(TZ=UTC0 pr "$TMP/f")"
+}
+
+@test "pr - splits long input into 66-line pages" {
+  seq 1 57 >"$TMP/f"
+  touch -d '2020-01-02 03:04:05' "$TMP/f"
+  run env TZ=UTC0 "$BIN/pr" "$TMP/f"
+  assert_success
+  assert_output "$(TZ=UTC0 pr "$TMP/f")"
+}
+
+@test "pr - -t streams lines without headers" {
+  printf 'one\ntwo\nthree\n' >"$TMP/f"
+  run "$BIN/pr" -t "$TMP/f"
+  assert_success
+  assert_output $'one\ntwo\nthree'
 }
 
 @test "sha512sum — matches coreutils" {
