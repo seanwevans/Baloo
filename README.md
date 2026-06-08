@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-129%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -152,7 +152,7 @@ Commands:
 - [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
 - `shuf` ⛔️ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
-- `sort` ⛔️ Sorts lines of text files
+- [`sort`](src/sort.asm) ✅ Sorts lines of text files
 - [`split`](src/split.asm) ✅ Splits a file into pieces
 - `stat` ⛔️ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ✅ Controls buffering for commands that use stdio

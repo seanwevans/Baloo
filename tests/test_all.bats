@@ -918,3 +918,10 @@ bob\ttty1\t1234567891'
   run "$BIN/printf" '%s\n' a b c
   assert_output $'a\nb\nc'
 }
+
+@test "sort — orders lines like LC_ALL=C sort" {
+  printf 'banana\napple\ncherry\napple\n' >"$TMP/f"
+  run "$BIN/sort" "$TMP/f"
+  assert_success
+  assert_output "$(LC_ALL=C sort "$TMP/f")"
+}
