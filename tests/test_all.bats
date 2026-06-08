@@ -1060,6 +1060,29 @@ sys.exit(r.returncode)
   assert_failure
 }
 
+@test "pr - paginates with a header matching coreutils" {
+  printf 'a\nb\nc\n' >"$TMP/f"
+  touch -d '2020-01-02 03:04:05' "$TMP/f"
+  run env TZ=UTC0 "$BIN/pr" "$TMP/f"
+  assert_success
+  assert_output "$(TZ=UTC0 pr "$TMP/f")"
+}
+
+@test "pr - splits long input into 66-line pages" {
+  seq 1 57 >"$TMP/f"
+  touch -d '2020-01-02 03:04:05' "$TMP/f"
+  run env TZ=UTC0 "$BIN/pr" "$TMP/f"
+  assert_success
+  assert_output "$(TZ=UTC0 pr "$TMP/f")"
+}
+
+@test "pr - -t streams lines without headers" {
+  printf 'one\ntwo\nthree\n' >"$TMP/f"
+  run "$BIN/pr" -t "$TMP/f"
+  assert_success
+  assert_output $'one\ntwo\nthree'
+}
+
 @test "sha512sum — matches coreutils" {
   printf 'hello world\n' >"$TMP/f"
   run "$BIN/sha512sum" "$TMP/f"
