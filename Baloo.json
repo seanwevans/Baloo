@@ -549,7 +549,7 @@
     "name": "pr",
     "description": "Paginate or columnate files for printing",
     "glyph": "📄",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "printenv",
