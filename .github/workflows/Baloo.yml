@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10 # Reduced from 20 to fail faster on hangs
+    timeout-minutes: 10
 
     steps:
     - name: Checkout repository
@@ -17,21 +17,20 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        sudo apt-get update
-        # Combined installation of build, test, and debugging tools
+        sudo apt-get update        
         sudo apt-get install -y nasm bats strace
 
     - name: Install bats helpers
       run: |
-        mkdir -p tests/test_helper
-        # Use shallow clones (--depth 1) for significantly faster downloads
+        mkdir -p tests/test_helper        
         git clone --depth 1 https://github.com/bats-core/bats-support.git tests/test_helper/bats-support
         git clone --depth 1 https://github.com/bats-core/bats-assert.git tests/test_helper/bats-assert
 
-    - name: Compile
-      # make clean is unnecessary on a fresh GitHub-hosted runner, went straight to make
+    - name: Compile      
       run: make
 
+    - name: Verify README is up to date
+      run: make check-readme
 
     - name: Verify README catalog links
       run: make check-readme-links
@@ -41,5 +40,4 @@ jobs:
 
     - name: Run Tests
       timeout-minutes: 5
-      # Removed the 'timeout' utility wrapper since GitHub Actions provides native step timeouts
       run: make test TEST_FLAGS="--timing --print-output-on-failure"
