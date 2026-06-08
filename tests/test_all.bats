@@ -842,6 +842,26 @@ bob\ttty1\t1234567891'
   assert_output "stdbuf_ok"
 }
 
+@test "stty — size reports terminal rows and columns" {
+  command -v python3 >/dev/null 2>&1 || skip "python3 needed to allocate a pty"
+  run python3 -c '
+import sys, os, pty, fcntl, termios, struct, subprocess
+m, s = pty.openpty()
+fcntl.ioctl(s, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 100, 0, 0))
+r = subprocess.run([sys.argv[1], "size"], stdin=s, stdout=subprocess.PIPE)
+os.write(1, r.stdout)
+sys.exit(r.returncode)
+' "$BIN/stty"
+  assert_success
+  assert_output "40 100"
+}
+
+@test "stty — errors when input is not a terminal" {
+  run "$BIN/stty" size </dev/null
+  assert_failure 1
+  assert_output --partial "Inappropriate ioctl for device"
+}
+
 @test "tee — copies stdin to a file and stdout" {
   run bash -c "echo teed | '$BIN/tee' '$TMP/teeout'"
   assert_success
