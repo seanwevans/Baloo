@@ -925,3 +925,81 @@ bob\ttty1\t1234567891'
   assert_success
   assert_output "$(stat -c '%s %i %u %g %a %A %F' "$TMP/f")"
 }
+
+@test "sort — orders lines like LC_ALL=C sort" {
+  printf 'banana\napple\ncherry\napple\n' >"$TMP/f"
+  run "$BIN/sort" "$TMP/f"
+  assert_success
+  assert_output "$(LC_ALL=C sort "$TMP/f")"
+}
+
+@test "read — echoes the first line of input" {
+  run bash -c "printf 'first\nsecond\n' | '$BIN/read'"
+  assert_success
+  assert_output "first"
+}  
+
+@test "realpath — canonicalizes an existing path" {
+  mkdir -p "$TMP/d/sub"; touch "$TMP/d/sub/f"
+  run "$BIN/realpath" "$TMP/d/./sub/../sub/f"
+  assert_success
+  assert_output "$(realpath "$TMP/d/./sub/../sub/f")"
+}
+
+@test "shuf — outputs a permutation of the input" {
+  seq 1 20 >"$TMP/in"
+  run "$BIN/shuf" "$TMP/in"
+  assert_success
+  sorted="$(printf '%s\n' "$output" | sort -n)"
+  assert_equal "$sorted" "$(seq 1 20)"
+}
+
+@test "paste — merges lines with tabs" {
+  printf 'a\nb\nc\n' >"$TMP/1"
+  printf 'x\ny\nz\n' >"$TMP/2"
+  run "$BIN/paste" "$TMP/1" "$TMP/2"
+  assert_success
+  assert_output "$(paste "$TMP/1" "$TMP/2")"
+}
+
+@test "pathchk — accepts a valid name, rejects an empty one" {
+  run "$BIN/pathchk" "valid/path/name"
+  assert_success
+  run "$BIN/pathchk" ""
+  assert_failure
+}
+
+@test "sha512sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha512sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha512sum "$TMP/f")"
+}
+
+@test "sha224sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha224sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha224sum "$TMP/f")"
+}
+
+@test "sha384sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha384sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha384sum "$TMP/f")"
+}
+
+@test "sha1sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha1sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha1sum "$TMP/f")"
+}
+
+@test "sha256sum — matches coreutils" {
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/sha256sum" "$TMP/f"
+  assert_success
+  assert_output "$(sha256sum "$TMP/f")"
+}

@@ -1,6 +1,4 @@
-# Baloo 🐻 
-
-![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+# Baloo 🐻 ![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -123,9 +121,9 @@ Commands:
 - [`nproc`](src/nproc.asm) ✅ Queries the number of (active) processors
 - [`numfmt`](src/numfmt.asm) ✅ Reformat numbers
 - [`od`](src/od.asm) ✅ Dumps files in octal and other formats
-- `paste` ⛔️ Merge corresponding or subsequent lines of files
+- [`paste`](src/paste.asm) ✅ Merge corresponding or subsequent lines of files
 - `patch` ⛔️ Apply changes to files
-- `pathchk` ⛔️ Checks whether file names are valid or portable
+- [`pathchk`](src/pathchk.asm) ✅ Checks whether file names are valid or portable
 - `pax` ⛔️ Portable archive interchange
 - [`pinky`](src/pinky.asm) ✅ A lightweight version of finger
 - `pr` ⛔️ Paginate or columnate files for printing
@@ -134,9 +132,9 @@ Commands:
 - [`ps`](src/ps.asm) ✅ Report process status
 - `ptx` ⛔️ Produces a permuted index of file contents
 - [`pwd`](src/pwd.asm) ✅ Prints the current working directory
-- `read` ⛔️ Read a line from standard input
+- [`read`](src/read.asm) ✅ Read a line from standard input
 - [`readlink`](src/readlink.asm) ✅ Print destination of a symbolic link
-- `realpath` ⛔️ Returns the resolved absolute or relative path for a file
+- [`realpath`](src/realpath.asm) ✅ Returns the resolved absolute or relative path for a file
 - [`renice`](src/renice.asm) ✅ Set nice values of running processes
 - [`rm`](src/rm.asm) ✅ Removes files/directories
 - [`rmdir`](src/rmdir.asm) ✅ Removes empty directories
@@ -144,15 +142,15 @@ Commands:
 - `sed` ⛔️ Stream editor
 - [`seq`](src/seq.asm) ✅ Prints a sequence of numbers
 - `sh` ⛔️ Shell, the standard command language interpreter
-- `sha1sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha224sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha256sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha384sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
-- `sha512sum` ⛔️ Computes and checks SHA-1/SHA-2 message digests
+- [`sha1sum`](src/sha1sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha224sum`](src/sha224sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha256sum`](src/sha256sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha384sum`](src/sha384sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
+- [`sha512sum`](src/sha512sum.asm) ✅ Computes and checks SHA-1/SHA-2 message digests
 - [`shred`](src/shred.asm) ✅ Overwrites a file to hide its contents, and optionally deletes it
-- `shuf` ⛔️ generates random permutations
+- [`shuf`](src/shuf.asm) ✅ generates random permutations
 - [`sleep`](src/sleep.asm) ✅ Delays for a specified amount of time
-- `sort` ⛔️ Sorts lines of text files
+- [`sort`](src/sort.asm) ✅ Sorts lines of text files
 - [`split`](src/split.asm) ✅ Splits a file into pieces
 - [`stat`](src/stat.asm) ✅ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ✅ Controls buffering for commands that use stdio
@@ -191,8 +189,6 @@ Commands:
 - [`write`](src/write.asm) ✅ Write to another user's terminal
 - [`xargs`](src/xargs.asm) ✅ Construct argument lists and invoke utility
 - [`yes`](src/yes.asm) ✅ Prints a string repeatedly
+
 ## Benchmark
 Run `make` to build all binaries, then execute `tests/benchmark.sh` to compare a few Baloo programs against the system implementations using `hyperfine`.
-
-## License
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
