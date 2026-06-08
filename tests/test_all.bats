@@ -366,6 +366,37 @@ EOF
   [[ "$output" =~ /tmp/ ]]
 }
 
+@test "msgfmt - compiles a .po into a .mo Python gettext can read" {
+  command -v python3 >/dev/null 2>&1 || skip "python3 needed to read the .mo"
+  cat >"$TMP/m.po" <<'PO'
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "hello"
+msgstr "bonjour"
+
+msgid "world"
+msgstr "monde"
+PO
+  run "$BIN/msgfmt" -o "$TMP/m.mo" "$TMP/m.po"
+  assert_success
+  run python3 -c '
+import sys, gettext, struct
+data = open(sys.argv[1], "rb").read()
+magic, ver, n, o, t, s, h = struct.unpack("<IIIIIII", data[:28])
+assert magic == 0x950412de, "bad magic"
+origs = [data[off:off+l] for l, off in
+         (struct.unpack("<II", data[o+8*i:o+8*i+8]) for i in range(n))]
+assert origs == sorted(origs), "originals not sorted"
+tr = gettext.GNUTranslations(open(sys.argv[1], "rb"))
+assert tr.gettext("hello") == "bonjour", "hello"
+assert tr.gettext("world") == "monde", "world"
+print("ok")
+' "$TMP/m.mo"
+  assert_success
+  assert_output "ok"
+}
+
 @test "mv — moves file" {
   echo move >"$TMP/m"
   run "$BIN/mv" "$TMP/m" "$TMP/n"

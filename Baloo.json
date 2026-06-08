@@ -459,7 +459,7 @@
     "name": "msgfmt",
     "description": "Create messages objects from messages object files",
     "glyph": "📬",
-    "isDone": false
+    "isDone": true
   },
   {
     "name": "mv",
