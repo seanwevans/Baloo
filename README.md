@@ -1,6 +1,6 @@
 # Baloo 🐻 
 
-![Progress](https://img.shields.io/badge/progress-130%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
+![Progress](https://img.shields.io/badge/progress-143%2F154%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
 Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
 
@@ -157,7 +157,7 @@ Commands:
 - [`stat`](src/stat.asm) ✅ Returns data about an inode
 - [`stdbuf`](src/stdbuf.asm) ✅ Controls buffering for commands that use stdio
 - [`strings`](src/strings.asm) ✅ Find printable strings in files
-- `stty` ⛔️ Changes and prints terminal line settings
+- [`stty`](src/stty.asm) ✅ Changes and prints terminal line settings
 - [`sum`](src/sum.asm) ✅ Checksums and counts the blocks in a file
 - [`sync`](src/sync.asm) ✅ Flushes file system buffers
 - [`tabs`](src/tabs.asm) ✅ Set terminal tabs
