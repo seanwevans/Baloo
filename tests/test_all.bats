@@ -918,3 +918,10 @@ bob\ttty1\t1234567891'
   run "$BIN/printf" '%s\n' a b c
   assert_output $'a\nb\nc'
 }
+
+@test "stat — -c format matches coreutils" {
+  echo hi >"$TMP/f"
+  run "$BIN/stat" -c '%s %i %u %g %a %A %F' "$TMP/f"
+  assert_success
+  assert_output "$(stat -c '%s %i %u %g %a %A %F' "$TMP/f")"
+}
