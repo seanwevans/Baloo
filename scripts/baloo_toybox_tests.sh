@@ -4,8 +4,10 @@
 
 set -e
 
-BALOO_ROOT="/mnt/f/repos/Baloo"
-BALOO_BIN_DIR="/mnt/f/repos/Baloo/bin"
+# Resolve the repository location relative to this script so the report
+# works from any checkout (including CI); both are overridable via env.
+BALOO_ROOT="${BALOO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+BALOO_BIN_DIR="${BALOO_BIN_DIR:-$BALOO_ROOT/bin}"
 
 TEST_ENV="/tmp/baloo_compliance_env"
 FARM_DIR="$TEST_ENV/symlink_farm"
