@@ -140,7 +140,7 @@ Commands:
 - [`renice`](src/renice.asm) ✅ Set nice values of running processes
 - [`rm`](src/rm.asm) ✅ Removes files/directories
 - [`rmdir`](src/rmdir.asm) ✅ Removes empty directories
-- `runcon` ⛔️ Run command with specified security context
+- [`runcon`](src/runcon.asm) ✅ Run command with specified security context
 - `sed` ⛔️ Stream editor
 - [`seq`](src/seq.asm) ✅ Prints a sequence of numbers
 - `sh` ⛔️ Shell, the standard command language interpreter

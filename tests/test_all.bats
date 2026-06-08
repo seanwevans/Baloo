@@ -919,6 +919,32 @@ bob\ttty1\t1234567891'
   assert_output $'a\nb\nc'
 }
 
+@test "runcon — prints the current security context" {
+  # With no arguments runcon prints the process's context from
+  # /proc/self/attr/current ("kernel" on a kernel without SELinux).
+  [ -r /proc/self/attr/current ] || skip "no /proc/self/attr/current here"
+  expected=$(tr -d '\000' < /proc/self/attr/current)
+  run "$BIN/runcon"
+  assert_success
+  assert_output "$expected"
+}
+
+@test "runcon — rejects a context with no command" {
+  run "$BIN/runcon" foo
+  assert_failure 125
+  assert_output --partial "no command specified"
+}
+
+@test "runcon — refuses to run a command off a SELinux kernel" {
+  # statfs magic of a mounted selinuxfs; skip where SELinux is enabled.
+  if [ "$(stat -f -c '%t' /sys/fs/selinux 2>/dev/null)" = "f97cff8c" ]; then
+    skip "SELinux is enabled; the guard path is not exercised"
+  fi
+  run "$BIN/runcon" foo /bin/echo hi
+  assert_failure 125
+  assert_output --partial "SELinux kernel"
+}
+
 @test "ptx — permuted index matches coreutils (fitting input)" {
   if ! command -v ptx >/dev/null 2>&1; then
     skip "coreutils ptx not available"
