@@ -41,3 +41,25 @@ jobs:
     - name: Run Tests
       timeout-minutes: 5
       run: make test TEST_FLAGS="--timing --print-output-on-failure"
+
+  toybox-compliance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Informational POSIX-compliance report against Toybox; Baloo implements
+    # subsets, so failures here are expected and must not block the build.
+    continue-on-error: true
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nasm
+
+    - name: Compile
+      run: make
+
+    - name: Toybox POSIX compliance report
+      run: bash scripts/baloo_toybox_tests.sh

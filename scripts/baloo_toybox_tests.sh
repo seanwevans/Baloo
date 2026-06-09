@@ -4,12 +4,20 @@
 
 set -e
 
-BALOO_ROOT="/mnt/f/repos/Baloo"
-BALOO_BIN_DIR="/mnt/f/repos/Baloo/bin"
+# Resolve the repository location relative to this script so the report
+# works from any checkout (including CI); both are overridable via env.
+BALOO_ROOT="${BALOO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+BALOO_BIN_DIR="${BALOO_BIN_DIR:-$BALOO_ROOT/bin}"
+
+# Hard per-test time limit (seconds). Some Toybox tests block on stdin or
+# loop against Baloo's partial implementations, so this keeps a single test
+# from stalling the whole run. Overridable via env.
+TEST_TIMEOUT="${TEST_TIMEOUT:-60}"
 
 TEST_ENV="/tmp/baloo_compliance_env"
 FARM_DIR="$TEST_ENV/symlink_farm"
 SUMMARY_FILE="$TEST_ENV/summary_report.txt"
+TEST_OUT="$TEST_ENV/last_test.out"
 
 rm -rf "$FARM_DIR" 
 mkdir -p "$FARM_DIR"
@@ -47,7 +55,17 @@ for file in "$BALOO_BIN_DIR"/*; do
             rm -f "$FARM_DIR"/* 
             ln -sf "$file" "$FARM_DIR/$UTIL"            
             
-            OUTPUT=$(TEST_HOST=1 scripts/test.sh "$UTIL" 2>&1 || true)
+            # Capture the test output via a file, NOT a $(...) pipe. Some
+            # tests background helpers that outlive the test: renice.test
+            # spawns `yes` processes whose inherited stderr would keep a
+            # command-substitution pipe open forever, so the read never
+            # returns even after timeout kills the test itself. Closing stdin
+            # stops tests that block reading it; the time cap bounds runaway
+            # tests; then we reap the stray helpers and read the file.
+            : > "$TEST_OUT"
+            TEST_HOST=1 timeout -s KILL "$TEST_TIMEOUT" scripts/test.sh "$UTIL" </dev/null >"$TEST_OUT" 2>&1 || true
+            pkill -KILL -x yes 2>/dev/null || true
+            OUTPUT="$(cat "$TEST_OUT")"
             
             P_COUNT=$(echo "$OUTPUT" | grep -c "^PASS:" || true)
             F_COUNT=$(echo "$OUTPUT" | grep -c "^FAIL:" || true)
