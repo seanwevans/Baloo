@@ -18,38 +18,102 @@ _start:
     cmp         r14, 2                  ;need at least 1 operand
     jl          missing_operand
 
-    mov         rsi, [rsp + 16]         ;rsi = argv[1]
+    xor         r10, r10                ;nonzero when -a/-s selects multi-operand mode
+    xor         r12, r12                ;suffix pointer (0 = no suffix)
+    xor         r13, r13                ;suffix length
+    mov         r15, 1                  ;current argv index
+
+.parse_options:
+    cmp         r15, r14
+    jae         missing_operand
+    mov         rsi, [rsp + r15 * 8 + 8]
+
+    cmp         byte [rsi], '-'
+    jne         .options_done
+    cmp         byte [rsi + 1], 'a'
+    je          .maybe_a
+    cmp         byte [rsi + 1], 's'
+    je          .maybe_s
+    jmp         .options_done
+
+.maybe_a:
+    cmp         byte [rsi + 2], 0
+    jne         .options_done
+    mov         r10, 1
+    inc         r15
+    jmp         .parse_options
+
+.maybe_s:
+    cmp         byte [rsi + 2], 0
+    jne         .options_done
+    mov         r10, 1
+    inc         r15                     ;consume -s
+    cmp         r15, r14                ;need a suffix argument
+    jae         missing_operand
+    mov         r12, [rsp + r15 * 8 + 8]
+    mov         rsi, r12
+    call        strlen
+    mov         r13, rbx
+    inc         r15                     ;-s implies -a, so all remaining args are names
+    jmp         .parse_options
+
+.options_done:
+    cmp         r15, r14
+    jae         missing_operand
+
+    mov         rbp, r14                ;exclusive end index for path operands
+    test        r12, r12
+    jnz         .emit_loop              ;-s supplied the suffix already
+    test        r10, r10
+    jnz         .emit_loop              ;-a leaves every remaining argument as a path
+
+    mov         rax, r14
+    sub         rax, r15                ;remaining argument count
+    cmp         rax, 2
+    jne         .emit_loop
+
+; Traditional two-argument form: basename NAME SUFFIX.
+    mov         r12, [rsp + r15 * 8 + 16]
+    mov         rsi, r12
+    call        strlen
+    mov         r13, rbx
+    dec         rbp                     ;last argument is the suffix, not a path
+
+.emit_loop:
+    cmp         r15, rbp
+    jae         .done
+
+    mov         rsi, [rsp + r15 * 8 + 8]
     call        find_basename           ;rsi = component start, rbx = length
-    mov         r12, rsi                ;save component start
-    mov         r13, rbx                ;save component length
+    mov         r8, rsi                 ;component start
+    mov         r9, rbx                 ;component length
 
-    cmp         r14, 3                  ;optional suffix operand present?
-    jl          .emit
+    test        r13, r13
+    jz          .emit
+    cmp         r13, r9
+    jae         .emit                   ;suffix cannot be the whole result
 
-    mov         rsi, [rsp + 24]         ;rsi = argv[2] = suffix
-    call        strlen                  ;rbx = suffix length
-    test        rbx, rbx
-    jz          .emit                   ;empty suffix -> nothing to strip
-    cmp         rbx, r13
-    jae         .emit                   ;suffix not shorter than name -> keep whole
-
-    lea         r8, [r12 + r13]         ;end of the component
-    sub         r8, rbx                 ;start of its trailing slice
-    mov         r9, rsi                 ;suffix pointer
-    mov         rcx, rbx                ;suffix length
+    lea         r10, [r8 + r9]          ;end of the component
+    sub         r10, r13                ;start of its trailing slice
+    mov         rsi, r12                ;suffix pointer
+    mov         rcx, r13                ;suffix length
 .cmp_suffix:
-    mov         al, [r8]
-    cmp         al, [r9]
+    mov         al, [r10]
+    cmp         al, [rsi]
     jne         .emit                   ;tail != suffix -> keep whole
-    inc         r8
-    inc         r9
+    inc         r10
+    inc         rsi
     dec         rcx
     jnz         .cmp_suffix
-    sub         r13, rbx                ;strip the matched suffix
+    sub         r9, r13                 ;strip the matched suffix
 
 .emit:
-    write       STDOUT_FILENO, r12, r13
+    write       STDOUT_FILENO, r8, r9
     write       STDOUT_FILENO, nl, 1
+    inc         r15
+    jmp         .emit_loop
+
+.done:
     exit        0
 
 missing_operand:
