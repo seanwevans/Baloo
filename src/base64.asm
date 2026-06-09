@@ -16,10 +16,10 @@ global      _start
 
 _start:
     pop         rax                     ;Get argc
-    pop         rax                     ;skip program name
-    cmp         rax, 0
+    pop         rcx                     ;skip program name (argv[0])
+    dec         rax                     ;remaining args = argc - 1
 
-    jle         use_stdin               ;If no args, read from stdin
+    jle         use_stdin               ;If no file args, read from stdin
 
     pop         rsi                     ;Get filename
 

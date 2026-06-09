@@ -1,5 +1,6 @@
 bin/*
 build/*
+tests/test_helper/
 *.txt
 *.log
 *.bak
