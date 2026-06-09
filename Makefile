@@ -9,8 +9,12 @@ FMT_FILES := $(SRC) $(INC)
 FMT_SCRIPT := scripts/asmfmt.py
 README_SCRIPT := scripts/update_readme.py
 TEST_FLAGS ?= --timing
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+INSTALL ?= install
+INSTALL_PROGRAM ?= $(INSTALL) -m 755
 
-.PHONY: all setup clean test format lint-format update-readme check-readme check-readme-links
+.PHONY: all setup install uninstall clean test format lint-format update-readme check-readme check-readme-links
 
 .SECONDARY: $(OBJ)
 
@@ -40,6 +44,13 @@ lint-format:
 
 test: all
 	bats $(TEST_FLAGS) tests/test_all.bats
+
+install: all
+	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+	$(INSTALL_PROGRAM) $(BIN) $(DESTDIR)$(BINDIR)/
+
+uninstall:
+	rm -f $(addprefix $(DESTDIR)$(BINDIR)/,$(notdir $(BIN)))
 
 check-readme-links:
 	python3 scripts/check_readme_links.py
