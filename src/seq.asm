@@ -119,11 +119,11 @@ print_number:
     jmp             sequence_loop       ;Continue loop
 
 print_usage:
-    write           STDOUT_FILENO, usage_msg, usage_len
+    write           STDERR_FILENO, usage_msg, usage_len
     exit            1
 
 print_overflow:
-    write           STDOUT_FILENO, overflow_msg, overflow_len
+    write           STDERR_FILENO, overflow_msg, overflow_len
     exit            1
 
 end_program:
