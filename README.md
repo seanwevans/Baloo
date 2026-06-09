@@ -1,18 +1,15 @@
-# 🐻 Baloo  
+# 🐻 Baloo  ![Progress](https://img.shields.io/badge/progress-150%2F150%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
 
-![Progress](https://img.shields.io/badge/progress-150%2F150%20done-brightgreen) ![Build Status](https://github.com/seanwevans/baloo/actions/workflows/Baloo.yml/badge.svg)
-
-Just the bear utilities in x86_64 assembly using direct syscalls only — no libc or dependencies.
-
-<img src="assets/Baloo.jpg" title=" भालू "></img>
+Just the bare utilities in x86_64 assembly using direct syscalls only. No libc or dependencies.
 
 I was tired of seeing
 
-<img alt="usr/bin/true" src="https://github.com/user-attachments/assets/be6b408b-c922-411f-ae68-2a9de0ea70e0" />
+<img alt="'strace usr/bin/true' output" src="https://github.com/user-attachments/assets/be6b408b-c922-411f-ae68-2a9de0ea70e0" />
 
 When I should be seeing
 
-<img alt="Baloo/bin/true" src="https://github.com/user-attachments/assets/a7b74b87-1a2d-4b1a-93db-c591177b76af" />
+<img alt="'strace Baloo/bin/true' output" src="https://github.com/user-attachments/assets/ca5c42ed-33ea-405b-9d39-c97396ee827c" />
+
 
 So I built
 
@@ -222,7 +219,6 @@ Run `make` to build all binaries, then execute `tests/benchmark.sh` to compare a
 ## 📐 Formatting
 
 Canonical style rules:
-- Makefile recipe lines use **tabs**.
 - No trailing whitespace in tracked text files.
 - NASM labels/directives stay at column 0; instructions use 4-space indentation; inline comments are aligned to column 40.
 
@@ -230,3 +226,7 @@ Commands:
 - Apply formatting: `make format`
 - Validate formatting only: `make lint-format`
 - Single file: `python3 scripts/asmfmt.py src/example.asm`
+
+<hr>
+
+<img src="assets/Baloo.jpg" title=" भालू "></img>
