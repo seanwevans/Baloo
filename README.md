@@ -6,8 +6,15 @@ Just the bear utilities in x86_64 assembly using direct syscalls only — no lib
 
 <img src="assets/Baloo.jpg" title=" भालू "></img>
 
-<img src="https://github.com/user-attachments/assets/d1c3e5c4-eb85-4277-817c-f83df6958538" />
+I was tired of seeing
 
+<img alt="usr/bin/true" src="https://github.com/user-attachments/assets/be6b408b-c922-411f-ae68-2a9de0ea70e0" />
+
+When I should be seeing
+
+<img alt="Baloo/bin/true" src="https://github.com/user-attachments/assets/a7b74b87-1a2d-4b1a-93db-c591177b76af" />
+
+So I built
 
 ## Catalog
 
