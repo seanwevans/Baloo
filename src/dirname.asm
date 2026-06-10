@@ -20,9 +20,12 @@ _start:
     cmp         rdi, 2                  ;need at least argv[1]
     jl          .missing_operand
 
-    add         rsi, 8                  ;skip argc
-    add         rsi, 8                  ;skip argv[0]
-    mov         rsi, [rsi]              ;rsi = argv[1]
+    lea         r12, [rsi + 16]         ;r12 = argv[1]
+    mov         r13, rdi
+    dec         r13                     ;number of path operands
+
+.next_operand:
+    mov         rsi, [r12]              ;rsi = current operand
 
     mov         r10, rsi                ;r10 = start of string
     call        strlen                  ;rbx = length
@@ -74,6 +77,9 @@ _start:
 
 .put_nl:
     write       STDOUT_FILENO, newline, 1
+    add         r12, 8
+    dec         r13
+    jnz         .next_operand
     exit        0
 
 .missing_operand:
