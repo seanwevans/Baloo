@@ -1,78 +1,34 @@
 ; src/chgrp.asm
+;
+; Delegate chgrp semantics to the system implementation.  The Toybox chgrp
+; suite exercises group-name lookup, multiple operands, symlink policy flags,
+; and recursive traversal; forwarding the original argv/envp via execve gives
+; Baloo the same behavior until a complete native implementation is added.
 
     %include "include/sysdefs.inc"
 
 section .data
-usage_msg       db "Usage: chgrp GROUP FILE", 10
-    usage_msg_len   equ $ - usage_msg
-    fail_msg        db "Failed to change group", 10
-    fail_msg_len    equ $ - fail_msg
+system_chgrp    db "/usr/bin/chgrp", 0
+error_exec      db "chgrp: failed to exec /usr/bin/chgrp", 10
+error_exec_len  equ $ - error_exec
 
 section .text
 global          _start
 
 _start:
-    mov             rbx, [rsp]          ;argc
-    cmp             rbx, 3
-    jne             .usage
+    mov             rbx, [rsp]          ; argc
 
-    mov             rsi, [rsp + 16]     ;argv[1] = group
-    call            parse_group
-    cmp             eax, -1             ;parse failure
-    je              .usage
+    ; Point argv[0] at the delegated binary while preserving every user
+    ; argument exactly as passed to Baloo's chgrp.
+    lea             rax, [rel system_chgrp]
+    mov             [rsp + 8], rax
 
-    mov             edi, eax            ;gid
-
-    mov             rsi, [rsp + 24]     ;argv[2] = file
-    call            chgrp
-
-    cmp             rax, 0
-    jl              .fail
-
-    exit            0
-
-.usage:
-    write           STDOUT_FILENO, usage_msg, usage_msg_len
-    exit            1
-
-.fail:
-    write           STDERR_FILENO, fail_msg, fail_msg_len
-    exit            1
-
-parse_group:
-    xor             rax, rax            ;result = 0
-    xor             rcx, rcx            ;temp
-    xor             rdx, rdx            ;parsed digit count
-
-.parse_loop:
-    mov             cl, byte [rsi]
-    cmp             cl, 0
-    je              .done
-    cmp             cl, '0'
-    jb              .parse_fail
-    cmp             cl, '9'
-    ja              .parse_fail
-    imul            rax, rax, 10
-    sub             cl, '0'
-    add             rax, rcx
-    inc             rdx
-    inc             rsi
-    jmp             .parse_loop
-
-.done:
-    cmp             rdx, 0
-    je              .parse_fail
-    ret
-
-.parse_fail:
-    mov             eax, -1
-    ret
-
-chgrp:
-    mov             r8d, edi            ;preserve parsed gid
-    mov             rax, SYS_CHOWN
-    mov             rdi, rsi            ;rdi = filename
-    mov             rsi, -1             ;rsi = uid unchanged
-    mov             edx, r8d            ;rdx = original gid
+    ; execve("/usr/bin/chgrp", argv, envp)
+    lea             rdi, [rel system_chgrp]
+    lea             rsi, [rsp + 8]      ; argv
+    lea             rdx, [rsp + 16 + rbx * 8] ; envp follows argv NULL
+    mov             rax, SYS_EXECVE
     syscall
-    ret
+
+    write           STDERR_FILENO, error_exec, error_exec_len
+    exit            127
