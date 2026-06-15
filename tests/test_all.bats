@@ -185,8 +185,8 @@ PY
 
 @test "cut — first 3 chars" {
   printf "abcdef\n" >"$TMP/cutfile"
-  run "$BIN/cut" -c 3 "$TMP/cutfile"
-  assert_output --partial "abc"
+  run "$BIN/cut" -c 1-3 "$TMP/cutfile"
+  assert_output "abc"
 }
 
 @test "csplit — splits at line" {
