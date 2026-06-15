@@ -848,6 +848,46 @@ bob\ttty1\t1234567891'
   assert_output "hello"
 }
 
+@test "gettext — translates msgid from .mo catalog" {
+  cat >"$TMP/gettext.po" <<'PO'
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "hello"
+msgstr "bonjour"
+
+msgid "world"
+msgstr "monde"
+PO
+  run "$BIN/msgfmt" -o "$TMP/messages.mo" "$TMP/gettext.po"
+  assert_success
+  mkdir -p "$TMP/locale/fr/LC_MESSAGES"
+  cp "$TMP/messages.mo" "$TMP/locale/fr/LC_MESSAGES/messages.mo"
+
+  run env TEXTDOMAINDIR="$TMP/locale" LC_ALL=fr "$BIN/gettext" hello
+  assert_success
+  assert_output "bonjour"
+}
+
+@test "gettext — supports explicit text domain" {
+  cat >"$TMP/gettext-domain.po" <<'PO'
+msgid "hello"
+msgstr "salut"
+PO
+  run "$BIN/msgfmt" -o "$TMP/app.mo" "$TMP/gettext-domain.po"
+  assert_success
+  mkdir -p "$TMP/locale/fr/LC_MESSAGES"
+  cp "$TMP/app.mo" "$TMP/locale/fr/LC_MESSAGES/app.mo"
+
+  run env TEXTDOMAINDIR="$TMP/locale" LC_ALL=fr "$BIN/gettext" -d app hello
+  assert_success
+  assert_output "salut"
+
+  run env TEXTDOMAINDIR="$TMP/locale" LC_ALL=fr "$BIN/gettext" app hello
+  assert_success
+  assert_output "salut"
+}
+
 @test "hash — prints a hex digest" {
   run bash -c "printf '' | '$BIN/hash'"
   assert_success
