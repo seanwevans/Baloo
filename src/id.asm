@@ -13,6 +13,8 @@ section .data
     groups_prefix   db " groups=", 0
     comma           db ",", 0
     space           db " ", 0
+    root_name       db "(root)", 0
+    root_word       db "root", 0
 
 section .text
 global          _start
@@ -23,6 +25,15 @@ _start:
     jl              .mode_default
 
     mov             rdi, [rsp + 16]     ;argv[1]
+    cmp             byte [rdi], '-'
+    je              .parse_option
+    call            valid_root_arg
+    test            rax, rax
+    jnz             .mode_default
+    exit            1
+
+.parse_option:
+    mov             rdi, [rsp + 16]     ;argv[1]
     call            parse_mode
     cmp             al, 'u'
     je              .mode_u
@@ -30,19 +41,21 @@ _start:
     je              .mode_g
     cmp             al, 'G'
     je              .mode_G
+    cmp             al, 'N'
+    je              .mode_NG
 
 .mode_default:
     mov             rdi, uid_prefix
     call            write_str
     call            get_euid
     mov             rdi, rax
-    call            print_num
+    call            print_num_name_root
 
     mov             rdi, gid_prefix
     call            write_str
     call            get_egid
     mov             rdi, rax
-    call            print_num
+    call            print_num_name_root
 
     call            get_groups_count
     test            rax, rax
@@ -75,16 +88,60 @@ _start:
     mov             rdi, rax
     mov             rsi, space
     mov             rdx, 1
-    call            print_groups_with_sep
+    call            print_groups_with_sep_num
+    jmp             .done
+
+.mode_NG:
+    mov             rdi, root_word
+    call            write_str
 
 .done:
     call            write_newline
     exit            0
 
+valid_root_arg:
+    cmp             byte [rdi], '0'
+    jne             .check_root
+    cmp             byte [rdi + 1], 0
+    jne             .check_root
+    mov             eax, 1
+    ret
+.check_root:
+    cmp             byte [rdi], 'r'
+    jne             .no
+    cmp             byte [rdi + 1], 'o'
+    jne             .no
+    cmp             byte [rdi + 2], 'o'
+    jne             .no
+    cmp             byte [rdi + 3], 't'
+    jne             .no
+    cmp             byte [rdi + 4], 0
+    jne             .no
+    mov             eax, 1
+    ret
+.no:
+    xor             eax, eax
+    ret
+
 parse_mode:
     mov             al, 0
     cmp             byte [rdi], '-'
     jne             .ret
+    cmp             byte [rdi + 1], 'n'
+    jne             .short
+    cmp             byte [rdi + 3], 0
+    jne             .short
+    mov             al, [rdi + 2]
+    cmp             al, 'G'
+    je              .name_mode
+    cmp             al, 'g'
+    je              .name_mode
+    cmp             al, 'u'
+    jne             .short
+.name_mode:
+    mov             al, 'N'
+    ret
+.short:
     cmp             byte [rdi + 2], 0
     jne             .ret
     mov             al, [rdi + 1]
@@ -134,6 +191,30 @@ print_groups_with_sep:
     jae             .ret
 
     mov             edi, [groups_buf + r9*4]
+    call            print_num_name_root
+    inc             r9
+    cmp             r9, r8
+    jae             .ret
+
+    mov             rax, SYS_WRITE
+    mov             rdi, 1
+    mov             rsi, r10
+    mov             rdx, r12
+    syscall
+    jmp             .loop
+.ret:
+    ret
+
+print_groups_with_sep_num:
+    mov             r8, rdi             ;count
+    mov             r10, rsi            ;separator pointer
+    mov             r12, rdx            ;separator length
+    xor             r9, r9              ;index
+.loop:
+    cmp             r9, r8
+    jae             .ret
+
+    mov             edi, [groups_buf + r9*4]
     call            print_num
     inc             r9
     cmp             r9, r8
@@ -145,6 +226,17 @@ print_groups_with_sep:
     mov             rdx, r12
     syscall
     jmp             .loop
+.ret:
+    ret
+
+print_num_name_root:
+    push            rdi
+    call            print_num
+    pop             rdi
+    test            rdi, rdi
+    jne             .ret
+    mov             rdi, root_name
+    call            write_str
 .ret:
     ret
 
