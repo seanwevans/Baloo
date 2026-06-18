@@ -12,6 +12,8 @@ section .bss
     byte_pos        resq 1              ;Byte position (0-indexed as per standard cmp)
     line_count      resq 1              ;Line number of difference
     digit_buffer    resb 32             ;Buffer for converting numbers to strings
+    different       resq 1              ;Nonzero when files differ
+    silent_flag     resq 1              ;Nonzero for -s
 
 section .data
     buffer_size     equ 4096            ;Size of buffer for reading files
@@ -21,12 +23,17 @@ error_open_msg  db "Error: Cannot open file ", 0
     error_open_len  equ $ - error_open_msg
     newline         db 10, 0
 
-    diff_format     db " ", 0           ;Space between filenames
+    diff_format     db " "              ;Space between filenames
     diff_format_len equ $ - diff_format
-differ_msg      db " differ: byte ", 0      ; Standard cmp uses "byte" not "char"
+    stdin_name      db "-", 0
+differ_msg      db " differ: byte "     ; Standard cmp uses "byte" not "char"
     differ_len      equ $ - differ_msg
-    line_msg        db ", line ", 0
+    line_msg        db ", line "
     line_len        equ $ - line_msg
+cmp_prefix      db "cmp: EOF on "
+    cmp_prefix_len  equ $ - cmp_prefix
+    after_byte_msg  db " after byte "
+    after_byte_len  equ $ - after_byte_msg
 
 section .text
 global          _start
@@ -34,29 +41,55 @@ global          _start
 _start:
     mov             qword [byte_pos], 0 ;Start byte position at 0 (0-indexed)
     mov             qword [line_count], 1 ;Start at line 1
+    mov             qword [different], 0
+    mov             qword [silent_flag], 0
 
-cmp             qword [rsp], 3              ; Need 3 args: program name, file1, file2
+    mov             rbx, [rsp]
+    cmp             rbx, 4
+    jne             .check_argc
+    mov             rsi, [rsp + 16]
+    cmp             byte [rsi], '-'
+    jne             .check_argc
+    cmp             byte [rsi + 1], 's'
+    jne             .check_argc
+    cmp             byte [rsi + 2], 0
+    jne             .check_argc
+    mov             qword [silent_flag], 1
+    mov             rax, [rsp + 24]
+    mov             [file1_name], rax
+    mov             rax, [rsp + 32]
+    mov             [file2_name], rax
+    jmp             .open_files
+
+.check_argc:
+    cmp             rbx, 2
+    je              .one_file
+    cmp             rbx, 3
     jne             print_usage
 
     mov             rax, [rsp + 16]     ;file1
     mov             [file1_name], rax
     mov             rax, [rsp + 24]     ;file2
     mov             [file2_name], rax
+    jmp             .open_files
 
-    mov             rax, SYS_OPEN
+.one_file:
+    mov             rax, [rsp + 16]     ;file1
+    mov             [file1_name], rax
+    mov             qword [file2_name], stdin_name
+
+.open_files:
+
     mov             rdi, [file1_name]
-    mov             rsi, O_RDONLY
-    syscall
+    call            open_input
 
     cmp             rax, 0
     jl              error_open_file1
 
     mov             [file1_fd], rax
 
-    mov             rax, SYS_OPEN
     mov             rdi, [file2_name]
-    mov             rsi, O_RDONLY
-    syscall
+    call            open_input
 
     cmp             rax, 0
     jl              error_open_file2
@@ -73,7 +106,7 @@ cmp             qword [rsp], 3              ; Need 3 args: program name, file1, 
     mov             rdi, [file2_fd]
     syscall
 
-    mov             rax, [byte_pos]
+    mov             rax, [different]
     cmp             rax, 0
     jne             exit_different
 
@@ -85,8 +118,8 @@ exit_different:
 error_open_file1:
     write           STDERR_FILENO, error_open_msg, error_open_len
 
-    mov rsi, [file1_name]
-    call            print_string
+    mov             rsi, [file1_name]
+    call            print_string_stderr
 
     write           STDERR_FILENO, newline, 1
     exit            2
@@ -95,7 +128,7 @@ error_open_file2:
     write           STDERR_FILENO, error_open_msg, error_open_len
 
     mov             rsi, [file2_name]
-    call            print_string
+    call            print_string_stderr
 
     mov             rax, SYS_CLOSE
     mov             rdi, [file1_fd]
@@ -166,12 +199,42 @@ compare_files:
 .check_buffer_sizes:
     add             [byte_pos], rcx     ;Add compared bytes to total
     cmp             r12, r13
-    jne             .difference_found   ;If buffer sizes different, report difference
+    jne             .eof_in_shorter     ;If buffer sizes different, report EOF
 
     jmp             .read_loop
 
+.eof_in_shorter:
+    cmp             r12, r13
+    jg              .eof_file2
+    mov             rsi, [file1_name]
+    jmp             .print_eof
+.eof_file2:
+    mov             rsi, [file2_name]
+.print_eof:
+    mov             qword [different], 1
+    dec             qword [line_count]
+    cmp             qword [silent_flag], 1
+    je              .silent_eof
+    push            rsi
+    write           STDERR_FILENO, cmp_prefix, cmp_prefix_len
+    pop             rsi
+    call            print_string_stderr
+    write           STDERR_FILENO, after_byte_msg, after_byte_len
+    mov             rax, [byte_pos]
+    call            print_number_stderr
+    write           STDERR_FILENO, line_msg, line_len
+    mov             rax, [line_count]
+    call            print_number_stderr
+    write           STDERR_FILENO, newline, 1
+.silent_eof:
+    ret
+
 .difference_found:
     add             qword [byte_pos], r14 ;Add our current index in the buffer
+    mov             qword [different], 1
+
+    cmp             qword [silent_flag], 1
+    je              .silent_difference
 
     mov             rsi, [file1_name]
     call            print_string
@@ -194,6 +257,7 @@ compare_files:
 
     write           STDOUT_FILENO, newline, 1
 
+.silent_difference:
     ret
 
 .check_file2_eof:
@@ -206,15 +270,28 @@ compare_files:
     cmp             rax, 0
     je              .files_identical
 
-    mov             qword [byte_pos], 1 ;difference
+    mov             qword [different], 1
     jmp             .difference_found
 
 .files_identical:
-    mov             qword [byte_pos], 0 ;no difference
     ret
 
 .exit_error:
     exit            2
+
+open_input:
+    cmp             byte [rdi], '-'
+    jne             .open
+    cmp             byte [rdi + 1], 0
+    jne             .open
+    mov             rax, STDIN_FILENO
+    ret
+.open:
+    mov             rax, SYS_OPEN
+    mov             rsi, O_RDONLY
+    xor             rdx, rdx
+    syscall
+    ret
 
 print_string:
     push            rsi                 ;Save string pointer
@@ -228,6 +305,43 @@ print_string:
     pop             rsi                 ;Restore string pointer
     mov             rax, SYS_WRITE
     mov             rdi, STDOUT_FILENO
+    syscall
+    ret
+
+print_number_stderr:
+    mov             rsi, digit_buffer + 31
+    mov             byte [rsi], 0
+    mov             r10, 10
+    cmp             rax, 0
+    jne             .convert_loop
+    dec             rsi
+    mov             byte [rsi], '0'
+    jmp             .print_digits
+.convert_loop:
+    cmp             rax, 0
+    je              .print_digits
+    xor             rdx, rdx
+    div             r10
+    add             dl, '0'
+    dec             rsi
+    mov             [rsi], dl
+    jmp             .convert_loop
+.print_digits:
+    call            print_string_stderr
+    ret
+
+print_string_stderr:
+    push            rsi
+    xor             rdx, rdx
+.strlen_loop:
+    cmp             byte [rsi + rdx], 0
+    je              .strlen_done
+    inc             rdx
+    jmp             .strlen_loop
+.strlen_done:
+    pop             rsi
+    mov             rax, SYS_WRITE
+    mov             rdi, STDERR_FILENO
     syscall
     ret
 
