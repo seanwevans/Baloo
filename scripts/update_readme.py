@@ -8,15 +8,18 @@ from pathlib import Path
 def catalog_entry_line(entry: dict[str, object], src_dir: Path) -> str:
     name = str(entry["name"])
     asm_path = src_dir / f"{name}.asm"
-    status = "✅" if entry["isDone"] else "⛔️"
+    emoji = str(entry["glyph"])
+    status = "✅ Done" if entry["isDone"] else "⛔️ Pending"
     description = str(entry["description"])
 
     if asm_path.exists():
         name_rendered = f"[`{name}`](src/{name}.asm)"
+        source_rendered = f"[`src/{name}.asm`](src/{name}.asm)"
     else:
         name_rendered = f"`{name}`"
+        source_rendered = "—"
 
-    return f"- {name_rendered} {status} {description}"
+    return f"| {emoji} | {name_rendered} | {description} | {status} | {source_rendered} |"
 
 
 def main() -> None:
@@ -49,15 +52,21 @@ def main() -> None:
         if line.strip() == "## Catalog":
             start = i + 1
             continue
-        if start is not None and line.startswith("## Benchmark"):
+        if start is not None and line.startswith("## "):
             end = i
             break
     if start is None or end is None:
         raise RuntimeError("Failed to locate catalog section in README")
 
-    catalog_lines = [catalog_entry_line(entry, src_dir) for entry in data]
+    catalog_lines = [
+        "",
+        "| Emoji | Name | Description | Status | Source |",
+        "| :---: | --- | --- | :---: | --- |",
+        *[catalog_entry_line(entry, src_dir) for entry in data],
+        "",
+    ]
 
-    lines[start:end] = catalog_lines + [""]
+    lines[start:end] = catalog_lines
     readme_path.write_text("\n".join(lines) + "\n")
 
 
