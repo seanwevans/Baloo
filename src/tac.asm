@@ -5,6 +5,13 @@ section .bss
     buffer      resb 65536
     line_pos    resq 8192
     buffer_size equ 65536
+    exit_status resq 1
+
+section .data
+tac_pre     db "tac: "
+    tac_pre_len equ $ - tac_pre
+tac_suf     db ": No such file or directory", WHITESPACE_NL
+    tac_suf_len equ $ - tac_suf
 
 section .text
 global _start
@@ -12,6 +19,7 @@ global _start
 _start:
     pop r12                             ;argc
     pop rdi                             ;skip program name
+    mov qword [exit_status], 0
     dec r12
     cmp r12, 0
     je read_stdin
@@ -20,7 +28,18 @@ process_args:
     cmp r12, 0
     je exit_success
     pop rdi                             ;filename
+    cmp byte [rdi], '-'                 ;"-" means stdin
+    jne .file
+    cmp byte [rdi + 1], 0
+    jne .file
+    push r12
+    mov rdi, STDIN_FILENO
+    call tac_fd
+    pop r12
+    jmp .next
+.file:
     call tac_file
+.next:
     dec r12
     jmp process_args
 
@@ -36,10 +55,12 @@ tac_file:
     xor rdx, rdx
     syscall
     cmp rax, 0
-    jl error_exit
+    jl report_missing
     mov rdi, rax
     push r12
+    push rdi                            ;preserve fd across tac_fd
     call tac_fd
+    pop rdi                             ;restore fd for close
     pop r12
     mov rax, SYS_CLOSE
     syscall
@@ -112,5 +133,22 @@ tac_fd:
 error_exit:
     exit 1
 
+; report_missing: rdi -> filename; print a diagnostic and set the exit status
+report_missing:
+    mov r13, rdi
+    write STDERR_FILENO, tac_pre, tac_pre_len
+    mov rsi, r13
+    call strlen                         ;rbx = length (include/sysdefs.inc)
+    mov rax, SYS_WRITE
+    mov rdi, STDERR_FILENO
+    mov rsi, r13
+    mov rdx, rbx
+    syscall
+    write STDERR_FILENO, tac_suf, tac_suf_len
+    mov qword [exit_status], 1
+    ret
+
 exit_success:
-    exit 0
+    mov rdi, [exit_status]
+    mov rax, SYS_EXIT
+    syscall
