@@ -195,12 +195,20 @@ get_token:
 ; -------- helper: read_char --------
 ; returns char in al, or -1 in rax on EOF
 read_char:
+    push    rcx                         ;preserve the caller's token cursor state
+    push    rdx
+    push    rsi
+    push    rdi
     mov     rax, SYS_READ
     mov     rdi, STDIN_FILENO
     mov     rsi, char_buf
     mov     rdx, 1
     syscall
-    cmp     rax, 0
+    pop     rdi
+    pop     rsi
+    pop     rdx
+    pop     rcx
+    test    rax, rax
     je      .eof
     movzx   eax, byte [char_buf]
     ret
