@@ -104,13 +104,25 @@ args_done:
     test rax, rax
     jz print_usage
 
-; open files
+; open files ("-" means read from stdin)
     mov rsi, [arg1_ptr]
+    cmp byte [rsi], '-'
+    jne .open1
+    cmp byte [rsi + 1], 0
+    jne .open1
+    xor rsi, rsi                        ;NULL -> default fd (stdin)
+.open1:
     mov rdi, STDIN_FILENO
     call open_file
     mov [fd1], rax
 
     mov rsi, [arg2_ptr]
+    cmp byte [rsi], '-'
+    jne .open2
+    cmp byte [rsi + 1], 0
+    jne .open2
+    xor rsi, rsi
+.open2:
     mov rdi, STDIN_FILENO
     call open_file
     mov [fd2], rax
