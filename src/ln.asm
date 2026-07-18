@@ -6,6 +6,7 @@ section .bss
     argc            resq 1              ;Argument count
     argv            resq 1              ;Argument vector
     symlink_flag    resb 1              ;Flag for symbolic link (-s option)
+    force_flag      resb 1              ;Flag for force overwrite (-f option)
     source_path     resq 1              ;Pointer to source path
     target_path     resq 1              ;Pointer to target path
 
@@ -28,6 +29,7 @@ _start:
     pop             qword [argc]        ;Get argument count
     mov             qword [argv], rsp   ;Save pointer to argument vector
     mov             byte [symlink_flag], 0
+    mov             byte [force_flag], 0
     call            parse_args
 
     cmp             qword [source_path], 0
@@ -36,6 +38,13 @@ _start:
     cmp             qword [target_path], 0
     je              error_missing_target
 
+    movzx           rax, byte [force_flag]
+    test            rax, rax
+    jz              .no_force
+    mov             rax, SYS_UNLINK     ;remove existing target (ignore errors)
+    mov             rdi, [target_path]
+    syscall
+.no_force:
     movzx           rax, byte [symlink_flag]
     test            rax, rax
     jnz             create_symbolic_link
@@ -66,16 +75,42 @@ parse_args:
 
     mov             r8, [argv]          ;Get argument vector
     add             r8, 8               ;Skip program name
-    mov             rdi, [r8]           ;Get first argument
+    dec             rcx                 ;Remaining argument count
+
+.optloop:
+    cmp             rcx, 0
+    je              no_option
+    mov             rdi, [r8]           ;Current argument
     cmp             byte [rdi], '-'     ;Check if it starts with '-'
     jne             no_option
+    cmp             byte [rdi+1], 0     ;Lone "-" is an operand, not an option
+    je              no_option
+    inc             rdi                 ;Skip '-'
 
-    cmp             byte [rdi+1], 's'   ;Check if it's '-s'
-    jne             display_usage       ;If not '-s', display usage
+.charloop:
+    movzx           rax, byte [rdi]
+    cmp             al, 0
+    je              .nextopt
+    cmp             al, 's'
+    je              .set_symlink
+    cmp             al, 'f'
+    je              .set_force
+    jmp             display_usage
 
+.set_symlink:
     mov             byte [symlink_flag], 1
+    inc             rdi
+    jmp             .charloop
+
+.set_force:
+    mov             byte [force_flag], 1
+    inc             rdi
+    jmp             .charloop
+
+.nextopt:
     add             r8, 8
-    dec             rcx                 ;Decrement argument count
+    dec             rcx
+    jmp             .optloop
 
 no_option:
     cmp             rcx, 2              ;Need at least 2 arguments (source and target)
