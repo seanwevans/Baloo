@@ -1,4 +1,4 @@
-; src/cat.asm
+; src/cat.asm -- cat(1): concatenate files (and "-"/no args = stdin) to stdout
 
     %include "include/sysdefs.inc"
 
@@ -6,78 +6,101 @@ section .bss
     buffer      resb 4096               ;Buffer for reading data
     buffer_size equ 4096                ;Size of the buffer
 
+section .data
+errpre      db "cat: "
+    errpre_len  equ $ - errpre
+errsuf      db ": No such file or directory", WHITESPACE_NL
+    errsuf_len  equ $ - errsuf
+
 section .text
 global      _start
 
 _start:
-    pop         r12                     ;argc
-    pop         rdi
-    dec         r12
+    mov         r12, [rsp]              ;argc
+    lea         r13, [rsp + 16]         ;&argv[1]
+    xor         r14, r14                ;exit status
+    dec         r12                     ;operand count
+    jz          stdin_only              ;no operands -> stdin
+
+process:
     cmp         r12, 0
-    je          read_from_stdin         ;If no arguments, read from stdin
-
-process_arguments:
-    cmp         r12, 0                  ;Check if we've processed all arguments
-    je          exit_success
-
-    pop         rdi                     ;Get the filename
-    call        cat_file                ;Process the file
-
-    dec r12
-    jmp         process_arguments
-
-read_from_stdin:
+    je          done
+    mov         rdi, [r13]
+    cmp         byte [rdi], '-'         ;"-" means stdin
+    jne         open_it
+    cmp         byte [rdi + 1], 0
+    jne         open_it
     mov         rdi, STDIN_FILENO
     call        cat_fd
-    jmp         exit_success
+    jmp         next
 
-cat_file:
+open_it:
     mov         rax, SYS_OPEN
     mov         rsi, O_RDONLY
-    mov         rdx, 0
-    syscall                             ;Open for reading only
-
-    cmp         rax, 0
-    jl          error_exit
-
-    mov         rdi, rax                ;Move file descriptor to rdi for cat_fd
-    push        r12                     ;Save arg count
-    call        cat_fd                  ;Process the opened file
-
-    pop         r12                     ;Restore r12
+    xor         rdx, rdx
+    syscall
+    test        rax, rax
+    js          open_err
+    mov         r15, rax                ;file descriptor
+    mov         rdi, r15
+    call        cat_fd
+    mov         rdi, r15
     mov         rax, SYS_CLOSE
     syscall
+    jmp         next
 
-    ret
+open_err:
+    write       STDERR_FILENO, errpre, errpre_len
+    mov         rsi, [r13]              ;file name
+    call        strlen                  ;rbx = length (from include/sysdefs.inc)
+    mov         rax, SYS_WRITE
+    mov         rdi, STDERR_FILENO
+    mov         rsi, [r13]
+    mov         rdx, rbx
+    syscall
+    write       STDERR_FILENO, errsuf, errsuf_len
+    mov         r14, 1
 
-cat_fd:
-    push        rdi
+next:
+    add         r13, 8
+    dec         r12
+    jmp         process
 
-read_loop:
-    mov         rax, SYS_READ
-    pop         rdi                     ;Restore file descriptor
-    push        rdi                     ;Save it again for the next iteration
-    mov         rsi, buffer             ;Buffer to read into
-    mov         rdx, buffer_size        ;Number of bytes to read
+stdin_only:
+    mov         rdi, STDIN_FILENO
+    call        cat_fd
+
+done:
+    mov         rdi, r14
+    mov         rax, SYS_EXIT
     syscall
 
-    cmp         rax, 0                  ;Check if read returned 0 (EOF)
-    jle         read_done               ;If <= 0, we're done or there was an error
-
-    mov         rdx, rax                ;Number of bytes to write (from read)
+; cat_fd: copy everything from fd (rdi) to stdout. Sets r14=1 on write error.
+cat_fd:
+    mov         rbx, rdi                ;fd (survives syscalls; rcx/r11 do not)
+.read_loop:
+    mov         rax, SYS_READ
+    mov         rdi, rbx
+    mov         rsi, buffer
+    mov         rdx, buffer_size
+    syscall
+    cmp         rax, 0
+    jle         .done                   ;EOF or read error
+    mov         r10, rax                ;bytes remaining to write
+    mov         r9, buffer              ;current position
+.write_loop:
     mov         rax, SYS_WRITE
     mov         rdi, STDOUT_FILENO
-    mov         rsi, buffer             ;Buffer to write from
+    mov         rsi, r9
+    mov         rdx, r10
     syscall
-
-    jmp         read_loop               ;Continue reading
-
-read_done:
-    pop         rdi                     ;Clean up the stack
+    test        rax, rax
+    js          .write_err
+    add         r9, rax
+    sub         r10, rax
+    jnz         .write_loop
+    jmp         .read_loop
+.write_err:
+    mov         r14, 1
+.done:
     ret
-
-error_exit:
-    exit        1
-
-exit_success:
-    exit        0
