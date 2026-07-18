@@ -18,6 +18,11 @@ section .bss
     numtmp   resb 32
     outbuf   resb OUTBUF_SIZE
     outlen   resq 1
+    dt_tod   resq 1
+    dt_nsec  resq 1
+    dt_year  resq 1
+    dt_month resq 1
+    dt_day   resq 1
 
 section .data
     digits db "0123456789abcdef"
@@ -82,7 +87,7 @@ _start:
     inc     r13
     mov     al, [r13]
     test    al, al
-    jz      .line_done
+    jz      .trailing_pct
     cmp     al, 'n'
     je      .d_name
     cmp     al, 's'
@@ -109,14 +114,24 @@ _start:
     je      .d_perms_sym
     cmp     al, 'F'
     je      .d_type
+    cmp     al, 'X'
+    je      .d_atime
+    cmp     al, 'Y'
+    je      .d_mtime
+    cmp     al, 'x'
+    je      .d_atime_str
+    cmp     al, 'y'
+    je      .d_mtime_str
     cmp     al, '%'
     je      .d_pct
-    mov     al, '%'
-    call    out_char
-    mov     al, [r13]
+    mov     al, '?'                     ;unknown directive -> '?'
     call    out_char
     inc     r13
     jmp     .scan
+.trailing_pct:
+    mov     al, '%'                     ;a '%' at end of format is literal
+    call    out_char
+    jmp     .line_done
 .d_name:
     mov     rsi, [cur_name]
     call    emit_str
@@ -189,6 +204,30 @@ _start:
     jmp     .scan
 .d_type:
     call    emit_type
+    inc     r13
+    jmp     .scan
+.d_atime:
+    mov     rdi, [statbuf + 72]         ;st_atime seconds
+    mov     rsi, 10
+    call    emit_base
+    inc     r13
+    jmp     .scan
+.d_mtime:
+    mov     rdi, [statbuf + 88]         ;st_mtime seconds
+    mov     rsi, 10
+    call    emit_base
+    inc     r13
+    jmp     .scan
+.d_atime_str:
+    mov     rdi, [statbuf + 72]
+    mov     rsi, [statbuf + 80]         ;st_atime nanoseconds
+    call    emit_datetime
+    inc     r13
+    jmp     .scan
+.d_mtime_str:
+    mov     rdi, [statbuf + 88]
+    mov     rsi, [statbuf + 96]         ;st_mtime nanoseconds
+    call    emit_datetime
     inc     r13
     jmp     .scan
 .d_pct:
@@ -265,6 +304,215 @@ emit_base:
     pop     rcx
     pop     rbx
     pop     rax
+    ret
+
+; emit_padded: rdi = value, rsi = minimum width; emit decimal, zero-padded
+emit_padded:
+    push    rax
+    push    rbx
+    push    rcx
+    push    rdx
+    push    r8
+    lea     rcx, [numtmp + 32]
+    mov     rax, rdi
+    xor     r8, r8                      ;digit count
+.lp:
+    xor     rdx, rdx
+    mov     rbx, 10
+    div     rbx
+    add     dl, '0'
+    dec     rcx
+    mov     [rcx], dl
+    inc     r8
+    test    rax, rax
+    jnz     .lp
+.pad:
+    cmp     r8, rsi
+    jge     .emit
+    dec     rcx
+    mov     byte [rcx], '0'
+    inc     r8
+    jmp     .pad
+.emit:
+    mov     al, [rcx]
+    call    out_char
+    inc     rcx
+    dec     r8
+    jnz     .emit
+    pop     r8
+    pop     rdx
+    pop     rcx
+    pop     rbx
+    pop     rax
+    ret
+
+; emit_datetime: rdi = epoch seconds, rsi = nanoseconds. Emits UTC as
+; "YYYY-MM-DD HH:MM:SS.NNNNNNNNN +0000" (matches TZ=UTC coreutils stat).
+emit_datetime:
+    push    rbx
+    push    rcx
+    push    rdx
+    push    r8
+    push    r9
+    push    r10
+    push    r11
+    mov     [dt_nsec], rsi
+;split epoch into whole days and the seconds-of-day
+    mov     rax, rdi
+    xor     rdx, rdx
+    mov     rcx, 86400
+    div     rcx                         ;rax = days, rdx = seconds-of-day
+    mov     [dt_tod], rdx
+;civil_from_days(days) -> year/month/day (valid for days >= 0)
+    add     rax, 719468                 ;shift epoch to 0000-03-01
+    xor     rdx, rdx
+    mov     rcx, 146097
+    div     rcx                         ;rax = era, rdx = doe
+    mov     r11, rax                    ;era
+    mov     r8, rdx                     ;doe
+;yoe = (doe - doe/1460 + doe/36524 - doe/146096) / 365
+    mov     rax, r8
+    xor     rdx, rdx
+    mov     rcx, 1460
+    div     rcx
+    mov     r9, rax                     ;doe/1460
+    mov     rax, r8
+    xor     rdx, rdx
+    mov     rcx, 36524
+    div     rcx
+    mov     r10, rax                    ;doe/36524
+    mov     rax, r8
+    xor     rdx, rdx
+    mov     rcx, 146096
+    div     rcx                         ;rax = doe/146096
+    mov     rcx, r8
+    sub     rcx, r9
+    add     rcx, r10
+    sub     rcx, rax
+    mov     rax, rcx
+    xor     rdx, rdx
+    mov     rcx, 365
+    div     rcx
+    mov     r9, rax                     ;yoe
+;year = yoe + era*400
+    mov     rax, r11
+    imul    rax, rax, 400
+    add     rax, r9
+    mov     r11, rax                    ;year (pre month adjust)
+;doy = doe - (365*yoe + yoe/4 - yoe/100)
+    mov     rax, r9
+    imul    rax, rax, 365
+    mov     rcx, r9
+    shr     rcx, 2                      ;yoe/4
+    add     rax, rcx
+    mov     rbx, rax                    ;365*yoe + yoe/4
+    mov     rax, r9
+    xor     rdx, rdx
+    mov     rcx, 100
+    div     rcx                         ;yoe/100
+    mov     rcx, rbx
+    sub     rcx, rax                    ;365*yoe + yoe/4 - yoe/100
+    mov     r10, r8
+    sub     r10, rcx                    ;doy
+;mp = (5*doy + 2)/153
+    mov     rax, r10
+    imul    rax, rax, 5
+    add     rax, 2
+    xor     rdx, rdx
+    mov     rcx, 153
+    div     rcx
+    mov     r8, rax                     ;mp
+;day = doy - (153*mp + 2)/5 + 1
+    mov     rax, r8
+    imul    rax, rax, 153
+    add     rax, 2
+    xor     rdx, rdx
+    mov     rcx, 5
+    div     rcx
+    mov     rcx, r10
+    sub     rcx, rax
+    inc     rcx
+    mov     [dt_day], rcx
+;month = mp < 10 ? mp+3 : mp-9
+    cmp     r8, 10
+    jb      .mp_lt
+    sub     r8, 9
+    jmp     .mp_done
+.mp_lt:
+    add     r8, 3
+.mp_done:
+    mov     [dt_month], r8
+;year += (month <= 2)
+    cmp     r8, 2
+    ja      .year_ok
+    inc     r11
+.year_ok:
+    mov     [dt_year], r11
+;--- emit the formatted string ---
+    mov     rdi, [dt_year]
+    mov     rsi, 4
+    call    emit_padded
+    mov     al, '-'
+    call    out_char
+    mov     rdi, [dt_month]
+    mov     rsi, 2
+    call    emit_padded
+    mov     al, '-'
+    call    out_char
+    mov     rdi, [dt_day]
+    mov     rsi, 2
+    call    emit_padded
+    mov     al, ' '
+    call    out_char
+;hour = tod/3600
+    mov     rax, [dt_tod]
+    xor     rdx, rdx
+    mov     rcx, 3600
+    div     rcx
+    mov     rdi, rax                    ;hour
+    mov     r10, rdx                    ;remaining seconds
+    mov     rsi, 2
+    call    emit_padded
+mov     al, ':'
+    call    out_char
+;minute = (tod%3600)/60, second = tod%60
+    mov     rax, r10
+    xor     rdx, rdx
+    mov     rcx, 60
+    div     rcx
+    mov     rdi, rax                    ;minute
+    mov     r10, rdx                    ;second
+    mov     rsi, 2
+    call    emit_padded
+mov     al, ':'
+    call    out_char
+    mov     rdi, r10                    ;second
+    mov     rsi, 2
+    call    emit_padded
+    mov     al, '.'
+    call    out_char
+    mov     rdi, [dt_nsec]
+    mov     rsi, 9
+    call    emit_padded
+    mov     al, ' '
+    call    out_char
+    mov     al, '+'
+    call    out_char
+    mov     al, '0'
+    call    out_char
+    mov     al, '0'
+    call    out_char
+    mov     al, '0'
+    call    out_char
+    mov     al, '0'
+    call    out_char
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    pop     rdx
+    pop     rcx
+    pop     rbx
     ret
 
 ; emit_str: rsi = NUL-terminated string -> out_char (register-safe)
