@@ -1,223 +1,279 @@
-; src/tr.asm
+; src/tr.asm -- tr(1): translate, delete (-d), squeeze (-s) or truncate (-t)
+; characters from stdin to stdout. Sets are treated as literal byte lists
+; (ranges/classes are not implemented).
 
     %include "include/sysdefs.inc"
 
+    %define IOBUF 65536
+
 section .bss
-    buffer      resb buffer_size        ;I/O buffer
-    char_map    resb 256                ;Translation map (one byte per possible character)
-    delete_flag resb 1                  ;Flag for delete mode
-    set1        resb 256                ;First character set
-    set2        resb 256                ;Second character set
-    set1_len    resq 1                  ;Length of SET1
-    set2_len    resq 1                  ;Length of SET2
+    inbuf       resb IOBUF
+    outbuf      resb IOBUF
+    outpos      resq 1
+    char_map    resb 256                ;translation table
+    del_set     resb 256                ;bytes to delete
+    sq_set      resb 256                ;bytes to squeeze
+    set1        resb 256
+    set2        resb 256
+    set1_len    resq 1
+    set2_len    resq 1
+    d_flag      resb 1
+    s_flag      resb 1
+    t_flag      resb 1
+    xlat_flag   resb 1                  ;translation table in use
 
 section .data
-usage_msg   db "Usage: tr [-d] SET1 [SET2]", 10, 0
+usage_msg   db "Usage: tr [-dst] SET1 [SET2]", 10
     usage_len   equ $ - usage_msg
-    buffer_size equ 4096                ;Size of the I/O buffer
 
 section .text
 global      _start
 
 _start:
-    mov         rcx, 0
-
-init_map_loop:
-    mov         [char_map + rcx], cl    ;Map character to itself
+;identity translation table, empty delete/squeeze sets
+    xor         rcx, rcx
+.init:
+    mov         [char_map + rcx], cl
+    mov         byte [del_set + rcx], 0
+    mov         byte [sq_set + rcx], 0
     inc         rcx
     cmp         rcx, 256
-    jl          init_map_loop
+    jl          .init
+    mov         byte [d_flag], 0
+    mov         byte [s_flag], 0
+    mov         byte [t_flag], 0
+    mov         byte [xlat_flag], 0
+    mov         qword [outpos], 0
 
-    mov         byte [delete_flag], 0
+    mov         r12, [rsp]              ;argc
+    lea         r13, [rsp + 16]         ;&argv[1]
+    dec         r12                     ;operand count
 
-    pop         rcx                     ;argc
-    cmp         rcx, 1                  ;Check if we have at least one argument
-    jle         show_usage              ;If not, show usage and exit
-
-    pop         rdi
-    pop         rdi                     ;Get argv[1]
-    cmp         rcx, 1                  ;If we only have program name
-    je          show_usage              ;Show usage and exit
-
+opt_loop:
+    cmp         r12, 0
+    je          show_usage
+    mov         rdi, [r13]
     cmp         byte [rdi], '-'
-    jne         set1_arg                ;If not, it's SET1
+    jne         have_set1
+    cmp         byte [rdi + 1], 0
+    je          have_set1               ;lone "-" is not an option
+    inc         rdi
+.char:
+    movzx       eax, byte [rdi]
+    test        al, al
+    je          .next
+    cmp         al, 'd'
+    je          .sd
+    cmp         al, 's'
+    je          .ss
+    cmp         al, 't'
+    je          .st
+    jmp         show_usage
+.sd:
+    mov         byte [d_flag], 1
+    inc         rdi
+    jmp         .char
+.ss:
+    mov         byte [s_flag], 1
+    inc         rdi
+    jmp         .char
+.st:
+    mov         byte [t_flag], 1
+    inc         rdi
+    jmp         .char
+.next:
+    add         r13, 8
+    dec         r12
+    jmp         opt_loop
 
-    cmp         byte [rdi + 1], 'd'
-    jne         show_usage              ;If not -d, show usage
-    cmp         byte [rdi + 2], 0       ;Ensure it's exactly "-d"
-    jne         show_usage
-
-    mov         byte [delete_flag], 1
-
-    dec         rcx
-    cmp         rcx, 2                  ;Need at least SET1
-    jl          show_usage
-
-    pop         rdi
-    jmp         process_set1
-
-set1_arg:
-process_set1:
+have_set1:
+    cmp         r12, 0
+    je          show_usage
+    mov         rdi, [r13]
     mov         rsi, set1
-    call        copy_string
-
+    call        copy_set
     mov         [set1_len], rax
-    dec         rcx
-    cmp         rcx, 1                  ;Check if we have another argument
-    jl          check_delete_mode       ;If not, check if we're in delete mode
+    add         r13, 8
+    dec         r12
 
-    pop         rdi
+    mov         qword [set2_len], 0
+    cmp         r12, 0
+    je          .no_set2
+    mov         rdi, [r13]
     mov         rsi, set2
-    call        copy_string
+    call        copy_set
     mov         [set2_len], rax
-    call        build_translation_map
-
-    jmp         translate_input
-
-check_delete_mode:
-    cmp         byte [delete_flag], 1
-    je          translate_input         ;In delete mode, we only need SET1
-
+.no_set2:
+;require a second set unless -d/-s/-t was given
+    cmp         qword [set2_len], 0
+    jne         setup
+    cmp         byte [d_flag], 1
+    je          setup
+    cmp         byte [s_flag], 1
+    je          setup
+    cmp         byte [t_flag], 1
+    je          setup
     jmp         show_usage
 
-translate_input:
-read_next_chunk:
+setup:
+;-t truncates SET1 to the length of SET2
+    cmp         byte [t_flag], 1
+    jne         .no_trunc
+    mov         rax, [set2_len]
+    test        rax, rax
+    jz          .no_trunc
+    cmp         [set1_len], rax
+    jle         .no_trunc
+    mov         [set1_len], rax
+.no_trunc:
+;build the translation table when a SET2 exists and we are not deleting
+    cmp         qword [set2_len], 0
+    je          .delmap
+    cmp         byte [d_flag], 1
+    je          .delmap
+    mov         byte [xlat_flag], 1
+    xor         rcx, rcx
+.xl:
+    cmp         rcx, [set1_len]
+    jge         .delmap
+    mov         rbx, rcx                ;index into SET2 (extend with last)
+    cmp         rbx, [set2_len]
+    jl          .have_j
+    mov         rbx, [set2_len]
+    dec         rbx
+.have_j:
+    movzx       rax, byte [set1 + rcx]
+    movzx       rdx, byte [set2 + rbx]
+    mov         [char_map + rax], dl
+    inc         rcx
+    jmp         .xl
+.delmap:
+    cmp         byte [d_flag], 1
+    jne         .sqmap
+    xor         rcx, rcx
+.dl:
+    cmp         rcx, [set1_len]
+    jge         .sqmap
+    movzx       rax, byte [set1 + rcx]
+    mov         byte [del_set + rax], 1
+    inc         rcx
+    jmp         .dl
+.sqmap:
+    cmp         byte [s_flag], 1
+    jne         run
+;squeeze set is SET2 when present, otherwise SET1
+    mov         rsi, set1
+    mov         rdx, [set1_len]
+    cmp         qword [set2_len], 0
+    je          .sq_have
+    mov         rsi, set2
+    mov         rdx, [set2_len]
+.sq_have:
+    xor         rcx, rcx
+.sl:
+    cmp         rcx, rdx
+    jge         run
+    movzx       rax, byte [rsi + rcx]
+    mov         byte [sq_set + rax], 1
+    inc         rcx
+    jmp         .sl
+
+run:
+    mov         r15, -1                 ;last byte written (for squeeze)
+.read:
     mov         rax, SYS_READ
     mov         rdi, STDIN_FILENO
-    mov         rsi, buffer
-    mov         rdx, buffer_size
+    mov         rsi, inbuf
+    mov         rdx, IOBUF
     syscall
-
     cmp         rax, 0
-    jle         exit_success            ;EOF or error, exit
-
-    mov         rcx, 0                  ;Initialize index
-    mov         rbx, 0                  ;Initialize write index (for delete mode)
-
-process_byte_loop:
-    movzx       rdx, byte [buffer + rcx] ;Get the current byte
-    movzx       rdx, byte [char_map + rdx]
-    cmp         byte [delete_flag], 1
-    je      delete_check
-
-    mov         [buffer + rbx], dl
+    jle         .eof
+    mov         r14, rax                ;bytes read
+    xor         rbx, rbx                ;index
+.byte:
+    cmp         rbx, r14
+    jge         .read
+    movzx       rax, byte [inbuf + rbx]
     inc         rbx
-    jmp         next_byte
-
-delete_check:
-    cmp         dl, 0FFh                ;0xFF is our marker for deletion
-    je          next_byte               ;Skip byte if it should be deleted
-
-    mov         [buffer + rbx], dl
-    inc         rbx
-
-next_byte:
-    inc         rcx
-    cmp         rcx, rax                ;Check if we've processed all bytes
-    jl          process_byte_loop
-
-    mov         rdx, rbx                ;Number of bytes to write
-    cmp         rdx, 0
-    je          read_next_chunk         ;Nothing to write, read next chunk
-
-    mov         rax, SYS_WRITE
-    mov         rdi, STDOUT_FILENO
-    mov         rsi, buffer
-    syscall
-
-    cmp         rax, 0
-    jl          exit_error              ;Write error
-
-    jmp         read_next_chunk         ;Process next chunk
-
-exit_success:
+;delete?
+    cmp         byte [d_flag], 1
+    jne         .translate
+    cmp         byte [del_set + rax], 1
+    je          .byte                   ;deleted
+.translate:
+    cmp         byte [xlat_flag], 1
+    jne         .have_c
+    movzx       rax, byte [char_map + rax]
+.have_c:
+;squeeze?
+    cmp         byte [s_flag], 1
+    jne         .emit
+    cmp         byte [sq_set + rax], 1
+    jne         .emit
+    cmp         rax, r15
+    je          .byte                   ;squeezed repeat
+.emit:
+    mov         r15, rax
+    call        put_byte
+    jmp         .byte
+.eof:
+    call        flush
     exit        0
 
-show_usage:
-    write       STDERR_FILENO, usage_msg, usage_len
-    exit        1
-
-exit_error:
-    exit        2
-
-copy_string:
-    push        rcx
-    push        rdi
-    push        rsi
-
-    mov         rcx, 0                  ;Initialize counter
-copy_loop:
-    mov         al, [rdi + rcx]
-    cmp         al, 0
-    je          copy_done
-
-    mov         [rsi + rcx], al
+; put_byte: append al-ish (rax low byte) to outbuf, flushing when full
+put_byte:
+    mov         rcx, [outpos]
+    mov         [outbuf + rcx], al
     inc         rcx
-    cmp         rcx, 255                ;Limit to 255 characters
-    jl          copy_loop
-
-copy_done:
-    mov         [rsi + rcx], byte 0     ;Null-terminate the copy
-    mov         rax, rcx
-    pop         rsi
-    pop         rdi
-    pop         rcx
+    mov         [outpos], rcx
+    cmp         rcx, IOBUF
+    jl          .ok
+    call        flush
+.ok:
     ret
 
-build_translation_map:
+; flush: write and reset outbuf (preserves the working registers)
+flush:
+    push        rax
     push        rbx
     push        rcx
     push        rdx
     push        rsi
     push        rdi
-    cmp         byte [delete_flag], 1
-    je          build_delete_map
-
-    mov         rcx, 0                  ;Index into SET1
-    mov         rsi, set1
-    mov         rdi, set2
-    mov         rbx, [set1_len]
-    mov         rdx, [set2_len]
-
-translate_map_loop:
-    cmp         rcx, rbx                ;Check if we've processed all of SET1
-    jge         build_map_done
-
-    movzx       rax, byte [rsi + rcx]   ;Get character from SET1
-    cmp         rcx, rdx                ;Check if we've exhausted SET2
-    jl          use_set2_char
-
-    dec         rdx
-    movzx       rdi, byte [set2 + rdx]
-    jmp         set_map_entry
-
-use_set2_char:
-    movzx       rdi, byte [set2 + rcx]  ;Get character from SET2
-
-set_map_entry:
-    mov         [char_map + rax], dil   ;Map SET1 char to SET2 char
-
-    inc         rcx
-    jmp         translate_map_loop
-
-build_delete_map:
-    mov         rcx, 0                  ;Index into SET1
-    mov         rsi, set1
-    mov         rbx, [set1_len]
-
-delete_map_loop:
-    cmp         rcx, rbx                ;Check if we've processed all of SET1
-    jge         build_map_done
-
-    movzx       rax, byte [rsi + rcx]   ;Get character from SET1
-    mov         byte [char_map + rax], 0FFh ;Mark for deletion
-    inc         rcx
-    jmp         delete_map_loop
-
-build_map_done:
+    push        r11
+    mov         rdx, [outpos]
+    test        rdx, rdx
+    jz          .empty
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    mov         rsi, outbuf
+    syscall
+    mov         qword [outpos], 0
+.empty:
+    pop         r11
     pop         rdi
     pop         rsi
     pop         rdx
     pop         rcx
     pop         rbx
+    pop         rax
     ret
+
+; copy_set: rdi -> NUL-terminated arg, rsi -> dest (max 255); returns length
+copy_set:
+    xor         rcx, rcx
+.loop:
+    mov         al, [rdi + rcx]
+    test        al, al
+    je          .done
+    mov         [rsi + rcx], al
+    inc         rcx
+    cmp         rcx, 255
+    jl          .loop
+.done:
+    mov         rax, rcx
+    ret
+
+show_usage:
+    write       STDERR_FILENO, usage_msg, usage_len
+    exit        1
