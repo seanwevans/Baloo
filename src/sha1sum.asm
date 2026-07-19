@@ -16,6 +16,7 @@ section .bss
     hexbuf   resb 40                    ;hex digest text
     fname    resq 1                     ;displayed file name pointer
     fd       resq 1                     ;input file descriptor
+    exit_status resq 1
 
 section .data
 sha_init:
@@ -31,12 +32,43 @@ section .text
 global _start
 
 _start:
-    pop     rax                         ;argc
-    pop     rbx                         ;argv[0] discarded
-    cmp     rax, 2
-    jl      .use_stdin
-    pop     rsi                         ;argv[1] = file name
+    mov     r15, [rsp]                  ;argc
+    lea     rbp, [rsp + 16]             ;&argv[1]
+    mov     qword [exit_status], 0
+    dec     r15                         ;operand count
+    jz      .stdin_only
+
+    xor     rbx, rbx                    ;operand index
+.loop:
+    cmp     rbx, r15
+    jge     .done
+    mov     rsi, [rbp + rbx*8]
+    push    rbx
+    call    hash_one
+    pop     rbx
+    inc     rbx
+    jmp     .loop
+.done:
+    mov     rdi, [exit_status]
+    mov     rax, SYS_EXIT
+    syscall
+.stdin_only:
+    mov     rsi, dash
+    call    hash_one
+    mov     rdi, [exit_status]
+    mov     rax, SYS_EXIT
+    syscall
+
+; hash_one: rsi -> file name ("-" = stdin); hash it and print "HEX  NAME"
+hash_one:
     mov     [fname], rsi
+    cmp     byte [rsi], '-'
+    jne     .open
+    cmp     byte [rsi + 1], 0
+    jne     .open
+    mov     qword [fd], 0               ;stdin
+    jmp     .run
+.open:
     mov     rax, SYS_OPEN
     mov     rdi, rsi
     mov     rsi, O_RDONLY
@@ -45,10 +77,6 @@ _start:
     test    rax, rax
     js      .open_failed
     mov     [fd], rax
-    jmp     .run
-.use_stdin:
-    mov     qword [fd], 0
-    mov     qword [fname], dash
 .run:
     call    sha_init_state
 .read_loop:
@@ -58,7 +86,7 @@ _start:
     mov     rdx, RBUF_SIZE
     syscall
     test    rax, rax
-    js      .open_failed
+    js      .read_error
     jz      .finish
     add     [total], rax
     mov     r13, rax
@@ -97,11 +125,25 @@ _start:
     call    strlen
     write   STDOUT_FILENO, [fname], rbx
     write   STDOUT_FILENO, newline, 1
-    exit    0
 
+    cmp     qword [fd], 0
+    je      .ret
+    mov     rax, SYS_CLOSE
+    mov     rdi, [fd]
+    syscall
+.ret:
+    ret
+.read_error:
+    cmp     qword [fd], 0
+    je      .fail
+    mov     rax, SYS_CLOSE
+    mov     rdi, [fd]
+    syscall
+.fail:
 .open_failed:
     write   STDERR_FILENO, err_open, err_open_len
-    exit    1
+    mov     qword [exit_status], 1
+    ret
 
 sha_init_state:
     xor     rcx, rcx
