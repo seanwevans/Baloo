@@ -7,6 +7,17 @@ section .bss
     time_buf    resq 1                  ;Buffer for current time
     output_buf  resb 256                ;Buffer for complete output
     temp_buf    resb 32                 ;Temporary buffer for number conversion
+    v_era       resq 1
+    v_doe       resq 1
+    v_yoe       resq 1
+    v_doy       resq 1
+    b_year      resq 1
+    b_mon       resq 1
+    b_day       resq 1
+    b_hour      resq 1
+    b_min       resq 1
+    b_sec       resq 1
+    b_secs      resq 1
 
 section .data
 time_str    db " 00:00:00 "         ; Buffer for current time
@@ -27,7 +38,18 @@ section .text
 global      _start
 
 _start:
+    mov         rax, [rsp]              ;argc
+    cmp         rax, 1
+    jle         .normal
+    mov         rdi, [rsp + 16]         ;argv[1]
+    cmp         byte [rdi], '-'
+    jne         .normal
+    cmp         byte [rdi + 1], 's'
+    jne         .normal
+    cmp         byte [rdi + 2], 0
+    je          do_boot
 
+.normal:
     mov         rax, SYS_TIME
     xor         rdi, rdi
     syscall
@@ -146,6 +168,170 @@ _start:
 
 exit_error:
     exit        1
+
+; do_boot: print the boot time (now - uptime) as YYYY-MM-DD HH:MM:SS in UTC.
+do_boot:
+    mov         rax, SYS_SYSINFO
+    mov         rdi, sysinfo_buf
+    syscall
+    mov         rax, SYS_TIME
+    xor         rdi, rdi
+    syscall
+    sub         rax, [sysinfo_buf]      ;boot epoch = now - uptime
+    xor         rdx, rdx
+    mov         rcx, 86400
+    div         rcx
+    mov         [b_secs], rdx           ;seconds within the day
+;civil date from days (rax), Hinnant's algorithm
+    add         rax, 719468             ;z
+    xor         rdx, rdx
+    mov         rcx, 146097
+    div         rcx
+    mov         [v_era], rax
+    mov         [v_doe], rdx
+    mov         rax, [v_doe]
+    xor         rdx, rdx
+    mov         rcx, 1460
+    div         rcx
+    mov         r8, rax
+    mov         rax, [v_doe]
+    xor         rdx, rdx
+    mov         rcx, 36524
+    div         rcx
+    mov         r9, rax
+    mov         rax, [v_doe]
+    xor         rdx, rdx
+    mov         rcx, 146096
+    div         rcx
+    mov         r10, rax
+    mov         rax, [v_doe]
+    sub         rax, r8
+    add         rax, r9
+    sub         rax, r10
+    xor         rdx, rdx
+    mov         rcx, 365
+    div         rcx
+    mov         [v_yoe], rax
+    mov         rax, [v_era]
+    imul        rax, 400
+    add         rax, [v_yoe]
+    mov         [b_year], rax
+    mov         rax, [v_yoe]
+    imul        rax, 365
+    mov         r8, rax
+    mov         rax, [v_yoe]
+    xor         rdx, rdx
+    mov         rcx, 4
+    div         rcx
+    add         r8, rax
+    mov         rax, [v_yoe]
+    xor         rdx, rdx
+    mov         rcx, 100
+    div         rcx
+    sub         r8, rax
+    mov         rax, [v_doe]
+    sub         rax, r8
+    mov         [v_doy], rax
+    mov         rax, [v_doy]
+    imul        rax, 5
+    add         rax, 2
+    xor         rdx, rdx
+    mov         rcx, 153
+    div         rcx
+    mov         r11, rax                ;mp
+    mov         rax, 153
+    imul        rax, r11
+    add         rax, 2
+    xor         rdx, rdx
+    mov         rcx, 5
+    div         rcx
+    mov         r8, rax
+    mov         rax, [v_doy]
+    sub         rax, r8
+    inc         rax
+    mov         [b_day], rax
+    mov         rax, r11
+    cmp         rax, 10
+    jb          .mlt
+    sub         rax, 9
+    jmp         .mdone
+.mlt:
+    add         rax, 3
+.mdone:
+    mov         [b_mon], rax
+    cmp         rax, 2
+    ja          .noyinc
+    inc         qword [b_year]
+.noyinc:
+    mov         rax, [b_secs]
+    xor         rdx, rdx
+    mov         rcx, 3600
+    div         rcx
+    mov         [b_hour], rax
+    mov         rax, rdx
+    xor         rdx, rdx
+    mov         rcx, 60
+    div         rcx
+    mov         [b_min], rax
+    mov         [b_sec], rdx
+    mov         rax, [b_year]
+    mov         rdi, output_buf
+    call        put4
+    mov         byte [output_buf + 4], '-'
+    mov         rax, [b_mon]
+    lea         rdi, [output_buf + 5]
+    call        put2
+    mov         byte [output_buf + 7], '-'
+    mov         rax, [b_day]
+    lea         rdi, [output_buf + 8]
+    call        put2
+    mov         byte [output_buf + 10], ' '
+    mov         rax, [b_hour]
+    lea         rdi, [output_buf + 11]
+    call        put2
+mov         byte [output_buf + 13], ':'
+    mov         rax, [b_min]
+    lea         rdi, [output_buf + 14]
+    call        put2
+mov         byte [output_buf + 16], ':'
+    mov         rax, [b_sec]
+    lea         rdi, [output_buf + 17]
+    call        put2
+    mov         byte [output_buf + 19], WHITESPACE_NL
+    write       STDOUT_FILENO, output_buf, 20
+    exit        0
+
+put2:
+    xor         rdx, rdx
+    mov         rcx, 10
+    div         rcx
+    add         al, '0'
+    mov         [rdi], al
+    add         dl, '0'
+    mov         [rdi + 1], dl
+    ret
+
+put4:
+    xor         rdx, rdx
+    mov         rcx, 1000
+    div         rcx
+    add         al, '0'
+    mov         [rdi], al
+    mov         rax, rdx
+    xor         rdx, rdx
+    mov         rcx, 100
+    div         rcx
+    add         al, '0'
+    mov         [rdi + 1], al
+    mov         rax, rdx
+    xor         rdx, rdx
+    mov         rcx, 10
+    div         rcx
+    add         al, '0'
+    mov         [rdi + 2], al
+    add         dl, '0'
+    mov         [rdi + 3], dl
+    ret
 
 format_current_time:
     push        rbp
