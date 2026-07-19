@@ -6,3 +6,4 @@ tests/test_helper/
 *.bak
 
 fixasm.py
+__pycache__/

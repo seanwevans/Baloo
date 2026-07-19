@@ -3,13 +3,13 @@
     %include "include/sysdefs.inc"
 
 section .bss
-    buffer      resb 32                 ;Input buffer
+    buffer      resb 4096               ;Input buffer
     num_buffer  resb 32                 ;conversion buffer
     num         resq 1                  ;number to factorize
 
 section .data
     space       db WHITESPACE_SPACE
-colon_space db ": "
+colon       db ":"
     newline     db WHITESPACE_NL
     error_msg   db "Invalid input", WHITESPACE_NL
     error_len   equ $ - error_msg
@@ -19,43 +19,68 @@ section .text
 global      _start
 
 _start:
-    pop         rax                     ;argc
-    cmp         rax, 1
+    mov         r14, [rsp]              ;argc
+    lea         r15, [rsp + 16]         ;&argv[1]
+    cmp         r14, 1
     je          read_from_stdin         ;If argc == 1, read from stdin
 
-    pop         rax                     ;Skip program name
-    pop         rsi                     ;Get number to factor
-    xor         r8, r8                  ;Initialize number to 0
-    jmp         parse_string
+    dec         r14                     ;number of operands
+args_loop:
+    cmp         r14, 0
+    je          exit_ok
+    mov         rsi, [r15]              ;argv[i]
+    call        factor_one
+    add         r15, 8
+    dec         r14
+    jmp         args_loop
 
 read_from_stdin:
     mov         rax, SYS_READ
     mov         rdi, STDIN_FILENO
     mov         rsi, buffer
-    mov         rdx, space
+    mov         rdx, 4095
     syscall
 
     cmp         rax, 0
-    jle         error_exit
+    jle         exit_ok
 
-    mov         rcx, rax                ;Input length
+    mov         byte [buffer + rax], 0  ;NUL-terminate input
     mov         rsi, buffer             ;Input buffer
-    xor         r8, r8                  ;Initialize number to 0
 
-parse_string:
-    mov         rcx, 32                 ;Maximum length to prevent overflow
+stdin_loop:
+    call        skip_ws
+    cmp         byte [rsi], 0
+    je          exit_ok
+    call        factor_one
+    jmp         stdin_loop
+
+skip_ws:
+    movzx       rax, byte [rsi]
+    cmp         al, WHITESPACE_SPACE
+    je          .adv
+    cmp         al, WHITESPACE_TAB
+    je          .adv
+    cmp         al, WHITESPACE_NL
+    je          .adv
+    ret
+.adv:
+    inc         rsi
+    jmp         skip_ws
+
+; factor_one: parse a number at [rsi], print "N: factors", advance rsi.
+factor_one:
+    push        r14
+    push        r15
+    xor         r8, r8                  ;Initialize number to 0
 
 parse_loop:
     movzx       rax, byte [rsi]         ;Get character
     cmp         al, WHITESPACE_SPACE
-    je          next_char
-
+    je          parse_done
     cmp         al, WHITESPACE_TAB
-    je          next_char
-
+    je          parse_done
     cmp         al, WHITESPACE_NL
     je          parse_done
-
     cmp         al, 0                   ;Check for null terminator
     je          parse_done
 
@@ -65,25 +90,20 @@ parse_loop:
 
     imul        r8, 10                  ;Multiply by 10
     add         r8, rax                 ;Add current digit
-
-next_char:
     inc         rsi                     ;Next character
-    dec         rcx                     ;Decrement counter
-    jz          parse_done              ;Prevent overflow by limiting length
-
-    cmp         byte [rsi], 0           ;Check if end of string
-    jne         parse_loop              ;Continue if not end
+    jmp         parse_loop
 
 parse_done:
     mov         [num], r8
+    mov         r15, rsi                ;Preserve input cursor
 
     mov         rax, r8
     call        print_num
 
     mov         rax, SYS_WRITE
     mov         rdi, STDOUT_FILENO
-    mov         rsi, colon_space
-    mov         rdx, 2
+    mov         rsi, colon
+    mov         rdx, 1
     syscall
 
     mov         rax, [num]              ;Get the number
@@ -103,14 +123,14 @@ factor_loop:
     jne         try_next_factor         ;If remainder is not 0, try next factor
 
     push        rax                     ;Save quotient
-    mov         rax, rbx                ;Load factor to print
-    call        print_num               ;Print the factor
-
     mov         rax, SYS_WRITE
     mov         rdi, STDOUT_FILENO
-    mov         rsi, space
+    mov         rsi, space              ;Separator precedes each factor
     mov         rdx, 1
     syscall
+
+    mov         rax, rbx                ;Load factor to print
+    call        print_num               ;Print the factor
 
     pop         rax                     ;Restore quotient
     jmp         factor_loop             ;Try this factor again
@@ -160,11 +180,29 @@ sqrt_done:
     cmp         rbx, rcx
     jbe         factor_loop             ;Continue if factor <= sqrt(n)
 
+    push        rax                     ;Save remaining prime
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    mov         rsi, space              ;Separator precedes each factor
+    mov         rdx, 1
+    syscall
+    pop         rax                     ;Restore remaining prime
+
     call        print_num               ;Print the remaining prime
     jmp         done
 
 special_case:
     mov         rax, [num]
+    cmp         rax, 1                  ;0 and 1 have no prime factors
+    jb          done
+    ja          done
+    push        rax
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    mov         rsi, space
+    mov         rdx, 1
+    syscall
+    pop         rax
     call        print_num
 
 done:
@@ -174,6 +212,12 @@ done:
     mov         rdx, 1
     syscall
 
+    mov         rsi, r15                ;Restore input cursor
+    pop         r15
+    pop         r14
+    ret
+
+exit_ok:
     exit        0
 
 error_exit:

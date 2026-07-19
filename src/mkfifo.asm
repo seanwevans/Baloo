@@ -1,75 +1,120 @@
-; src/mkfifo.asm
+; src/mkfifo.asm -- mkfifo(1): create named pipes, with -m MODE.
 
     %include "include/sysdefs.inc"
 
+    %define DEFMODE 0o666
+
 section .bss
+    m_flag      resb 1
+    mode_val    resq 1
 
 section .data
-error_msg:      db "Error: Failed to create FIFO", 10
+error_msg:      db "mkfifo: cannot create fifo", 10
 error_len:      equ $ - error_msg
-exists_msg:     db "mkfifo: cannot create fifo '", 0
-exists_msg_len: equ $ - exists_msg
-exists_suffix:  db "': File exists", 10
-exists_suffix_len: equ $ - exists_suffix
-usage_msg:      db "mkfifo: missing operand", 10, "Try 'mkfifo --help' for more information.", 10
+usage_msg:      db "mkfifo: missing operand", 10
 usage_len:      equ $ - usage_msg
 
 section .text
 global          _start
 
 _start:
-    pop             rcx                 ;argc
-    cmp             rcx, 2              ;Need at least 2 (program name + fifo name)
-    jl              usage_error         ;If less than 2, show usage message
+    mov             r12, [rsp]          ;argc
+    lea             r13, [rsp + 16]     ;&argv[1]
+    cmp             r12, 2
+    jl              usage_error
 
-    add             rsp, 8              ;Skip program name (argv[0])
-    pop             rdi                 ;Get argv[1] into rdi (the FIFO name)
-    mov             rax, SYS_MKNOD
-    mov             rsi, S_IFIFO | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH ;File type and mode (0666)
-    mov             rdx, 0              ;dev_t parameter (not used for FIFOs)
-    push            rdi
+    mov             byte [m_flag], 0
+    mov             qword [mode_val], DEFMODE
+    dec             r12                 ;remaining arguments
+    xor             r14, r14            ;exit status
+
+opt_loop:
+    cmp             r12, 0
+    je              usage_error         ;options but no operand
+    mov             rdi, [r13]
+    cmp             byte [rdi], '-'
+    jne             operands
+    cmp             byte [rdi + 1], 0   ;lone "-" is an operand
+    je              operands
+    inc             rdi                 ;skip '-'
+.char:
+    movzx           eax, byte [rdi]
+    test            al, al
+    je              .next_opt
+    cmp             al, 'm'
+    je              .set_m
+    inc             rdi                 ;ignore unknown option letters
+    jmp             .char
+.set_m:
+    mov             byte [m_flag], 1
+    inc             rdi
+    cmp             byte [rdi], 0       ;mode attached (-mNNN) or next arg?
+    jne             .mode_here
+    add             r13, 8
+    dec             r12
+    mov             rdi, [r13]
+.mode_here:
+    call            parse_mode
+.next_opt:
+    add             r13, 8
+    dec             r12
+    jmp             opt_loop
+
+operands:
+    cmp             r12, 0
+    je              done
+    mov             rdi, [r13]
+    call            make_fifo
+    add             r13, 8
+    dec             r12
+    jmp             operands
+
+done:
+    mov             rdi, r14
+    mov             rax, SYS_EXIT
     syscall
 
-    test            rax, rax
-    js              handle_error        ;Jump if sign flag is set (negative result = error)
+; parse_mode: rdi -> octal digits, result into mode_val
+parse_mode:
+    xor             rax, rax
+.loop:
+    movzx           rdx, byte [rdi]
+    cmp             dl, '0'
+    jb              .done
+    cmp             dl, '7'
+    ja              .done
+    sub             dl, '0'
+    shl             rax, 3
+    add             rax, rdx
+    inc             rdi
+    jmp             .loop
+.done:
+    mov             [mode_val], rax
+    ret
 
-    exit            0
+; make_fifo: rdi -> path, create a FIFO with the requested mode
+make_fifo:
+    push            rdi
+    mov             rsi, [mode_val]
+    or              rsi, S_IFIFO
+    xor             rdx, rdx            ;dev_t unused for FIFOs
+    mov             rax, SYS_MKNOD
+    syscall
+    pop             rdi
+    test            rax, rax
+    js              .fail
+    cmp             byte [m_flag], 0
+    je              .ok
+    mov             rsi, [mode_val]     ;apply the exact mode (bypass umask)
+    mov             rax, SYS_CHMOD
+    syscall
+.ok:
+    ret
+.fail:
+    write           STDERR_FILENO, error_msg, error_len
+    mov             r14, 1
+    ret
 
 usage_error:
     write           STDERR_FILENO, usage_msg, usage_len
     exit            1
-
-handle_error:
-    pop             rdi
-
-    cmp             rax, -EEXIST        ;Check if error is EEXIST (File exists)
-    je              file_exists_error
-
-    write           STDERR_FILENO, error_msg, error_len
-    exit            1
-
-file_exists_error:
-    push            rdi                 ;Save filename pointer
-    write           STDERR_FILENO, exists_msg, exists_msg_len
-
-    pop             rdi
-    push            rdi                 ;Save filename pointer again
-    mov             rcx, 0              ;Initialize counter
-
-count_loop:
-    cmp             byte [rdi + rcx], 0 ;Check for null terminator
-    je              count_done
-
-    inc             rcx                 ;Increment counter
-    jmp             count_loop
-
-count_done:
-    mov             rdx, rcx            ;Move length to rdx for syscall
-    mov             rax, SYS_WRITE
-    mov             rsi, rdi            ;Source is the filename
-    mov             rdi, STDERR_FILENO  ;Destination is stderr
-    syscall
-
-    pop             rdi
-    write           STDERR_FILENO, exists_suffix, exists_suffix_len
-    exit 1

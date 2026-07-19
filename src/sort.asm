@@ -42,6 +42,7 @@ _start:
     jne     .open_named
     cmp     byte [rdi + 1], 0
     je      .use_stdin_fd
+    jmp     .bad_option                 ;an unrecognised option
 .open_named:
     mov     rax, SYS_OPEN
     mov     rsi, O_RDONLY
@@ -73,6 +74,9 @@ _start:
 .next_file:
     inc     r13
     jmp     .open_loop
+
+.bad_option:
+    exit    2
 
 .stdin:
     xor     r14, r14

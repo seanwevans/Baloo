@@ -12,8 +12,6 @@ usage_msg:  db "Usage: link oldpath newpath", 10
 usage_len:  equ $ - usage_msg
 error_msg:  db "Error: link failed", 10
 error_len:  equ $ - error_msg
-success_msg: db "Link created successfully", 10
-success_len: equ $ - success_msg
 
 section .text
 global      _start
@@ -81,7 +79,6 @@ perform_link:
     test        rax, rax
     js          print_error
 
-    write       STDOUT_FILENO, success_msg, success_len
     exit        0
 
 print_error:
