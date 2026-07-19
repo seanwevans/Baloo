@@ -21,6 +21,43 @@ debug_msg   db "Debug: signal=", 0
     newline     db WHITESPACE_NL, 0
     default_signal  equ 15
 
+    sn1  db "HUP",0
+    sn2  db "INT",0
+    sn3  db "QUIT",0
+    sn4  db "ILL",0
+    sn5  db "TRAP",0
+    sn6  db "ABRT",0
+    sn7  db "BUS",0
+    sn8  db "FPE",0
+    sn9  db "KILL",0
+    sn10 db "USR1",0
+    sn11 db "SEGV",0
+    sn12 db "USR2",0
+    sn13 db "PIPE",0
+    sn14 db "ALRM",0
+    sn15 db "TERM",0
+    sn16 db "STKFLT",0
+    sn17 db "CHLD",0
+    sn18 db "CONT",0
+    sn19 db "STOP",0
+    sn20 db "TSTP",0
+    sn21 db "TTIN",0
+    sn22 db "TTOU",0
+    sn23 db "URG",0
+    sn24 db "XCPU",0
+    sn25 db "XFSZ",0
+    sn26 db "VTALRM",0
+    sn27 db "PROF",0
+    sn28 db "WINCH",0
+    sn29 db "IO",0
+    sn30 db "PWR",0
+    sn31 db "SYS",0
+    NSIG equ 31
+signames:
+    dq 0, sn1, sn2, sn3, sn4, sn5, sn6, sn7, sn8, sn9, sn10
+    dq sn11, sn12, sn13, sn14, sn15, sn16, sn17, sn18, sn19, sn20
+    dq sn21, sn22, sn23, sn24, sn25, sn26, sn27, sn28, sn29, sn30, sn31
+
 section .text
 global      _start
 
@@ -43,6 +80,8 @@ parse_args:
     jne         parse_as_pid            ;If not an option, assume it's a PID
 
 check_s_option:
+    cmp         byte [rax+1], 'l'       ;-l lists signal names/numbers
+    je          do_list
     cmp         byte [rax+1], 's'
     jne         parse_dash_signal
     cmp         byte [rax+2], 0         ;Ensure it's just "-s"
@@ -118,6 +157,136 @@ invalid_signal:
 error_exit:
     neg         rax                     ;Convert negative error code to positive
     exit        rax
+
+do_list:
+; -l : convert each following argument (number -> name, name -> number).
+; With no arguments, list every signal name.
+    cmp         byte [rax+2], 0
+    jne         invalid_signal
+    inc         rsi                     ;skip the -l argument
+    cmp         rsi, [rbp]
+    jge         list_all
+.loop:
+    cmp         rsi, [rbp]
+    jge         exit_ok
+    mov         rdi, [rbp + rsi*8 + 8]
+    push        rsi
+    call        list_one
+    pop         rsi
+    inc         rsi
+    jmp         .loop
+
+list_all:
+    mov         rcx, 1
+.la:
+    cmp         rcx, NSIG
+    jg          exit_ok
+    mov         rsi, [signames + rcx*8]
+    push        rcx
+    call        print_cstr_nl
+    pop         rcx
+    inc         rcx
+    jmp         .la
+
+exit_ok:
+    exit        0
+
+; list_one: rdi -> argument. If numeric, print its signal name; otherwise
+; print the signal number for the name.
+list_one:
+    movzx       rax, byte [rdi]
+    sub         al, '0'
+    cmp         al, 9
+    ja          .name
+    call        parse_number            ;rax = number
+    cmp         rax, NSIG
+    ja          .done
+    test        rax, rax
+    jz          .done
+    mov         rsi, [signames + rax*8]
+    call        print_cstr_nl
+    ret
+.name:
+    call        name_to_num             ;rax = number or -1
+    cmp         rax, -1
+    je          .done
+    call        print_num_nl
+.done:
+    ret
+
+; name_to_num: rdi -> signal name (optional SIG prefix); rax = number or -1
+name_to_num:
+    mov         rsi, rdi
+    cmp         byte [rsi], 'S'
+    jne         .search
+    cmp         byte [rsi+1], 'I'
+    jne         .search
+    cmp         byte [rsi+2], 'G'
+    jne         .search
+    add         rsi, 3
+.search:
+    mov         rcx, 1
+.loop:
+    cmp         rcx, NSIG
+    jg          .fail
+    mov         rdx, [signames + rcx*8]
+    xor         r8, r8
+.cmp:
+    mov         al, [rsi + r8]
+    mov         r9b, [rdx + r8]
+    cmp         al, r9b
+    jne         .next
+    test        al, al
+    jz          .match
+    inc         r8
+    jmp         .cmp
+.next:
+    inc         rcx
+    jmp         .loop
+.match:
+    mov         rax, rcx
+    ret
+.fail:
+    mov         rax, -1
+    ret
+
+; print_cstr_nl: rsi -> NUL-terminated string; write it and a newline
+print_cstr_nl:
+    xor         rdx, rdx
+.len:
+    cmp         byte [rsi + rdx], 0
+    je          .out
+    inc         rdx
+    jmp         .len
+.out:
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    syscall
+    write       STDOUT_FILENO, newline, 1
+    ret
+
+; print_num_nl: rax -> unsigned value; write decimal digits and a newline
+print_num_nl:
+    mov         rcx, number_buf
+    add         rcx, 31
+    mov         r8, 10
+.conv:
+    xor         rdx, rdx
+    div         r8
+    add         dl, '0'
+    dec         rcx
+    mov         [rcx], dl
+    test        rax, rax
+    jnz         .conv
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    mov         rsi, rcx
+    mov         rdx, number_buf
+    add         rdx, 31
+    sub         rdx, rcx
+    syscall
+    write       STDOUT_FILENO, newline, 1
+    ret
 
 parse_number:
     xor         rax, rax                ;Initialize result to 0
