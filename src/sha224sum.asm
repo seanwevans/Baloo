@@ -16,6 +16,10 @@ section .bss
     hexbuf   resb 64                    ;hex digest text
     fname    resq 1                     ;pointer to the displayed file name
     fd       resq 1                     ;input file descriptor
+    n_ops    resq 1
+    op_idx   resq 1
+    argv1    resq 1
+    exit_status resq 1
 
 section .data
 sha_init:
@@ -49,12 +53,45 @@ section .text
 global _start
 
 _start:
-    pop     rax                         ;argc
-    pop     rbx                         ;argv[0] discarded
-    cmp     rax, 2
-    jl      .use_stdin
-    pop     rsi                         ;argv[1] = file name
+    mov     rax, [rsp]                  ;argc
+    lea     rcx, [rsp + 16]             ;&argv[1]
+    mov     [argv1], rcx
+    dec     rax                         ;operand count
+    mov     [n_ops], rax
+    mov     qword [op_idx], 0
+    mov     qword [exit_status], 0
+    test    rax, rax
+    jz      .stdin_only
+.loop:
+    mov     rax, [op_idx]
+    cmp     rax, [n_ops]
+    jge     .done
+    mov     rcx, [argv1]
+    mov     rsi, [rcx + rax*8]
+    call    hash_one
+    inc     qword [op_idx]
+    jmp     .loop
+.done:
+    mov     rdi, [exit_status]
+    mov     rax, SYS_EXIT
+    syscall
+.stdin_only:
+    mov     rsi, dash
+    call    hash_one
+    mov     rdi, [exit_status]
+    mov     rax, SYS_EXIT
+    syscall
+
+; hash_one: rsi -> file name ("-" = stdin); hash it and print "HEX  NAME"
+hash_one:
     mov     [fname], rsi
+    cmp     byte [rsi], '-'
+    jne     .open
+    cmp     byte [rsi + 1], 0
+    jne     .open
+    mov     qword [fd], 0
+    jmp     .run
+.open:
     mov     rax, SYS_OPEN
     mov     rdi, rsi
     mov     rsi, O_RDONLY
@@ -63,10 +100,6 @@ _start:
     test    rax, rax
     js      .open_failed
     mov     [fd], rax
-    jmp     .run
-.use_stdin:
-    mov     qword [fd], 0
-    mov     qword [fname], dash
 .run:
     call    sha224_init
 .read_loop:
@@ -116,11 +149,18 @@ _start:
     call    strlen                      ;length -> rbx
     write   STDOUT_FILENO, [fname], rbx
     write   STDOUT_FILENO, newline, 1
-    exit    0
 
+    cmp     qword [fd], 0
+    je      .ret
+    mov     rax, SYS_CLOSE
+    mov     rdi, [fd]
+    syscall
+.ret:
+    ret
 .open_failed:
     write   STDERR_FILENO, err_open, err_open_len
-    exit    1
+    mov     qword [exit_status], 1
+    ret
 
 ; sha224_init: load the initial hash state and reset counters
 sha224_init:

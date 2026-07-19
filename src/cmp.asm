@@ -1,374 +1,400 @@
-; src/cmp.asm
+; src/cmp.asm -- cmp(1): compare two files.
+; Usage: cmp [-l] [-s] [-n N] FILE1 FILE2 [SKIP1 [SKIP2]]   ("-" = stdin).
 
     %include "include/sysdefs.inc"
 
+    %define BUFSZ 1048576
+
 section .bss
-    buffer1         resb buffer_size    ;Buffer for file 1
-    buffer2         resb buffer_size    ;Buffer for file 2
-    file1_name      resq 1              ;Pointer to file1 name
-    file2_name      resq 1              ;Pointer to file2 name
-    file1_fd        resq 1              ;File descriptor for file 1
-    file2_fd        resq 1              ;File descriptor for file 2
-    byte_pos        resq 1              ;Byte position (0-indexed as per standard cmp)
-    line_count      resq 1              ;Line number of difference
-    digit_buffer    resb 32             ;Buffer for converting numbers to strings
-    different       resq 1              ;Nonzero when files differ
-    silent_flag     resq 1              ;Nonzero for -s
+    buf1        resb BUFSZ
+    buf2        resb BUFSZ
+    numbuf      resb 32
+    name1       resq 1
+    name2       resq 1
+    n1          resq 1
+    n2          resq 1
+    skip1       resq 1
+    skip2       resq 1
+    limit       resq 1
+    eff1v       resq 1
+    eff2v       resq 1
+    l_flag      resb 1
+    s_flag      resb 1
 
 section .data
-    buffer_size     equ 4096            ;Size of buffer for reading files
-usage_msg       db "Usage: cmp file1 file2", 10, 0
-    usage_len       equ $ - usage_msg
-error_open_msg  db "Error: Cannot open file ", 0
-    error_open_len  equ $ - error_open_msg
-    newline         db 10, 0
-
-    diff_format     db " "              ;Space between filenames
-    diff_format_len equ $ - diff_format
-    stdin_name      db "-", 0
-differ_msg      db " differ: byte "     ; Standard cmp uses "byte" not "char"
-    differ_len      equ $ - differ_msg
-    line_msg        db ", line "
-    line_len        equ $ - line_msg
-cmp_prefix      db "cmp: EOF on "
-    cmp_prefix_len  equ $ - cmp_prefix
-    after_byte_msg  db " after byte "
-    after_byte_len  equ $ - after_byte_msg
+s_differ    db " differ: char "
+    s_differ_len equ $ - s_differ
+    s_line      db ", line "
+    s_line_len  equ $ - s_line
+s_eof       db "cmp: EOF on "
+    s_eof_len   equ $ - s_eof
+    s_after     db " after byte "
+    s_after_len equ $ - s_after
+s_open      db "cmp: cannot open file", WHITESPACE_NL
+    s_open_len  equ $ - s_open
+    spc         db " "
+    nl          db WHITESPACE_NL
+    dash        db "-", 0
 
 section .text
-global          _start
+global _start
 
 _start:
-    mov             qword [byte_pos], 0 ;Start byte position at 0 (0-indexed)
-    mov             qword [line_count], 1 ;Start at line 1
-    mov             qword [different], 0
-    mov             qword [silent_flag], 0
+    mov     byte [l_flag], 0
+    mov     byte [s_flag], 0
+    mov     qword [limit], -1
+    mov     qword [skip1], 0
+    mov     qword [skip2], 0
+    mov     qword [name1], 0
+    mov     qword [name2], 0
 
-    mov             rbx, [rsp]
-    cmp             rbx, 4
-    jne             .check_argc
-    mov             rsi, [rsp + 16]
-    cmp             byte [rsi], '-'
-    jne             .check_argc
-    cmp             byte [rsi + 1], 's'
-    jne             .check_argc
-    cmp             byte [rsi + 2], 0
-    jne             .check_argc
-    mov             qword [silent_flag], 1
-    mov             rax, [rsp + 24]
-    mov             [file1_name], rax
-    mov             rax, [rsp + 32]
-    mov             [file2_name], rax
-    jmp             .open_files
+    mov     r12, [rsp]                  ;argc
+    lea     r13, [rsp + 16]             ;&argv[1]
+    dec     r12
+    xor     r14, r14                    ;positional index
 
-.check_argc:
-    cmp             rbx, 2
-    je              .one_file
-    cmp             rbx, 3
-    jne             print_usage
+parse:
+    cmp     r12, 0
+    je      run
+    mov     rdi, [r13]
+    cmp     byte [rdi], '-'
+    jne     .positional
+    cmp     byte [rdi + 1], 0
+    je      .positional                 ;lone "-" is an operand
+    inc     rdi
+.char:
+    movzx   eax, byte [rdi]
+    test    al, al
+    je      .next
+    cmp     al, 'l'
+    je      .set_l
+    cmp     al, 's'
+    je      .set_s
+    cmp     al, 'n'
+    je      .set_n
+    inc     rdi
+    jmp     .char
+.set_l:
+    mov     byte [l_flag], 1
+    inc     rdi
+    jmp     .char
+.set_s:
+    mov     byte [s_flag], 1
+    inc     rdi
+    jmp     .char
+.set_n:
+    inc     rdi
+    cmp     byte [rdi], 0
+    jne     .n_here
+    add     r13, 8
+    dec     r12
+    mov     rdi, [r13]
+.n_here:
+    call    atou
+    mov     [limit], rax
+    jmp     .next
+.positional:
+    mov     rdi, [r13]
+    cmp     r14, 0
+    je      .p0
+    cmp     r14, 1
+    je      .p1
+    cmp     r14, 2
+    je      .p2
+    call    atou
+    mov     [skip2], rax
+    jmp     .padv
+.p0:
+    mov     [name1], rdi
+    jmp     .padv
+.p1:
+    mov     [name2], rdi
+    jmp     .padv
+.p2:
+    call    atou
+    mov     [skip1], rax
+.padv:
+    inc     r14
+.next:
+    add     r13, 8
+    dec     r12
+    jmp     parse
 
-    mov             rax, [rsp + 16]     ;file1
-    mov             [file1_name], rax
-    mov             rax, [rsp + 24]     ;file2
-    mov             [file2_name], rax
-    jmp             .open_files
+run:
+    cmp     qword [name1], 0
+    je      usage
+    cmp     qword [name2], 0
+    jne     .have2
+    mov     qword [name2], dash         ;a single file compares against stdin
+.have2:
 
-.one_file:
-    mov             rax, [rsp + 16]     ;file1
-    mov             [file1_name], rax
-    mov             qword [file2_name], stdin_name
+    mov     rdi, [name1]
+    mov     rsi, buf1
+    call    read_file
+    cmp     rax, -1
+    je      open_error
+    mov     [n1], rax
 
-.open_files:
+    mov     rdi, [name2]
+    mov     rsi, buf2
+    call    read_file
+    cmp     rax, -1
+    je      open_error
+    mov     [n2], rax
 
-    mov             rdi, [file1_name]
-    call            open_input
+;effective lengths after the skips
+    mov     rax, [n1]
+    sub     rax, [skip1]
+    jns     .e1ok
+    xor     rax, rax
+.e1ok:
+    mov     r8, rax                     ;eff1
+    mov     rax, [n2]
+    sub     rax, [skip2]
+    jns     .e2ok
+    xor     rax, rax
+.e2ok:
+    mov     r9, rax                     ;eff2
+    mov     [eff1v], r8
+    mov     [eff2v], r9
 
-    cmp             rax, 0
-    jl              error_open_file1
+;minlen = min(eff1, eff2)
+    mov     r13, r8
+    cmp     r9, r13
+    jae     .have_min
+    mov     r13, r9
+.have_min:
+;cmplen = min(minlen, limit); r14 survives the -l loop's write syscalls
+    mov     r14, r13
+    cmp     r14, [limit]
+    jbe     .have_cmp
+    mov     r14, [limit]
+.have_cmp:
+    mov     rbx, buf1
+    add     rbx, [skip1]                ;compare base 1
+    mov     rbp, buf2
+    add     rbp, [skip2]                ;compare base 2
 
-    mov             [file1_fd], rax
+    xor     r15, r15                    ;i
+    xor     r10, r10                    ;newline count in matched prefix
+    xor     r12, r12                    ;any-difference flag
+.loop:
+    cmp     r15, r14
+    jge     .after
+    movzx   rax, byte [rbx + r15]
+    movzx   rdx, byte [rbp + r15]
+    cmp     al, dl
+    jne     .diff
+    cmp     al, WHITESPACE_NL
+    jne     .adv
+    inc     r10
+.adv:
+    inc     r15
+    jmp     .loop
+.diff:
+    mov     r12, 1                      ;a difference was seen
+    cmp     byte [l_flag], 1
+    je      .diff_l
+;default: report first difference and stop
+    cmp     byte [s_flag], 1
+    je      .exit_diff
+;"NAME1 NAME2 differ: char POS, line LINE"
+    mov     rsi, [name1]
+    call    put_cstr_stdout
+    write   STDOUT_FILENO, spc, 1
+    mov     rsi, [name2]
+    call    put_cstr_stdout
+    write   STDOUT_FILENO, s_differ, s_differ_len
+    lea     rdi, [r15 + 1]
+    call    put_dec_stdout
+    write   STDOUT_FILENO, s_line, s_line_len
+    lea     rdi, [r10 + 1]
+    call    put_dec_stdout
+    write   STDOUT_FILENO, nl, 1
+.exit_diff:
+    mov     rdi, 1
+    mov     rax, SYS_EXIT
+    syscall
+.diff_l:
+;list this byte: "POS OCT1 OCT2"
+    cmp     byte [s_flag], 1
+    je      .adv
+    push    rax
+    push    rdx
+    lea     rdi, [r15 + 1]
+    call    put_dec_stdout
+    write   STDOUT_FILENO, spc, 1
+    pop     rdx
+    pop     rax
+    push    rdx
+    mov     rdi, rax
+    call    put_oct_stdout
+    write   STDOUT_FILENO, spc, 1
+    pop     rdx
+    mov     rdi, rdx
+    call    put_oct_stdout
+    write   STDOUT_FILENO, nl, 1
+    jmp     .adv
 
-    mov             rdi, [file2_name]
-    call            open_input
-
-    cmp             rax, 0
-    jl              error_open_file2
-
-    mov             [file2_fd], rax
-
-    call            compare_files
-
-    mov             rax, SYS_CLOSE
-    mov             rdi, [file1_fd]
+.after:
+    mov     r8, [eff1v]
+    mov     r9, [eff2v]
+;compared cmplen bytes with no early exit (default) or listed diffs (-l)
+    cmp     r14, r13
+jb      .finish                     ;stopped at the -n limit: no EOF
+;cmplen == minlen: EOF unless the effective lengths are equal
+    cmp     r8, r9
+    je      .finish
+;the shorter file hit EOF
+    mov     r12, 1
+    cmp     byte [s_flag], 1
+    je      .finish
+;pick the shorter file's name
+    mov     rsi, [name1]
+    cmp     r8, r9
+    jb      .have_name
+    mov     rsi, [name2]
+.have_name:
+    push    rsi
+    write   STDERR_FILENO, s_eof, s_eof_len
+    pop     rsi
+    call    put_cstr_stderr
+    write   STDERR_FILENO, s_after, s_after_len
+    mov     rdi, r13                    ;byte = minlen
+    call    put_dec_stderr
+    cmp     byte [l_flag], 1
+    je      .eof_nl
+    write   STDERR_FILENO, s_line, s_line_len
+    lea     rdi, [r10]                  ;line = newlines in the matched prefix
+    call    put_dec_stderr
+.eof_nl:
+    write   STDERR_FILENO, nl, 1
+.finish:
+    mov     rdi, r12                    ;1 if any difference/EOF else 0
+    mov     rax, SYS_EXIT
     syscall
 
-    mov             rax, SYS_CLOSE
-    mov             rdi, [file2_fd]
+usage:
+    write   STDERR_FILENO, s_open, s_open_len
+    mov     rdi, 2
+    mov     rax, SYS_EXIT
     syscall
 
-    mov             rax, [different]
-    cmp             rax, 0
-    jne             exit_different
-
-    exit            0
-
-exit_different:
-    exit            1
-
-error_open_file1:
-    write           STDERR_FILENO, error_open_msg, error_open_len
-
-    mov             rsi, [file1_name]
-    call            print_string_stderr
-
-    write           STDERR_FILENO, newline, 1
-    exit            2
-
-error_open_file2:
-    write           STDERR_FILENO, error_open_msg, error_open_len
-
-    mov             rsi, [file2_name]
-    call            print_string_stderr
-
-    mov             rax, SYS_CLOSE
-    mov             rdi, [file1_fd]
+open_error:
+    cmp     byte [s_flag], 1
+    je      .quiet
+    write   STDERR_FILENO, s_open, s_open_len
+.quiet:
+    mov     rdi, 2
+    mov     rax, SYS_EXIT
     syscall
 
-    write           STDERR_FILENO, newline, 1
-    exit            2
-
-print_usage:
-    write           STDERR_FILENO, usage_msg, usage_len
-    exit            2
-
-compare_files:
-.read_loop:
-    mov             rax, SYS_READ
-    mov             rdi, [file1_fd]
-    mov             rsi, buffer1
-    mov             rdx, buffer_size
-    syscall
-
-    mov             r12, rax
-    cmp             rax, 0
-    jle             .check_file2_eof    ;If EOF or error, check if file 2 is also at EOF
-
-    mov             rax, SYS_READ
-    mov             rdi, [file2_fd]
-    mov             rsi, buffer2
-    mov             rdx, buffer_size
-    syscall
-
-    mov             r13, rax
-    cmp             rax, 0
-    jl              .exit_error
-
-    cmp             r12, r13
-    jne             .compare_buffers
-
-    cmp             r12, 0
-    je              .files_identical
-
-.compare_buffers:
-    mov             rcx, r12            ;Default to bytes from file 1
-    cmp             rcx, r13            ;Compare with bytes from file 2
-    jle             .min_bytes_set      ;If file 1 bytes <= file 2 bytes, keep rcx
-    mov             rcx, r13            ;Otherwise, use file 2 bytes
-
-.min_bytes_set:
-    mov             rsi, buffer1        ;buffer1
-    mov             rdi, buffer2        ;buffer2
-    xor             r14, r14            ;buffer index
-
-.compare_byte:
-    cmp             r14, rcx            ;Check if we've compared all bytes
-    jge             .check_buffer_sizes ;If yes, check if buffer sizes are different
-
-    mov             al, byte [rsi + r14]
-    cmp             al, byte [rdi + r14]
-    jne             .difference_found   ;If different, report it
-
-    cmp             al, 10              ;'\n'
-    jne             .not_newline
-    inc             qword [line_count]  ;Increment line counter
-
-.not_newline:
-    inc             r14                 ;Move to next byte
-    jmp             .compare_byte       ;Continue comparing
-
-.check_buffer_sizes:
-    add             [byte_pos], rcx     ;Add compared bytes to total
-    cmp             r12, r13
-    jne             .eof_in_shorter     ;If buffer sizes different, report EOF
-
-    jmp             .read_loop
-
-.eof_in_shorter:
-    cmp             r12, r13
-    jg              .eof_file2
-    mov             rsi, [file1_name]
-    jmp             .print_eof
-.eof_file2:
-    mov             rsi, [file2_name]
-.print_eof:
-    mov             qword [different], 1
-    dec             qword [line_count]
-    cmp             qword [silent_flag], 1
-    je              .silent_eof
-    push            rsi
-    write           STDERR_FILENO, cmp_prefix, cmp_prefix_len
-    pop             rsi
-    call            print_string_stderr
-    write           STDERR_FILENO, after_byte_msg, after_byte_len
-    mov             rax, [byte_pos]
-    call            print_number_stderr
-    write           STDERR_FILENO, line_msg, line_len
-    mov             rax, [line_count]
-    call            print_number_stderr
-    write           STDERR_FILENO, newline, 1
-.silent_eof:
-    ret
-
-.difference_found:
-    add             qword [byte_pos], r14 ;Add our current index in the buffer
-    mov             qword [different], 1
-
-    cmp             qword [silent_flag], 1
-    je              .silent_difference
-
-    mov             rsi, [file1_name]
-    call            print_string
-
-    write           STDOUT_FILENO, diff_format, diff_format_len
-
-    mov             rsi, [file2_name]
-    call            print_string
-
-    write           STDOUT_FILENO, differ_msg, differ_len
-
-    mov             rax, [byte_pos]     ;Standard cmp reports 0-indexed positions
-    inc             rax                 ;Adjust by 1 to match standard cmp behavior
-    call            print_number
-
-    write           STDOUT_FILENO, line_msg, line_len
-
-    mov             rax, [line_count]
-    call            print_number
-
-    write           STDOUT_FILENO, newline, 1
-
-.silent_difference:
-    ret
-
-.check_file2_eof:
-    mov             rax, SYS_READ
-    mov             rdi, [file2_fd]
-    mov             rsi, buffer2
-    mov             rdx, buffer_size
-    syscall
-
-    cmp             rax, 0
-    je              .files_identical
-
-    mov             qword [different], 1
-    jmp             .difference_found
-
-.files_identical:
-    ret
-
-.exit_error:
-    exit            2
-
-open_input:
-    cmp             byte [rdi], '-'
-    jne             .open
-    cmp             byte [rdi + 1], 0
-    jne             .open
-    mov             rax, STDIN_FILENO
-    ret
+; read_file: rdi = name ("-" = stdin), rsi = buffer; rax = length or -1
+read_file:
+    mov     r10, rsi                    ;buffer base
+    cmp     byte [rdi], '-'
+    jne     .open
+    cmp     byte [rdi + 1], 0
+    jne     .open
+    xor     r8, r8                      ;stdin
+    jmp     .rd
 .open:
-    mov             rax, SYS_OPEN
-    mov             rsi, O_RDONLY
-    xor             rdx, rdx
+    mov     rax, SYS_OPEN
+    mov     rsi, O_RDONLY
+    xor     rdx, rdx
+    syscall
+    test    rax, rax
+    js      .fail
+    mov     r8, rax                     ;fd
+.rd:
+    xor     r9, r9                      ;bytes read so far (r11 is clobbered by syscall)
+.loop:
+    mov     rdx, BUFSZ
+    sub     rdx, r9
+    jle     .done
+    mov     rax, SYS_READ
+    mov     rdi, r8
+    lea     rsi, [r10 + r9]
+    syscall
+    cmp     rax, 0
+    jle     .done
+    add     r9, rax
+    jmp     .loop
+.done:
+    test    r8, r8
+    jz      .ret
+    mov     rax, SYS_CLOSE
+    mov     rdi, r8
+    syscall
+.ret:
+    mov     rax, r9
+    ret
+.fail:
+    mov     rax, -1
+    ret
+
+; --- number/string output helpers ---
+put_cstr_stdout:
+    mov     r9, STDOUT_FILENO
+    jmp     put_cstr
+put_cstr_stderr:
+    mov     r9, STDERR_FILENO
+put_cstr:
+    push    rsi
+    call    strlen
+    mov     rax, SYS_WRITE
+    mov     rdi, r9
+    pop     rsi
+    mov     rdx, rbx
     syscall
     ret
 
-print_string:
-    push            rsi                 ;Save string pointer
-    mov             rdx, 0              ;Initialize length counter
-.strlen_loop:
-    cmp             byte [rsi + rdx], 0 ;Check for null terminator
-    je              .strlen_done
-    inc             rdx                 ;Increment length
-    jmp             .strlen_loop
-.strlen_done:
-    pop             rsi                 ;Restore string pointer
-    mov             rax, SYS_WRITE
-    mov             rdi, STDOUT_FILENO
+put_dec_stdout:
+    mov     r9, STDOUT_FILENO
+    jmp     put_dec
+put_dec_stderr:
+    mov     r9, STDERR_FILENO
+put_dec:
+    mov     rcx, numbuf
+    add     rcx, 31
+    mov     r8, 10
+    jmp     put_num
+put_oct_stdout:
+    mov     r9, STDOUT_FILENO
+put_oct:
+    mov     rcx, numbuf
+    add     rcx, 31
+    mov     r8, 8
+put_num:
+    mov     rax, rdi
+.d:
+    xor     rdx, rdx
+    div     r8
+    add     dl, '0'
+    dec     rcx
+    mov     [rcx], dl
+    test    rax, rax
+    jnz     .d
+    mov     rax, SYS_WRITE
+    mov     rdi, r9
+    mov     rsi, rcx
+    mov     rdx, numbuf
+    add     rdx, 31
+    sub     rdx, rcx
     syscall
     ret
 
-print_number_stderr:
-    mov             rsi, digit_buffer + 31
-    mov             byte [rsi], 0
-    mov             r10, 10
-    cmp             rax, 0
-    jne             .convert_loop
-    dec             rsi
-    mov             byte [rsi], '0'
-    jmp             .print_digits
-.convert_loop:
-    cmp             rax, 0
-    je              .print_digits
-    xor             rdx, rdx
-    div             r10
-    add             dl, '0'
-    dec             rsi
-    mov             [rsi], dl
-    jmp             .convert_loop
-.print_digits:
-    call            print_string_stderr
-    ret
-
-print_string_stderr:
-    push            rsi
-    xor             rdx, rdx
-.strlen_loop:
-    cmp             byte [rsi + rdx], 0
-    je              .strlen_done
-    inc             rdx
-    jmp             .strlen_loop
-.strlen_done:
-    pop             rsi
-    mov             rax, SYS_WRITE
-    mov             rdi, STDERR_FILENO
-    syscall
-    ret
-
-print_number:
-    mov             rsi, digit_buffer + 31 ;Point to end of buffer
-    mov             byte [rsi], 0       ;Null terminator
-    mov             r10, 10             ;Divisor
-    cmp             rax, 0
-    jne             .convert_loop
-
-    dec             rsi
-    mov             byte [rsi], '0'
-    jmp             .print_digits
-
-.convert_loop:
-    cmp             rax, 0
-    je              .print_digits
-
-    xor             rdx, rdx            ;Clear rdx for division
-    div             r10                 ;Divide rax by 10, remainder in rdx
-
-    add             dl, '0'             ;Convert remainder to ASCII
-    dec             rsi                 ;Move pointer
-    mov             [rsi], dl           ;Store digit
-
-    jmp             .convert_loop
-
-.print_digits:
-    call            print_string
+; atou: rdi -> unsigned decimal, result in rax
+atou:
+    xor     rax, rax
+.l:
+    movzx   rdx, byte [rdi]
+    sub     dl, '0'
+    cmp     dl, 9
+    ja      .d
+    imul    rax, rax, 10
+    add     rax, rdx
+    inc     rdi
+    jmp     .l
+.d:
     ret
