@@ -5,6 +5,7 @@
 section .bss
     groups_buf      resd 32             ;32-bit group IDs
     numbuf          resb 16             ;for printing numbers
+    primary_gid     resd 1              ;primary group id
 
 section .data
     newline         db 10
@@ -57,19 +58,27 @@ _start:
     mov             rdi, rax
     call            print_num_name_root
 
-    call            get_groups_count
-    test            rax, rax
-    je              .done
-    mov             r13, rax
-
     mov             rdi, groups_prefix
     call            write_str
-
-    mov             rdi, r13
-    mov             rsi, comma
-    mov             rdx, 1
-    call            print_groups_with_sep
-    jmp             .done
+    call            get_egid            ;primary group leads the list
+    mov             [primary_gid], eax
+    mov             rdi, rax
+    call            print_num_name_root
+    call            get_groups_count
+    mov             r13, rax
+    xor             r9, r9
+.grp_loop:
+    cmp             r9, r13
+    jae             .done
+    mov             eax, [groups_buf + r9*4]
+    cmp             eax, [primary_gid]
+    je              .grp_next
+    write           1, comma, 1
+    mov             edi, [groups_buf + r9*4]
+    call            print_num_name_root
+.grp_next:
+    inc             r9
+    jmp             .grp_loop
 
 .mode_u:
     call            get_euid
@@ -84,12 +93,25 @@ _start:
     jmp             .done
 
 .mode_G:
-    call            get_groups_count
+    call            get_egid
+    mov             [primary_gid], eax
     mov             rdi, rax
-    mov             rsi, space
-    mov             rdx, 1
-    call            print_groups_with_sep_num
-    jmp             .done
+    call            print_num
+    call            get_groups_count
+    mov             r13, rax
+    xor             r9, r9
+.g_loop:
+    cmp             r9, r13
+    jae             .done
+    mov             eax, [groups_buf + r9*4]
+    cmp             eax, [primary_gid]
+    je              .g_next
+    write           1, space, 1
+    mov             edi, [groups_buf + r9*4]
+    call            print_num
+.g_next:
+    inc             r9
+    jmp             .g_loop
 
 .mode_NG:
     mov             rdi, root_word
