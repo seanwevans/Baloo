@@ -1,143 +1,343 @@
-; src/ln.asm
+; src/ln.asm -- ln(1): create hard or symbolic links.
+; Usage: ln [-sfnT] [-t DIR] SOURCE... [DEST]
+;
+; With a directory DEST each SOURCE is linked as DEST/basename; -n/-T treat a
+; symlink-to-directory DEST as the link name itself. -s makes symbolic links,
+; -f removes an existing destination first.
 
     %include "include/sysdefs.inc"
 
+    %define S_IFMT  0xF000
+    %define S_IFDIR 0x4000
+
 section .bss
-    argc            resq 1              ;Argument count
-    argv            resq 1              ;Argument vector
-    symlink_flag    resb 1              ;Flag for symbolic link (-s option)
-    force_flag      resb 1              ;Flag for force overwrite (-f option)
-    source_path     resq 1              ;Pointer to source path
-    target_path     resq 1              ;Pointer to target path
+    stat_buf    resb 160
+    target      resb 4096
+    relbuf      resb 8192
+    operands    resq 256
+    nops        resq 1
+    s_flag      resb 1
+    f_flag      resb 1
+    r_flag      resb 1
+    notdir      resb 1                  ;-n / -T
+    tdir        resq 1
+    had_err     resb 1
 
 section .data
-usage_msg       db "Usage: ln [-s] source_file target_file", 10, 0
-    usage_len       equ $ - usage_msg
-error_msg       db "Error: ", 0
-    error_len       equ $ - error_msg
-    error_no_source db "source file not specified", 10, 0
-    error_no_source_len equ $ - error_no_source
-    error_no_target     db "target file not specified", 10, 0
-    error_no_target_len equ $ - error_no_target
-    error_link_failed   db "failed to create link", 10, 0
-    error_link_failed_len equ $ - error_link_failed
+usage_msg   db "Usage: ln [-sfnT] [-t DIR] SOURCE... DEST", WHITESPACE_NL
+    usage_len   equ $ - usage_msg
 
 section .text
-global          _start
+global _start
 
 _start:
-    pop             qword [argc]        ;Get argument count
-    mov             qword [argv], rsp   ;Save pointer to argument vector
-    mov             byte [symlink_flag], 0
-    mov             byte [force_flag], 0
-    call            parse_args
+    mov     byte [s_flag], 0
+    mov     byte [f_flag], 0
+    mov     byte [r_flag], 0
+    mov     byte [notdir], 0
+    mov     qword [tdir], 0
+    mov     byte [had_err], 0
+    mov     qword [nops], 0
 
-    cmp             qword [source_path], 0
-    je              error_missing_source
+    mov     r12, [rsp]                  ;argc
+    lea     r13, [rsp + 16]             ;&argv[1]
+    dec     r12
+parse:
+    cmp     r12, 0
+    je      after_parse
+    mov     rdi, [r13]
+    cmp     byte [rdi], '-'
+    jne     .op
+    cmp     byte [rdi + 1], 0
+    je      .op
+    lea     rsi, [rdi + 1]
+.oc:
+    movzx   eax, byte [rsi]
+    test    al, al
+    jz      .nextarg
+    cmp     al, 's'
+    je      .ss
+    cmp     al, 'f'
+    je      .sf
+    cmp     al, 'n'
+    je      .sn
+    cmp     al, 'T'
+    je      .sn
+    cmp     al, 't'
+    je      .st
+    cmp     al, 'r'
+    je      .srv
+    inc     rsi
+    jmp     .oc
+.srv:
+    mov     byte [r_flag], 1
+    inc     rsi
+    jmp     .oc
+.ss:
+    mov     byte [s_flag], 1
+    inc     rsi
+    jmp     .oc
+.sf:
+    mov     byte [f_flag], 1
+    inc     rsi
+    jmp     .oc
+.sn:
+    mov     byte [notdir], 1
+    inc     rsi
+    jmp     .oc
+.st:
+    inc     rsi
+    cmp     byte [rsi], 0
+    jne     .t_here
+    add     r13, 8
+    dec     r12
+    mov     rsi, [r13]
+.t_here:
+    mov     [tdir], rsi
+    jmp     .nextarg
+.op:
+    mov     rcx, [nops]
+    mov     [operands + rcx*8], rdi
+    inc     qword [nops]
+.nextarg:
+    add     r13, 8
+    dec     r12
+    jmp     parse
 
-    cmp             qword [target_path], 0
-    je              error_missing_target
-
-    movzx           rax, byte [force_flag]
-    test            rax, rax
-    jz              .no_force
-    mov             rax, SYS_UNLINK     ;remove existing target (ignore errors)
-    mov             rdi, [target_path]
+after_parse:
+    cmp     qword [tdir], 0
+    je      .need2
+    cmp     qword [nops], 1
+    jge     .run
+    jmp     .usage
+.need2:
+    cmp     qword [nops], 2
+    jge     .run
+.usage:
+    write   STDERR_FILENO, usage_msg, usage_len
+    mov     rdi, 1
+    mov     rax, SYS_EXIT
     syscall
-.no_force:
-    movzx           rax, byte [symlink_flag]
-    test            rax, rax
-    jnz             create_symbolic_link
-
-    mov             rax, SYS_LINK       ;link syscall
-    mov             rdi, [source_path]  ;source path
-    mov             rsi, [target_path]  ;target path
+.run:
+    cmp     qword [tdir], 0
+    je      .no_tdir
+    mov     r15, [tdir]
+    mov     r13, [nops]
+    mov     r14, 1                      ;dest is dir
+    jmp     .loop
+.no_tdir:
+    mov     rax, [nops]
+    dec     rax
+    mov     r15, [operands + rax*8]     ;dest
+    mov     r13, rax                    ;source count
+    xor     r14, r14
+    cmp     byte [notdir], 1
+je      .loop                       ;-n/-T: dest is the link name
+    mov     rdi, r15
+    mov     rsi, stat_buf
+    mov     rax, SYS_STAT
+    syscall
+    test    rax, rax
+    js      .loop
+    mov     ax, [stat_buf + 24]
+    and     ax, S_IFMT
+    cmp     ax, S_IFDIR
+    jne     .loop
+    mov     r14, 1
+.loop:
+    xor     r12, r12
+.each:
+    cmp     r12, r13
+    jge     .done
+    mov     rbx, [operands + r12*8]     ;source
+    test    r14, r14
+    jz      .plain
+    call    build_dir_target
+    jmp     .go
+.plain:
+    mov     rsi, r15
+    mov     rdi, target
+    call    strcpy_c
+.go:
+;-f: remove an existing destination
+    cmp     byte [f_flag], 1
+    jne     .link
+    mov     rax, SYS_UNLINK
+    mov     rdi, target
+    syscall
+.link:
+    cmp     byte [s_flag], 1
+    je      .sym
+    mov     rax, SYS_LINK
+    mov     rdi, rbx
+    mov     rsi, target
+    syscall
+    jmp     .checkerr
+.sym:
+    mov     rdi, rbx                    ;symlink content
+    cmp     byte [r_flag], 1
+    jne     .dosym
+    call    build_relative              ;rax = relative content
+    mov     rdi, rax
+.dosym:
+    mov     rax, SYS_SYMLINK
+    mov     rsi, target
+    syscall
+.checkerr:
+    test    rax, rax
+    jns     .next
+    mov     byte [had_err], 1
+.next:
+    inc     r12
+    jmp     .each
+.done:
+    movzx   edi, byte [had_err]
+    mov     rax, SYS_EXIT
     syscall
 
-    jmp             check_link_result
-
-create_symbolic_link:
-    mov             rax, SYS_SYMLINK    ;symlink syscall
-    mov             rdi, [source_path]  ;source path
-    mov             rsi, [target_path]  ;target path
-    syscall
-
-check_link_result:
-    test            rax, rax
-    js              link_failed
-
-    exit            0
-
-parse_args:
-    mov             rcx, [argc]         ;Get argument count
-    cmp             rcx, 1              ;Check if only program name is provided
-    jle             display_usage       ;If no arguments, display usage
-
-    mov             r8, [argv]          ;Get argument vector
-    add             r8, 8               ;Skip program name
-    dec             rcx                 ;Remaining argument count
-
-.optloop:
-    cmp             rcx, 0
-    je              no_option
-    mov             rdi, [r8]           ;Current argument
-    cmp             byte [rdi], '-'     ;Check if it starts with '-'
-    jne             no_option
-    cmp             byte [rdi+1], 0     ;Lone "-" is an operand, not an option
-    je              no_option
-    inc             rdi                 ;Skip '-'
-
-.charloop:
-    movzx           rax, byte [rdi]
-    cmp             al, 0
-    je              .nextopt
-    cmp             al, 's'
-    je              .set_symlink
-    cmp             al, 'f'
-    je              .set_force
-    jmp             display_usage
-
-.set_symlink:
-    mov             byte [symlink_flag], 1
-    inc             rdi
-    jmp             .charloop
-
-.set_force:
-    mov             byte [force_flag], 1
-    inc             rdi
-    jmp             .charloop
-
-.nextopt:
-    add             r8, 8
-    dec             rcx
-    jmp             .optloop
-
-no_option:
-    cmp             rcx, 2              ;Need at least 2 arguments (source and target)
-    jl              display_usage
-
-    mov             rax, [r8]
-    mov             [source_path], rax
-    add             r8, 8
-    mov             rax, [r8]
-    mov             [target_path], rax
+; build_dir_target: target = dest(r15) + "/" + basename(rbx source).
+build_dir_target:
+    mov     rsi, r15
+    mov     rdi, target
+    call    strcpy_c
+    test    rax, rax
+    jz      .slash
+    cmp     byte [target + rax - 1], '/'
+    je      .base
+.slash:
+    mov     byte [target + rax], '/'
+    inc     rax
+.base:
+    mov     r10, rax                    ;write offset (survives strlen_c)
+    mov     rdi, rbx
+    call    strlen_c
+    mov     rcx, rax
+.strip:
+    cmp     rcx, 1
+    jle     .find
+    cmp     byte [rbx + rcx - 1], '/'
+    jne     .find
+    dec     rcx
+    jmp     .strip
+.find:
+    xor     r8, r8
+    mov     r9, rcx
+    dec     r9
+.scan:
+    cmp     r9, 0
+    jl      .cp
+    cmp     byte [rbx + r9], '/'
+    jne     .dec
+    lea     r8, [r9 + 1]
+    jmp     .cp
+.dec:
+    dec     r9
+    jmp     .scan
+.cp:
+    mov     rdx, r10
+.cl:
+    cmp     r8, rcx
+    jge     .cdone
+    mov     al, [rbx + r8]
+    mov     [target + rdx], al
+    inc     r8
+    inc     rdx
+    jmp     .cl
+.cdone:
+    mov     byte [target + rdx], 0
     ret
 
-display_usage:
-    write           STDERR_FILENO, usage_msg, usage_len
-    exit            1
+; build_relative: relbuf = ("../" per component of dirname(target)) + source(rbx).
+; Absolute sources are copied unchanged. Returns relbuf in rax.
+build_relative:
+    cmp     byte [rbx], '/'
+    je      .abs
+    mov     rdi, target
+    call    strlen_c
+    mov     rcx, rax                    ;target length
+    mov     r9, -1
+    xor     r8, r8
+.fl:
+    cmp     r8, rcx
+    jge     .fdone
+    cmp     byte [target + r8], '/'
+    jne     .fn
+    mov     r9, r8
+.fn:
+    inc     r8
+    jmp     .fl
+.fdone:
+    xor     r11, r11                    ;component count
+    cmp     r9, 0
+    jl      .pre
+    xor     r8, r8
+    xor     r10, r10                    ;in-segment
+.cs:
+    cmp     r8, r9
+    jge     .pre
+    cmp     byte [target + r8], '/'
+    jne     .nonsl
+    xor     r10, r10
+    jmp     .csn
+.nonsl:
+    test    r10, r10
+    jnz     .csn
+    inc     r11
+    mov     r10, 1
+.csn:
+    inc     r8
+    jmp     .cs
+.pre:
+    xor     rdx, rdx                    ;relbuf offset
+.pl:
+    test    r11, r11
+    jz      .app
+    mov     byte [relbuf + rdx], '.'
+    mov     byte [relbuf + rdx + 1], '.'
+    mov     byte [relbuf + rdx + 2], '/'
+    add     rdx, 3
+    dec     r11
+    jmp     .pl
+.app:
+    xor     rcx, rcx
+.al:
+    mov     al, [rbx + rcx]
+    mov     [relbuf + rdx], al
+    test    al, al
+    jz      .done
+    inc     rcx
+    inc     rdx
+    jmp     .al
+.done:
+    mov     rax, relbuf
+    ret
+.abs:
+    mov     rsi, rbx
+    mov     rdi, relbuf
+    call    strcpy_c
+    mov     rax, relbuf
+    ret
 
-error_missing_source:
-    write           STDERR_FILENO, error_msg, error_len
-    write           STDERR_FILENO, error_no_source, error_no_source_len
-    exit            1
+; strcpy_c: rsi -> rdi, NUL-terminated; rax = length (excl NUL).
+strcpy_c:
+    xor     rax, rax
+.l:
+    mov     cl, [rsi + rax]
+    mov     [rdi + rax], cl
+    test    cl, cl
+    jz      .done
+    inc     rax
+    jmp     .l
+.done:
+    ret
 
-error_missing_target:
-    write           STDERR_FILENO, error_msg, error_len
-    write           STDERR_FILENO, error_no_target, error_no_target_len
-    exit            1
-
-link_failed:
-    write           STDERR_FILENO, error_msg, error_len
-    write           STDERR_FILENO, error_link_failed, error_link_failed_len
-    exit            1
+; strlen_c: rdi -> rax length.
+strlen_c:
+    xor     rax, rax
+.l:
+    cmp     byte [rdi + rax], 0
+    je      .done
+    inc     rax
+    jmp     .l
+.done:
+    ret
