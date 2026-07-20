@@ -1,116 +1,85 @@
-; src/touch.asm
+; src/touch.asm -- touch(1): create files and/or update their timestamps.
+; Usage: touch [-c] FILE...   (-c: do not create missing files).
+;
+; Other timestamp options (-t/-d/-r/-a/-m) are accepted but only the default
+; "set to the current time" behaviour is implemented.
 
     %include "include/sysdefs.inc"
 
 section .bss
-    buffer          resb 4096           ;Buffer for filename
-    stat_buf        resb 144            ;Stat buffer (struct stat)
+    nocreate    resb 1
 
 section .data
-usage_msg       db "Usage: touch FILE...", 10, 0
-error_msg       db "Error: Cannot touch ", 0
-    newline         db 10, 0
+usage_msg   db "Usage: touch [-c] FILE...", 10
+    usage_len   equ $ - usage_msg
 
 section .text
-global          _start
+global _start
 
 _start:
-    pop             rcx                 ;Get argc
-    pop             rdx                 ;Skip argv[0] (program name)
-    dec             rcx                 ;Decrease argc by 1
-    cmp             rcx, 0              ;Check if no arguments were provided
-    jg              process_args        ;If we have arguments, process them
+    mov     byte [nocreate], 0
+    mov     r12, [rsp]                  ;argc
+    lea     r13, [rsp + 16]             ;&argv[1]
+    dec     r12
 
-    write           STDOUT_FILENO, usage_msg, 22
-    exit            1
+    xor     r14, r14                    ;count of file operands seen
+parse:
+    cmp     r12, 0
+    je      .checkfiles
+    mov     rdi, [r13]
+    cmp     byte [rdi], '-'
+    jne     .file
+    cmp     byte [rdi + 1], 0
+    je      .file                       ;lone "-" is a filename
+    lea     rsi, [rdi + 1]
+.opt:
+    movzx   eax, byte [rsi]
+    test    al, al
+    jz      .nextarg
+    cmp     al, 'c'
+    jne     .skipopt
+    mov     byte [nocreate], 1
+.skipopt:
+    inc     rsi
+    jmp     .opt
+.file:
+    inc     r14
+    call    touch_file
+.nextarg:
+    add     r13, 8
+    dec     r12
+    jmp     parse
+.checkfiles:
+    test    r14, r14
+    jnz     .ok
+    write   STDERR_FILENO, usage_msg, usage_len
+    mov     rdi, 1
+    mov     rax, SYS_EXIT
+    syscall
+.ok:
+    xor     rdi, rdi
+    mov     rax, SYS_EXIT
+    syscall
 
-process_args:
-    pop             rdi                 ;Get next argument (filename)
-    call            touch_file          ;Touch the file
-
-    dec             rcx                 ;Decrease argument counter
-    jnz             process_args        ;If more arguments, continue processing
-
-    exit            0                   ;Exit with success code
-
+; touch_file: rdi = filename. Creates it (unless -c) then sets its times to now.
 touch_file:
-    push            rcx                 ;Save registers we'll use
-    push            rdi                 ;Save filename pointer
-    push            rdx
-    mov             rax, SYS_OPEN
-
-    mov             rsi, O_RDWR         ;Open for reading and writing
+    mov     r15, rdi                    ;keep the name
+    cmp     byte [nocreate], 1
+    je      .settime
+    mov     rax, SYS_OPEN
+    mov     rsi, O_WRONLY | O_CREAT
+    mov     rdx, 0o666
     syscall
-
-    cmp             rax, 0              ;Check if file was opened successfully
-    jl              create_file         ;If not, try to create it
-
-    mov             rdi, rax            ;File descriptor is now in rax
-    mov             rax, SYS_CLOSE
+    test    rax, rax
+    js      .settime
+    mov     rdi, rax
+    mov     rax, SYS_CLOSE
     syscall
-
-    pop             rdx                 ;Restore rdx
-    pop             rdi                 ;Restore filename pointer
-    push            rdi                 ;Save it again for update_timestamp
-    push            rdx                 ;Save rdx again
-    jmp             update_timestamp
-
-create_file:
-    pop             rdx                 ;Restore rdx
-    pop             rdi                 ;Restore filename pointer
-    push            rdi                 ;Save it again for later
-    push            rdx                 ;Save rdx again
-    mov             rax, SYS_OPEN
-    mov             rsi, O_WRONLY | O_CREAT ;Create for writing
-    mov             rdx, DEFAULT_MODE   ;File permissions (0644)
+.settime:
+    mov     rax, SYS_UTIMENSAT
+    mov     rdi, AT_FDCWD
+    mov     rsi, r15
+    xor     rdx, rdx                    ;NULL -> current time
+    xor     r10, r10
     syscall
-
-    cmp             rax, 0              ;Check if file was created successfully
-    jl              handle_error        ;If not, handle error
-
-    mov             rdi, rax            ;File descriptor
-    mov             rax, SYS_CLOSE
-    syscall
-
-update_timestamp:
-    pop             rdx                 ;Restore rdx
-    pop             rdi                 ;Restore filename pointer
-    push            rdi                 ;Save filename again in case of error
-    push            rdx                 ;Save rdx again
-
-    mov             rax, SYS_UTIMENSAT
-    mov             rdi, AT_FDCWD       ;Use current directory
-    mov             rsi, rdi
-    pop             rdx                 ;Restore rdx temporarily
-    pop             rsi                 ;Get filename into rsi
-    push            rsi                 ;Save filename again
-    push            rdx                 ;Save rdx again
-    xor             rdx, rdx            ;NULL timespec means use current time
-    xor             r10, r10            ;No flags
-    syscall
-
-    cmp             rax, 0              ;Check for errors
-    jl              handle_error        ;If error, handle it
-
-    pop             rdx                 ;Restore registers
-    pop             rdi                 ;Clean up saved filename
-    pop             rcx
-    ret
-
-handle_error:
-    write           STDERR_FILENO, error_msg, 20
-
-    pop             rdx                 ;Restore rdx
-    pop             rdi                 ;Get filename for error message
-    mov             rcx, -1             ;Set counter to max
-    xor             al, al              ;Search for null byte
-    mov             rsi, rdi            ;Save start pointer
-    repne           scasb               ;Scan until null byte
-    not             rcx                 ;Invert count
-    dec             rcx                 ;Remove null byte from count
-    write           STDERR_FILENO, rsi, rcx
-
-    write           STDERR_FILENO, newline, 1
-
-    pop             rcx                 ;Restore rcx
     ret
