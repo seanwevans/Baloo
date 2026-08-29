@@ -67,6 +67,27 @@ PY
   fi
 }
 
+@test "bc — keeps arbitrary precision" {
+  run bash -c "printf 'scale=30\n1/7\n2^100\n' | '$BIN/bc'"
+  assert_success
+  assert_output $'.142857142857142857142857142857
+1267650600228229401496703205376'
+}
+
+@test "bc — -l loads the maths library" {
+  run bash -c "printf 'scale=20\n4*a(1)\ne(1)\n' | '$BIN/bc' -l"
+  assert_success
+  assert_output $'3.14159265358979323844
+2.71828182845904523536'
+}
+
+@test "bc — obase writes other bases" {
+  run bash -c "printf 'obase=16\n255\nobase=2\n10\n' | '$BIN/bc'"
+  assert_success
+  assert_output $'FF
+1010'
+}
+
 
 @test "cat — echoes file contents" {
   echo "hello, baloo" >"$TMP/file"
@@ -833,10 +854,22 @@ bob\ttty1\t1234567891'
   assert_output "command_ok"
 }
 
-@test "date — prints an ISO-like date" {
+@test "date — prints the default format" {
   run "$BIN/date"
   assert_success
-  [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2} ]]
+  [[ "$output" =~ ^[A-Z][a-z]{2}\ [A-Z][a-z]{2}\ [\ 0-9][0-9]\ [0-9]{2}:[0-9]{2}:[0-9]{2}\ .*\ [0-9]{4}$ ]]
+}
+
+@test "date — -I prints an ISO date" {
+  run "$BIN/date" -I
+  assert_success
+  [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+}
+
+@test "date — reads an epoch and formats it in UTC" {
+  run "$BIN/date" -u -d @1598476818 "+%Y-%m-%dT%H:%M:%S"
+  assert_success
+  assert_output "2020-08-26T21:20:18"
 }
 
 @test "dd — copies a file" {
