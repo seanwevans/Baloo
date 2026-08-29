@@ -67,6 +67,27 @@ PY
   fi
 }
 
+@test "bc — keeps arbitrary precision" {
+  run bash -c "printf 'scale=30\n1/7\n2^100\n' | '$BIN/bc'"
+  assert_success
+  assert_output $'.142857142857142857142857142857
+1267650600228229401496703205376'
+}
+
+@test "bc — -l loads the maths library" {
+  run bash -c "printf 'scale=20\n4*a(1)\ne(1)\n' | '$BIN/bc' -l"
+  assert_success
+  assert_output $'3.14159265358979323844
+2.71828182845904523536'
+}
+
+@test "bc — obase writes other bases" {
+  run bash -c "printf 'obase=16\n255\nobase=2\n10\n' | '$BIN/bc'"
+  assert_success
+  assert_output $'FF
+1010'
+}
+
 
 @test "cat — echoes file contents" {
   echo "hello, baloo" >"$TMP/file"
