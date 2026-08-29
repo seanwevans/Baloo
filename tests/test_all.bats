@@ -813,10 +813,22 @@ bob\ttty1\t1234567891'
   assert_output "command_ok"
 }
 
-@test "date — prints an ISO-like date" {
+@test "date — prints the default format" {
   run "$BIN/date"
   assert_success
-  [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2} ]]
+  [[ "$output" =~ ^[A-Z][a-z]{2}\ [A-Z][a-z]{2}\ [\ 0-9][0-9]\ [0-9]{2}:[0-9]{2}:[0-9]{2}\ .*\ [0-9]{4}$ ]]
+}
+
+@test "date — -I prints an ISO date" {
+  run "$BIN/date" -I
+  assert_success
+  [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+}
+
+@test "date — reads an epoch and formats it in UTC" {
+  run "$BIN/date" -u -d @1598476818 "+%Y-%m-%dT%H:%M:%S"
+  assert_success
+  assert_output "2020-08-26T21:20:18"
 }
 
 @test "dd — copies a file" {
