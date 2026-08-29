@@ -710,6 +710,47 @@ bob\ttty1\t1234567891'
   assert_output 'foo'
 }
 
+@test "grep - matches a basic regular expression" {
+  printf 'abc\na1b\nxyz\n' >"$TMP/g"
+  run "$BIN/grep" -n '[0-9]' "$TMP/g"
+  assert_output '2:a1b'
+}
+
+@test "grep - -o shows each match on its own line" {
+  run bash -c "printf 'this is a test\n' | '$BIN/grep' -o is"
+  assert_success
+  assert_output $'is\nis'
+}
+
+@test "grep - -c -v -i and -w do what they say" {
+  printf 'Alpha\nbeta\nalphabet\n' >"$TMP/g"
+  run "$BIN/grep" -ci alpha "$TMP/g"
+  assert_output '2'
+  run "$BIN/grep" -iw alpha "$TMP/g"
+  assert_output 'Alpha'
+  run "$BIN/grep" -v alpha "$TMP/g"
+  assert_output $'Alpha\nbeta'
+}
+
+@test "grep - -r searches a directory tree" {
+  mkdir -p "$TMP/tree/sub"
+  echo hello >"$TMP/tree/sub/one"
+  echo other >"$TMP/tree/two"
+  run bash -c "cd '$TMP/tree' && '$BIN/grep' -r hello ."
+  assert_success
+  assert_output './sub/one:hello'
+}
+
+@test "grep - exit status says whether anything matched" {
+  printf 'foo\n' >"$TMP/g"
+  run "$BIN/grep" -q foo "$TMP/g"
+  assert_success
+  run "$BIN/grep" -q nothere "$TMP/g"
+  [ "$status" -eq 1 ]
+  run "$BIN/grep" -q foo "$TMP/nosuchfile"
+  [ "$status" -eq 2 ]
+}
+
 @test "strings — extracts printable sequences" {
   printf 'a\x00abcdEF\x01' >"$TMP/str"
   run "$BIN/strings" "$TMP/str"
