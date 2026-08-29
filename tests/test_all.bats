@@ -962,7 +962,34 @@ PO
 }
 
 @test "man — shows documentation" {
-  skip "needs installed man pages; exits 1 in CI"
+  mkdir -p "$TMP/manroot/man1" "$TMP/manroot/man5"
+  printf '.TH WIDGET 1\n.SH NAME\nwidget \\- turns things\n.PP\nA \\fBwidget\\fP turns.\n' \
+    >"$TMP/manroot/man1/widget.1"
+  printf 'plain page\n' >"$TMP/manroot/man5/widget.5"
+
+  run "$BIN/man" -M "$TMP/manroot" widget
+  assert_success
+  assert_output $'WIDGET 1\n\nNAME\n\n widget - turns things\n\n A widget turns.'
+
+  run "$BIN/man" -M "$TMP/manroot" 5 widget
+  assert_success
+  assert_output ' plain page'
+
+  run "$BIN/man" -M "$TMP/manroot" -k turns
+  assert_success
+  assert_output 'widget.1 - turns things'
+
+  run "$BIN/man" -M "$TMP/manroot" nosuchpage
+  [ "$status" -eq 1 ]
+}
+
+@test "man - reads a compressed page" {
+  if ! command -v gzip >/dev/null 2>&1; then skip "gzip not available"; fi
+  mkdir -p "$TMP/manzip/man1"
+  printf 'compressed page\n' | gzip >"$TMP/manzip/man1/widget.1.gz"
+  run "$BIN/man" -M "$TMP/manzip" widget
+  assert_success
+  assert_output ' compressed page'
 }
 
 @test "md5sum — MD5 digest" {
