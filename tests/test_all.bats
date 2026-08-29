@@ -1053,6 +1053,33 @@ sys.exit(r.returncode)
   assert_output "timeout_ok"
 }
 
+@test "timeout - stops a command that runs long" {
+  run "$BIN/timeout" 0.1 sleep 5
+  [ "$status" -eq 124 ]
+}
+
+@test "timeout - -s picks the signal" {
+  run "$BIN/timeout" -s KILL 0.1 sleep 5
+  [ "$status" -eq 137 ]
+}
+
+@test "timeout - --preserve-status hands back the child's status" {
+  run "$BIN/timeout" --preserve-status 0.1 sleep 5
+  [ "$status" -eq 143 ]
+}
+
+@test "timeout - passes on the exit status of a command that finished" {
+  run "$BIN/timeout" 5 false
+  [ "$status" -eq 1 ]
+}
+
+@test "timeout - says why it could not run the command" {
+  run "$BIN/timeout" 5 /does/not/exist
+  [ "$status" -eq 127 ]
+  run "$BIN/timeout"
+  [ "$status" -eq 125 ]
+}
+
 @test "tr — translates explicit character sets" {
   run bash -c "printf 'abc' | '$BIN/tr' abc xyz"
   assert_success
