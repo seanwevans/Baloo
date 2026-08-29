@@ -531,6 +531,36 @@ print("ok")
   refute [ -e "$TMP/r" ]
 }
 
+@test "rm - -r removes a tree" {
+  mkdir -p "$TMP/tree/a/b"
+  touch "$TMP/tree/f" "$TMP/tree/a/f" "$TMP/tree/a/b/f"
+  run "$BIN/rm" -r "$TMP/tree"
+  assert_success
+  refute [ -e "$TMP/tree" ]
+}
+
+@test "rm - -f ignores what is not there" {
+  run "$BIN/rm" -f "$TMP/never-existed"
+  assert_success
+  run "$BIN/rm" "$TMP/never-existed"
+  [ "$status" -eq 1 ]
+}
+
+@test "rm - -v names what it removed" {
+  mkdir "$TMP/vd"
+  touch "$TMP/vd/one"
+  run bash -c "cd '$TMP' && '$BIN/rm' -rv vd | sort"
+  assert_success
+  assert_output $'rm \'vd/one\'\nrmdir \'vd\''
+}
+
+@test "rm - refuses a directory without -r" {
+  mkdir "$TMP/plain"
+  run "$BIN/rm" "$TMP/plain"
+  [ "$status" -eq 1 ]
+  [ -d "$TMP/plain" ]
+}
+
 @test "shred — overwrites and deletes" {
   printf 'secret' >"$TMP/s"
   run "$BIN/shred" -u "$TMP/s"
