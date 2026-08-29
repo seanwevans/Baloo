@@ -44,6 +44,7 @@
     %define MAXCLASS 256
     %define MAXGROUPS 10
     %define MAXDEPTH 128
+    %define WALKMAX 64
     %define PATHCAP 4096
     %define DIRCAP 32768
     %define READCAP 262144
@@ -141,7 +142,6 @@ section .bss
 
     pathbuf     resb PATHCAP
     pathlen     resq 1
-    dirbufs     resb MAXDEPTH * 8
     stbuf       resb 160
     numbuf      resb 32
 
@@ -207,7 +207,8 @@ section .bss
     g_rawlen    resq 1
     ctxw        resq 1
     ctx_head    resq 1
-    dirbuf      resb DIRCAP
+    dirbufs     resb WALKMAX * DIRCAP
+    walkdepth   resq 1
     rx_mso      resq 1
     rx_meo      resq 1
     rx_p        resq 1
@@ -3754,6 +3755,9 @@ walk_path:
     test    al, al
     jnz     .out
 .enter:
+    mov     rax, [walkdepth]
+    cmp     rax, WALKMAX
+    jae     .out
     mov     rax, SYS_OPEN
     mov     rdi, pathbuf
     mov     rsi, O_RDONLY | O_DIRECTORY_FLAG
@@ -3763,10 +3767,16 @@ walk_path:
     js      .out
     mov     r13, rax
     mov     r14, [pathlen]
+; entries are read into this level's own buffer: descending into a
+; subdirectory would otherwise overwrite the names still to be looked at here
+    mov     rax, [walkdepth]
+    imul    r15, rax, DIRCAP
+    add     r15, dirbufs
+    inc     qword [walkdepth]
 .chunk:
     mov     rax, SYS_GETDENTS_ID
     mov     rdi, r13
-    mov     rsi, dirbuf
+    mov     rsi, r15
     mov     rdx, DIRCAP
     syscall
     test    rax, rax
@@ -3776,14 +3786,14 @@ walk_path:
 .entry:
     cmp     rbx, r12
     jae     .chunk
-    lea     rdi, [dirbuf + rbx + 19]
+    lea     rdi, [r15 + rbx + 19]
     call    is_dot_name
     test    al, al
     jnz     .nextentry
     mov     [pathlen], r14
     mov     byte [pathbuf + r14], '/'
     lea     rdi, [pathbuf + r14 + 1]
-    lea     rsi, [dirbuf + rbx + 19]
+    lea     rsi, [r15 + rbx + 19]
     call    copy_name
     lea     rcx, [r14 + 1]
     add     rcx, rax
@@ -3794,10 +3804,11 @@ walk_path:
     call    walk_path
     pop     rbx
 .nextentry:
-    movzx   eax, word [dirbuf + rbx + 16]
+    movzx   eax, word [r15 + rbx + 16]
     add     rbx, rax
     jmp     .entry
 .closedir:
+    dec     qword [walkdepth]
     mov     [pathlen], r14
     mov     byte [pathbuf + r14], 0
     mov     rax, SYS_CLOSE
