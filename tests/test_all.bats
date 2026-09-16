@@ -288,6 +288,51 @@ PY
   assert_output "$(id -u)"
 }
 
+@test "id — prints its own ids and groups like id(1)" {
+  run "$BIN/id"
+  assert_success
+  assert_output "$(id)"
+}
+
+@test "id — looks a USER operand up by name" {
+  run "$BIN/id" root
+  assert_success
+  assert_output "$(id root)"
+}
+
+@test "id — looks a USER operand up by number" {
+  run "$BIN/id" 0
+  assert_success
+  assert_output "$(id 0)"
+}
+
+@test "id — prints names with -n" {
+  run "$BIN/id" -nu root
+  assert_success
+  assert_output "root"
+  run "$BIN/id" -ng root
+  assert_success
+  assert_output "$(id -ng root)"
+}
+
+@test "id — prints a USER's group list" {
+  run "$BIN/id" -G root
+  assert_success
+  assert_output "$(id -G root)"
+}
+
+@test "id — reports an unknown USER" {
+  run "$BIN/id" no-such-user
+  assert_failure
+  run "$BIN/id" 2147483647
+  assert_failure
+}
+
+@test "id — rejects more than one of -u/-g/-G" {
+  run "$BIN/id" -ug
+  assert_failure
+}
+
 @test "kill — terminates a background process" {
   sleep 30 & pid=$!
   trap 'kill "$pid" 2>/dev/null || true' RETURN
