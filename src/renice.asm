@@ -25,6 +25,10 @@ section .bss
     pw_len      resq 1
     pw_loaded   resb 1
     had_err     resb 1
+    f_id        resq 1                  ;the id a failed call was given
+    f_err       resq 1
+    f_kind      resb 1
+    numbuf      resb 32
 
 section .data
     passwd_path db "/etc/passwd", 0
@@ -42,6 +46,21 @@ err_many    db "renice: too many ids", WHITESPACE_NL
     err_many_len equ $ - err_many
     quote       db "'"
     newline     db WHITESPACE_NL
+colon_sp    db ": "
+    colon_sp_len equ $ - colon_sp
+    tag_pid     db "pid ", 0
+    tag_pgid    db "pgid ", 0
+    tag_uid     db "uid ", 0
+    r_eperm     db "operation not permitted", WHITESPACE_NL
+    r_eperm_len equ $ - r_eperm
+    r_esrch     db "no such process", WHITESPACE_NL
+    r_esrch_len equ $ - r_esrch
+    r_eacces    db "permission denied", WHITESPACE_NL
+    r_eacces_len equ $ - r_eacces
+    r_einval    db "invalid argument", WHITESPACE_NL
+    r_einval_len equ $ - r_einval
+    r_other     db "cannot set priority", WHITESPACE_NL
+    r_other_len equ $ - r_other
 
 section .text
 global _start
@@ -175,6 +194,10 @@ after_parse:
     js      .fail
     jmp     .next
 .fail:
+    mov     rsi, rax                    ;-errno from whichever call failed
+    mov     rdi, [ids + r14*8]
+    movzx   edx, byte [kinds + r14]
+    call    report_failure
     mov     byte [had_err], 1
 .next:
     inc     r14
@@ -183,6 +206,82 @@ after_parse:
     movzx   edi, byte [had_err]
     mov     rax, SYS_EXIT
     syscall
+
+; report_failure: say which id could not be changed, and why.
+;   rdi = the id, rsi = -errno, rdx = the PRIO_* it was given under
+report_failure:
+    mov     [f_id], rdi
+    mov     [f_err], rsi
+    mov     [f_kind], dl
+    write   STDERR_FILENO, err_pre, err_pre_len
+    movzx   eax, byte [f_kind]
+    cmp     al, PRIO_PGRP
+    je      .pgrp
+    cmp     al, PRIO_USER
+    je      .user
+    mov     rdi, tag_pid
+    jmp     .tagged
+.pgrp:
+    mov     rdi, tag_pgid
+    jmp     .tagged
+.user:
+    mov     rdi, tag_uid
+.tagged:
+    call    err_str
+    mov     rdi, [f_id]
+    call    err_num
+    write   STDERR_FILENO, colon_sp, colon_sp_len
+    mov     rax, [f_err]
+    neg     rax
+    cmp     rax, EPERM
+    je      .eperm
+    cmp     rax, ESRCH
+    je      .esrch
+    cmp     rax, EACCES
+    je      .eacces
+    cmp     rax, EINVAL
+    je      .einval
+    write   STDERR_FILENO, r_other, r_other_len
+    ret
+.eperm:
+    write   STDERR_FILENO, r_eperm, r_eperm_len
+    ret
+.esrch:
+    write   STDERR_FILENO, r_esrch, r_esrch_len
+    ret
+.eacces:
+    write   STDERR_FILENO, r_eacces, r_eacces_len
+    ret
+.einval:
+    write   STDERR_FILENO, r_einval, r_einval_len
+    ret
+
+; err_str: rdi = NUL-terminated string, to stderr.
+err_str:
+    mov     rsi, rdi
+    call    strlen                      ;rbx = length
+    write   STDERR_FILENO, rsi, rbx
+    ret
+
+; err_num: rdi = value, in decimal, to stderr.
+err_num:
+    mov     rax, rdi
+    mov     rsi, numbuf + 31
+    mov     rcx, 10
+.digit:
+    xor     rdx, rdx
+    div     rcx
+    dec     rsi
+    add     dl, '0'
+    mov     [rsi], dl
+    test    rax, rax
+    jnz     .digit
+    mov     rdx, numbuf + 31
+    sub     rdx, rsi
+    mov     rax, SYS_WRITE
+    mov     rdi, STDERR_FILENO
+    syscall
+    ret
 
 ; fail_arg: report "renice: MSG 'ARG'" on stderr and exit 1.
 ;   rdi = the offending argument, rsi = message, rdx = message length

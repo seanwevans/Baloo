@@ -144,8 +144,12 @@
     %define DEAD_PROCESS    8           ;Terminated process
     %define ACCOUNTING      9
 
-    %define EEXIST          17          ;Error number for "File exists"
+    %define EPERM           1           ;Error number for "Operation not permitted"
     %define ENOENT          2           ;Error number for "No such file or directory"
+    %define ESRCH           3           ;Error number for "No such process"
+    %define EACCES          13          ;Error number for "Permission denied"
+    %define EEXIST          17          ;Error number for "File exists"
+    %define EINVAL          22          ;Error number for "Invalid argument"
 
     %define SIGHUP          1           ;Hangup signal number
     %define SIG_IGN         1           ;Ignore handler
