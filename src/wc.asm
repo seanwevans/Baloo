@@ -9,7 +9,7 @@
 
     %include "include/sysdefs.inc"
 
-    %define BUFCAP (8 * 1024 * 1024)
+    %define BUFCAP 65536                ;input is processed one chunk at a time
     %define FL_l 1
     %define FL_w 2
     %define FL_m 4
@@ -33,6 +33,7 @@ section .bss
     dw_fd       resq 1
     dw_name     resq 1
     dw_len      resq 1
+    dw_eof      resq 1
     dw_pos      resq 1
     dw_clen     resq 1
     dw_wchar    resq 1
@@ -255,23 +256,10 @@ do_wc_and_print:
     cmp     rcx, 5
     jl      .zl
 
-;read the whole input into inbuf (capped at BUFCAP)
-    xor     r15, r15
-.rd:
-    mov     rdx, BUFCAP
-    sub     rdx, r15
-    jz      .rdone
-    mov     rax, SYS_READ
-    mov     rdi, [dw_fd]
-    lea     rsi, [inbuf + r15]
-    syscall
-    test    rax, rax
-    jle     .rdone
-    add     r15, rax
-    jmp     .rd
-.rdone:
-    mov     [dw_len], r15
-
+;input streams through inbuf; wc_refill keeps a few bytes of lookahead so a
+;UTF-8 sequence split across two reads still decodes as one character.
+    mov     qword [dw_len], 0
+    mov     qword [dw_eof], 0
     mov     qword [dw_pos], 0
     mov     qword [dw_clen], 1
     mov     qword [dw_line], 0
@@ -280,6 +268,15 @@ do_wc_and_print:
 
 .loop:
     mov     rax, [dw_pos]
+    cmp     qword [dw_eof], 0
+    jne     .check
+    mov     rdx, [dw_len]
+    sub     rdx, rax
+    cmp     rdx, 4
+    jae     .check
+    call    wc_refill
+    mov     rax, [dw_pos]
+.check:
     cmp     rax, [dw_len]
     jge     .after
     movzx   ecx, byte [inbuf + rax]
@@ -350,6 +347,36 @@ jge     .word                       ;continuation byte: reuse dw_space
     mov     rdi, lengths
     mov     rsi, [dw_name]
     call    print_lengths
+    ret
+
+; wc_refill: slide the unread tail of inbuf to the front and read more until
+; at least 4 bytes are buffered or the input ends (sets [dw_eof]).
+wc_refill:
+    mov     rcx, [dw_len]
+    sub     rcx, [dw_pos]               ;unread bytes to keep
+    lea     rsi, [inbuf]
+    add     rsi, [dw_pos]
+    lea     rdi, [inbuf]
+    mov     [dw_len], rcx
+    mov     qword [dw_pos], 0
+    rep     movsb
+.more:
+    cmp     qword [dw_len], 4
+    jae     .ret
+    mov     rax, SYS_READ
+    mov     rdi, [dw_fd]
+    lea     rsi, [inbuf]
+    add     rsi, [dw_len]
+    mov     rdx, BUFCAP
+    sub     rdx, [dw_len]
+    syscall
+    test    rax, rax
+    jle     .eof                        ;end of input or read error
+    add     [dw_len], rax
+    jmp     .more
+.eof:
+    mov     qword [dw_eof], 1
+.ret:
     ret
 
 ; utf8_decode: decode the sequence at inbuf+[dw_pos]; set [dw_clen], [dw_wchar].

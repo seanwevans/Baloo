@@ -1,16 +1,21 @@
 ; src/base64.asm -- base64(1): encode (default) or decode (-d) stdin or a
 ; file, wrapping encoded output every -w N columns (default 76, 0 = no wrap).
+;
+; Input is processed in INSIZE chunks. INSIZE is a multiple of 3, and every
+; chunk but the last is read full, so padding only ever appears at the very
+; end; the wrap column and the decoder's bit accumulator carry across chunks.
 
     %include "include/sysdefs.inc"
 
-    %define INSIZE 1048576
-    %define OUTSIZE 2097152
+    %define INSIZE 786432               ;3 * 256 KiB
+    %define OUTSIZE 2097152             ;4/3 of INSIZE plus newlines, rounded up
 
 section .bss
     inbuf       resb INSIZE
     outbuf      resb OUTSIZE
     dec_table   resb 256
     inlen       resq 1
+    in_fd       resq 1
     wrap        resq 1
     d_flag      resb 1
 
@@ -75,13 +80,11 @@ input_file:
     syscall
     test        rax, rax
     js          exit_error
-    mov         rdi, rax
-    call        read_all
+    mov         [in_fd], rax
     jmp         build
 
 input_stdin:
-    mov         rdi, STDIN_FILENO
-    call        read_all
+    mov         qword [in_fd], STDIN_FILENO
 
 build:
 ;build the decode table (base64 char -> 6-bit value, else 0xFF)
@@ -106,9 +109,11 @@ build:
 
 ; ---------------- encode ----------------
 encode:
+    xor         r10, r10                ;column (carries across chunks)
+.chunk:
+    call        read_all
     xor         rbx, rbx                ;input index
     xor         r15, r15                ;output index
-    xor         r10, r10                ;column
 .blk:
     mov         rax, [inlen]
     sub         rax, rbx
@@ -169,6 +174,11 @@ encode:
     add         rbx, 3
     jmp         .blk
 .fin:
+    cmp         qword [inlen], INSIZE
+    jne         .last
+call        flush_out               ;a full chunk: there may be more
+    jmp         .chunk
+.last:
     mov         rcx, [wrap]
     test        rcx, rcx
     jz          .write
@@ -177,11 +187,7 @@ encode:
     mov         byte [outbuf + r15], WHITESPACE_NL
     inc         r15
 .write:
-    mov         rax, SYS_WRITE
-    mov         rdi, STDOUT_FILENO
-    mov         rsi, outbuf
-    mov         rdx, r15
-    syscall
+    call        flush_out
     exit        0
 
 ; emit_wc: append al to outbuf, inserting a newline every [wrap] columns
@@ -202,10 +208,12 @@ emit_wc:
 
 ; ---------------- decode ----------------
 decode:
+    xor         r8, r8                  ;bit accumulator (carries across chunks)
+    xor         r9, r9                  ;bits held
+.chunk:
+    call        read_all
     xor         rbx, rbx                ;input index
     xor         r15, r15                ;output index
-    xor         r8, r8                  ;bit accumulator
-    xor         r9, r9                  ;bits held
 .dl:
     cmp         rbx, [inlen]
     jge         .dfin
@@ -232,14 +240,32 @@ decode:
     and         r8, rax
     jmp         .dl
 .dfin:
-    mov         rax, SYS_WRITE
-    mov         rdi, STDOUT_FILENO
-    mov         rsi, outbuf
-    mov         rdx, r15
-    syscall
+    call        flush_out
+    cmp         qword [inlen], INSIZE
+je          .chunk                  ;a full chunk: there may be more
     exit        0
 
-; read_all: rdi = fd; read up to INSIZE bytes into inbuf, store [inlen]
+; flush_out: write outbuf[0..r15) to stdout, resuming after short writes.
+; Preserves r8-r10 (the encoder/decoder state).
+flush_out:
+    mov         rsi, outbuf
+    mov         rdx, r15
+.loop:
+    test        rdx, rdx
+    jz          .done
+    mov         rax, SYS_WRITE
+    mov         rdi, STDOUT_FILENO
+    syscall
+    test        rax, rax
+    js          exit_error
+    add         rsi, rax
+    sub         rdx, rax
+    jmp         .loop
+.done:
+    ret
+
+; read_all: fill inbuf from [in_fd] (up to INSIZE bytes, fewer only at EOF),
+; store [inlen]. Preserves r8-r10.
 read_all:
     xor         r14, r14
 .loop:
@@ -247,6 +273,7 @@ read_all:
     sub         rdx, r14
     jle         .done
     mov         rax, SYS_READ
+    mov         rdi, [in_fd]
     lea         rsi, [inbuf + r14]
     syscall
     cmp         rax, 0
