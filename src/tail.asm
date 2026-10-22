@@ -2,8 +2,9 @@
 ; Usage: tail [-f|-F] [-q|-v] [-s SEC] [-n [+]N] [-c [+]N] [-N] [FILE...]
 ;   (no FILE, or "-", reads standard input).
 ;
-; Each operand is buffered whole, so counting lines/bytes back from the end
-; and the "+N" from-the-start forms are both handled by slicing that buffer.
+; Each operand is buffered whole (in memory that grows as needed, see
+; include/slurp.inc), so counting lines/bytes back from the end and the "+N"
+; from-the-start forms are both handled by slicing that buffer.
 ; The last of -n/-c/-N wins; the default is the last ten lines. With more
 ; than one operand a "==> NAME <==" banner precedes each one, and -q/-v
 ; force the banners off/on.
@@ -14,6 +15,7 @@
 ; polls every -s seconds (50ms by default) comparing the size and inode.
 
     %include "include/sysdefs.inc"
+    %include "include/slurp.inc"
 
     %define SYS_FSTAT 5
     %define SYS_NANOSLEEP 35
@@ -28,7 +30,7 @@
     %define IN_DELETE_SELF 0x00000400
     %define IN_MOVE_SELF 0x00000800
 
-    %define BUFCAP (8 * 1024 * 1024)
+    %define BUFCAP 65536                ;chunk size when following
     %define MAXFILES 64
     %define EVBUFCAP 4096
     %define NAMECAP 4096
@@ -264,27 +266,16 @@ mov     qword [fnames], 0           ;no operands: a single stdin "file"
 ; ---------------------------------------------------------------------------
 dump_initial:
     push    rbx
-    xor     r15, r15                    ;bytes read
-.rl:
-    mov     rdx, BUFCAP
-    sub     rdx, r15
-    jz      .rdone
-    mov     rax, SYS_READ
     mov     rdi, [fds + rbx * 8]
-    lea     rsi, [buf + r15]
-    syscall
-    test    rax, rax
-    jle     .rdone
-    add     r15, rax
-    jmp     .rl
-.rdone:
-    mov     [inlen], r15
+    call    slurp                       ;whole input, however large
+    mov     [inlen], rdx
     call    compute_slice               ;-> r14 = slice start
     call    print_header
     mov     rdx, [inlen]
     sub     rdx, r14
     jle     .noout
-    lea     rsi, [buf + r14]
+    mov     rsi, [slurp_ptr]
+    add     rsi, r14
     call    out
 .noout:
     mov     rax, [inlen]
@@ -295,9 +286,10 @@ dump_initial:
 
 ; ---------------------------------------------------------------------------
 ; compute_slice: with [mode]/[fromstart]/[kcount]/[inlen], set r14 to the
-; offset in buf where the output should start.
+; offset in the input buffer where the output should start.
 ; ---------------------------------------------------------------------------
 compute_slice:
+    mov     rdi, [slurp_ptr]            ;input base for the slicers below
     cmp     byte [mode], 'c'
     je      chars
     cmp     byte [fromstart], 1
@@ -311,7 +303,7 @@ mov     r14, 0                      ;default: the whole buffer
     jz      .out
     mov     rsi, rcx
     dec     rsi                         ;i = len-1
-    cmp     byte [buf + rsi], WHITESPACE_NL
+    cmp     byte [rdi + rsi], WHITESPACE_NL
     jne     .scan
     dec     rsi                         ;skip a trailing newline
 .scan:
@@ -319,7 +311,7 @@ mov     r14, 0                      ;default: the whole buffer
 .loop:
     cmp     rsi, 0
     jl      .out
-    cmp     byte [buf + rsi], WHITESPACE_NL
+    cmp     byte [rdi + rsi], WHITESPACE_NL
     jne     .dec
     inc     r8
     cmp     r8, [kcount]
@@ -344,7 +336,7 @@ mov     r14, [inlen]                ;default: nothing
 .loop:
     cmp     rsi, [inlen]
     jge     .out
-    cmp     byte [buf + rsi], WHITESPACE_NL
+    cmp     byte [rdi + rsi], WHITESPACE_NL
     jne     .next
     inc     r8
     cmp     r8, rdx

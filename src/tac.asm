@@ -1,10 +1,17 @@
-; src/tac.asm
+; src/tac.asm -- tac(1): print files with their lines in reverse order.
+; Usage: tac [FILE...]   ("-" or no FILE = stdin).
+;
+; Each input is read whole into a growable buffer (include/slurp.inc), then
+; walked backwards from the end, emitting each line with its newline. A final
+; line without a newline is printed first, unterminated, as GNU tac does.
     %include "include/sysdefs.inc"
+    %include "include/slurp.inc"
+
+    %define OBUFCAP 65536
 
 section .bss
-    buffer      resb 65536
-    line_pos    resq 8192
-    buffer_size equ 65536
+    obuf        resb OBUFCAP
+    olen        resq 1
     exit_status resq 1
 
 section .data
@@ -66,68 +73,85 @@ tac_file:
     syscall
     ret
 
-; rdi = file descriptor
-; reads file, stores line positions, outputs reversed
-; clobbers rax..r11
-
+; tac_fd: rdi = file descriptor. Reads it all, writes its lines in reverse.
+; Uses rbx, r14, r15; preserves r12/r13.
 tac_fd:
-    mov rax, SYS_READ
-    mov rsi, buffer
-    mov rdx, buffer_size
-    syscall
-    cmp rax, 0
+    call slurp                          ;rax = buffer, rdx = length
+    cmp qword [slurp_err], 0
     jl error_exit
-    mov rbx, rax                        ;bytes_read
+    mov rbx, rax                        ;buffer base
+    mov r15, rdx                        ;end of the line being collected
+    test r15, r15
+    jz .done
+    lea r14, [r15 - 1]                  ;scan index
+    cmp byte [rbx + r14], WHITESPACE_NL
+    jne .scan
+    dec r14                             ;the final newline ends the last line
+.scan:
+    cmp r14, 0
+    jl .first
+    cmp byte [rbx + r14], WHITESPACE_NL
+    jne .prev
+    lea rsi, [rbx + r14 + 1]            ;line runs from just past this newline
+    mov rdx, r15
+    sub rdx, r14
+    dec rdx
+    call emit
+    lea r15, [r14 + 1]
+.prev:
+    dec r14
+    jmp .scan
+.first:
+    mov rsi, rbx
+    mov rdx, r15
+    call emit
+.done:
+    call flush
+    ret
 
-    mov qword [line_pos], 0             ;first line start index
-    mov rcx, 1                          ;line count
-    xor r8, r8                          ;current index
+; emit: queue rdx bytes at rsi for stdout, flushing as obuf fills.
+emit:
+    test rdx, rdx
+    jz .ret
+    mov rax, OBUFCAP
+    sub rax, [olen]
+    cmp rdx, rax
+    jbe .copy
+    push rsi
+    push rdx
+    call flush
+    pop rdx
+    pop rsi
+    cmp rdx, OBUFCAP
+    jb .copy
+jmp write_all                       ;too big to buffer: write it directly
+.copy:
+    lea rdi, [obuf]
+    add rdi, [olen]
+    mov rcx, rdx
+    add [olen], rdx
+    rep movsb
+.ret:
+    ret
 
-.scan_loop:
-    cmp r8, rbx
-    jge .scan_done
-    mov al, [buffer + r8]
-    cmp al, 10
-    jne .not_nl
-    mov r9, rbx
-    dec r9
-    cmp r8, r9
-    je .not_nl                          ;newline at end -> ignore
-    lea rax, [r8 + 1]
-    mov [line_pos + rcx*8], rax
-    inc rcx
-.not_nl:
-    inc r8
-    jmp .scan_loop
-
-.scan_done:
-    mov r15, rcx                        ;total line count
-    mov r14, r15
-    dec r14                             ;r14 = last line index
-
-.output_loop:
-    cmp r14, -1
-    jle .done
-    mov r9, [line_pos + r14*8]          ;start
-    mov r10, r14
-    inc r10
-    cmp r10, r15
-    jne .not_last
-    mov r11, rbx
-    jmp .write_line
-.not_last:
-    mov r11, [line_pos + r10*8]
-.write_line:
+; flush: write out whatever obuf holds.
+flush:
+    mov rdx, [olen]
+    mov qword [olen], 0
+    lea rsi, [obuf]
+; write_all: write rdx bytes at rsi to stdout, resuming after short writes.
+write_all:
+    test rdx, rdx
+    jz .ret
     mov rax, SYS_WRITE
     mov rdi, STDOUT_FILENO
-    lea rsi, [buffer + r9]
-    mov rdx, r11
-    sub rdx, r9
     syscall
-    dec r14
-    jmp .output_loop
-
-.done:
+    test rax, rax
+    js error_exit
+    add rsi, rax
+    sub rdx, rax
+    jmp write_all
+.ret:
     ret
 
 error_exit:

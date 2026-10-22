@@ -1,17 +1,16 @@
 ; src/split.asm -- split(1): break input into pieces.
 ; Usage: split [-l N] [-b N] [-n N] [-a LEN] [INPUT [PREFIX]]  ("-" = stdin).
 ;
-; The input is buffered, then written to PREFIXaa, PREFIXab, ... : -l groups
+; The input is buffered (in memory that grows as needed, include/slurp.inc),
+; then written to PREFIXaa, PREFIXab, ... : -l groups
 ; lines (default 1000), -b groups bytes, -n makes N equal byte-sized pieces.
 ; -a sets the suffix length (default 2); running out of suffixes is an error
 ; after the files produced so far.
 
     %include "include/sysdefs.inc"
-
-    %define BUFCAP (8 * 1024 * 1024)
+    %include "include/slurp.inc"
 
 section .bss
-    buf         resb BUFCAP
     namebuf     resb 256
     inputname   resq 1
     prefix_ptr  resq 1
@@ -156,21 +155,10 @@ after_parse:
     js      input_err
     mov     [in_fd], rax
 .rdall:
-    xor     r15, r15
-.rl:
-    mov     rdx, BUFCAP
-    sub     rdx, r15
-    jz      .rdone
-    mov     rax, SYS_READ
     mov     rdi, [in_fd]
-    lea     rsi, [buf + r15]
-    syscall
-    test    rax, rax
-    jle     .rdone
-    add     r15, rax
-    jmp     .rl
-.rdone:
-    mov     [inlen], r15
+    call    slurp
+    mov     rbp, rax                    ;input base for the splitters below
+    mov     [inlen], rdx
 
     cmp     byte [mode], 'b'
     je      do_bytes
@@ -185,12 +173,12 @@ do_lines:
 .l:
     cmp     r13, [inlen]
     jge     .tail
-    cmp     byte [buf + r13], WHITESPACE_NL
+    cmp     byte [rbp + r13], WHITESPACE_NL
     jne     .adv
     inc     r14
     cmp     r14, [ncount]
     jne     .adv
-    lea     rsi, [buf + r12]
+    lea     rsi, [rbp + r12]
     lea     rdx, [r13 + 1]
     sub     rdx, r12
     call    write_chunk
@@ -202,7 +190,7 @@ do_lines:
 .tail:
     cmp     r12, [inlen]
     jge     done
-    lea     rsi, [buf + r12]
+    lea     rsi, [rbp + r12]
     mov     rdx, [inlen]
     sub     rdx, r12
     call    write_chunk
@@ -221,7 +209,7 @@ do_bytes:
     jbe     .have
     mov     r13, rax
 .have:
-    lea     rsi, [buf + r12]
+    lea     rsi, [rbp + r12]
     mov     rdx, r13
     call    write_chunk
     add     r12, r13
@@ -247,7 +235,7 @@ do_chunks:
 mov     rdx, [inlen]                ;last chunk: remainder to end
     sub     rdx, r13
 .have:
-    lea     rsi, [buf + r13]
+    lea     rsi, [rbp + r13]
     add     r13, rdx
     call    write_chunk
     inc     r12
@@ -274,11 +262,20 @@ write_chunk:
     test    rax, rax
     js      exhaust
     mov     [out_fd], rax
-    mov     rax, SYS_WRITE
-    mov     rdi, [out_fd]
     mov     rsi, [wc_start]
     mov     rdx, [wc_len]
+.wr:
+    test    rdx, rdx                    ;resume after short writes
+    jz      .closeout
+    mov     rax, SYS_WRITE
+    mov     rdi, [out_fd]
     syscall
+    test    rax, rax
+    jle     .closeout
+    add     rsi, rax
+    sub     rdx, rax
+    jmp     .wr
+.closeout:
     mov     rax, SYS_CLOSE
     mov     rdi, [out_fd]
     syscall

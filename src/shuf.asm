@@ -1,17 +1,16 @@
 ; src/shuf.asm -- write a random permutation of the input lines.
 ; Usage: shuf [FILE]   (reads stdin when no FILE is given)
+;
+; The input and the line tables live in memory sized to the input
+; (include/slurp.inc), so there is no fixed cap on bytes or lines.
+; r15 holds the input base and r8/r9/r10 the line_off/line_len/idx tables.
 
     %include "include/sysdefs.inc"
+    %include "include/slurp.inc"
 
-    %define ARENA_SIZE 8388608
-    %define MAX_LINES 1048576
     %define OUTBUF_SIZE 65536
 
 section .bss
-    arena    resb ARENA_SIZE
-    line_off resq MAX_LINES
-    line_len resq MAX_LINES
-    idx      resd MAX_LINES
     nlines   resq 1
     inlen    resq 1
     randbuf  resq 1
@@ -35,25 +34,40 @@ _start:
     syscall
     test    rax, rax
     js      .stdin
-    mov     r15, rax
+    mov     rdi, rax
     jmp     .slurp
 .stdin:
-    xor     r15, r15
+    xor     rdi, rdi
 .slurp:
-    xor     r14, r14
-.slurp_loop:
-    mov     rax, SYS_READ
-    mov     rdi, r15
-    lea     rsi, [arena + r14]
-    mov     rdx, ARENA_SIZE
-    sub     rdx, r14
-    syscall
-    test    rax, rax
-    jle     .slurp_done
-    add     r14, rax
-    jmp     .slurp_loop
-.slurp_done:
-    mov     [inlen], r14
+    call    slurp                       ;rax = input, rdx = length
+    mov     r15, rax
+    mov     [inlen], rdx
+
+; size the tables: one entry per newline plus an unterminated last line
+    xor     rbx, rbx
+    xor     rcx, rcx
+.count:
+    cmp     rcx, [inlen]
+    jge     .counted
+    cmp     byte [r15 + rcx], 10
+    jne     .count_adv
+    inc     rbx
+.count_adv:
+    inc     rcx
+    jmp     .count
+.counted:
+    inc     rbx
+    lea     rdi, [rbx * 8]
+    call    xalloc
+    mov     r12, rax                    ;line_off (xalloc clobbers r8-r10)
+    lea     rdi, [rbx * 8]
+    call    xalloc
+    mov     r13, rax                    ;line_len
+    lea     rdi, [rbx * 4]
+    call    xalloc
+    mov     r10, rax                    ;idx (dword line numbers)
+    mov     r8, r12
+    mov     r9, r13
 
 ; build the line table
     xor     r12, r12                    ;line count
@@ -62,16 +76,14 @@ _start:
 .scan:
     cmp     rcx, [inlen]
     jge     .scan_done
-    mov     al, [arena + rcx]
+    mov     al, [r15 + rcx]
     cmp     al, 10
     jne     .scan_adv
-    cmp     r12, MAX_LINES
-    jae     .scan_adv
-    mov     [line_off + r12*8], r13
+    mov     [r8 + r12*8], r13
     mov     rax, rcx
     sub     rax, r13
-    mov     [line_len + r12*8], rax
-    mov     [idx + r12*4], r12d
+    mov     [r9 + r12*8], rax
+    mov     [r10 + r12*4], r12d
     inc     r12
     lea     r13, [rcx + 1]
 .scan_adv:
@@ -81,12 +93,10 @@ _start:
     mov     rax, [inlen]
     cmp     r13, rax
     jge     .have_lines
-    cmp     r12, MAX_LINES
-    jae     .have_lines
-    mov     [line_off + r12*8], r13
+    mov     [r8 + r12*8], r13
     sub     rax, r13
-    mov     [line_len + r12*8], rax
-    mov     [idx + r12*4], r12d
+    mov     [r9 + r12*8], rax
+    mov     [r10 + r12*4], r12d
     inc     r12
 .have_lines:
     mov     [nlines], r12
@@ -100,10 +110,10 @@ _start:
 .shuffle:
     lea     rdi, [r12 + 1]
     call    rand_below
-    mov     ecx, [idx + r12*4]
-    mov     edx, [idx + rax*4]
-    mov     [idx + r12*4], edx
-    mov     [idx + rax*4], ecx
+    mov     ecx, [r10 + r12*4]
+    mov     edx, [r10 + rax*4]
+    mov     [r10 + r12*4], edx
+    mov     [r10 + rax*4], ecx
     dec     r12
     jnz     .shuffle
 
@@ -112,14 +122,15 @@ _start:
 .out_loop:
     cmp     r12, [nlines]
     jge     .done
-    mov     eax, [idx + r12*4]
-    mov     rsi, [line_off + rax*8]
-    mov     rcx, [line_len + rax*8]
+    mov     eax, [r10 + r12*4]
+    mov     rsi, [r8 + rax*8]
+    mov     rcx, [r9 + rax*8]
+    add     rsi, r15                    ;absolute start of the line
     xor     rbx, rbx
 .out_bytes:
     cmp     rbx, rcx
     jge     .out_nl
-    mov     al, [arena + rsi + rbx]
+    mov     al, [rsi + rbx]
     call    out_char
     inc     rbx
     jmp     .out_bytes

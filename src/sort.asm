@@ -1,7 +1,7 @@
 ; src/sort.asm -- sort(1): order lines of text.
 ; Usage: sort [-nrfbdiuscCsz] [-t X] [-k KEY]... [-o FILE] [FILE...]
 ;
-; Lines are read into memory, compared by the -k key list (or the whole line),
+; Lines are read into memory (growable, see include/slurp.inc), compared by the -k key list (or the whole line),
 ; and emitted with a stable merge sort. Each key extracts a field range and is
 ; compared numerically (-n) or as text, optionally case-folded (-f); a final
 ; whole-line comparison breaks ties unless -s. -c/-C check order instead of
@@ -9,10 +9,10 @@
 ; compare (floats with NaN/inf ordering).
 
     %include "include/sysdefs.inc"
+    %include "include/slurp.inc"
 
-    %define BUFCAP (8 * 1024 * 1024)
-    %define MAXLINES 500000
     %define KEYCAP 65536
+    %define OBUFCAP 65536
 
     %define F_N 1
     %define F_R 2
@@ -27,13 +27,14 @@
     %define F_V 1024
 
 section .bss
-    inbuf       resb BUFCAP
-    lines       resq MAXLINES
-    tmp         resq MAXLINES
+    lines_p     resq 1                  ;line pointer table (xalloc)
+    tmp_p       resq 1                  ;merge scratch table (xalloc)
     keyx        resb KEYCAP
     keyy        resb KEYCAP
     numbuf      resb 32
     nlb         resb 1
+    obuf        resb OBUFCAP
+    olen        resq 1
 
     files       resq 256
     nfiles      resq 1
@@ -358,18 +359,46 @@ mov     qword [k_r0], 1             ;default: whole-line key
 
 .split:
     mov     [inlen], r15
-    mov     byte [inbuf + r15], 0
+    cmp     qword [slurp_ptr], 0
+    jne     .havebuf
+xor     rdi, rdi                    ;no readable input: an empty buffer
+    call    xalloc
+    mov     [slurp_ptr], rax
+.havebuf:
+    mov     rbx, [slurp_ptr]            ;input base (stable from here on)
+    mov     byte [rbx + r15], 0         ;slurp leaves a spare byte
+;size the line tables: one slot per newline, plus an unterminated last line
+    xor     rcx, rcx
+    xor     rdx, rdx
+.cnt:
+    cmp     rdx, r15
+    jge     .cntdone
+    cmp     byte [rbx + rdx], WHITESPACE_NL
+    jne     .cntnext
+    inc     rcx
+.cntnext:
+    inc     rdx
+    jmp     .cnt
+.cntdone:
+    lea     rdi, [rcx * 8 + 8]
+    push    rdi
+    call    xalloc
+    mov     [lines_p], rax
+    pop     rdi
+    call    xalloc
+    mov     [tmp_p], rax
     xor     r14, r14                    ;line start
     xor     r15, r15                    ;pos
 .sl:
     cmp     r15, [inlen]
     jge     .stail
-    cmp     byte [inbuf + r15], WHITESPACE_NL
+    cmp     byte [rbx + r15], WHITESPACE_NL
     jne     .sadv
-    mov     byte [inbuf + r15], 0
+    mov     byte [rbx + r15], 0
     mov     rax, [linecount]
-    lea     rcx, [inbuf + r14]
-    mov     [lines + rax*8], rcx
+    lea     rcx, [rbx + r14]
+    mov     r11, [lines_p]
+    mov     [r11 + rax*8], rcx
     inc     qword [linecount]
     lea     r14, [r15 + 1]
 .sadv:
@@ -379,8 +408,9 @@ mov     qword [k_r0], 1             ;default: whole-line key
     cmp     r14, [inlen]
     jge     .ready
     mov     rax, [linecount]
-    lea     rcx, [inbuf + r14]
-    mov     [lines + rax*8], rcx
+    lea     rcx, [rbx + r14]
+    mov     r11, [lines_p]
+    mov     [r11 + rax*8], rcx
     inc     qword [linecount]
 .ready:
     cmp     byte [c_flag], 1
@@ -399,9 +429,11 @@ mov     qword [k_r0], 1             ;default: whole-line key
     cmp     rax, [linecount]
     jge     .ddone
     mov     rax, [ded_j]
-    mov     rdi, [lines + rax*8]
+    mov     r11, [lines_p]
+    mov     rdi, [r11 + rax*8]
     mov     rax, [ded_i]
-    mov     rsi, [lines + rax*8]
+    mov     r11, [lines_p]
+    mov     rsi, [r11 + rax*8]
     call    compare_keys
     test    rax, rax
     jnz     .keep
@@ -410,9 +442,11 @@ mov     qword [k_r0], 1             ;default: whole-line key
 .keep:
     inc     qword [ded_j]
     mov     rax, [ded_i]
-    mov     rcx, [lines + rax*8]
+    mov     r11, [lines_p]
+    mov     rcx, [r11 + rax*8]
     mov     rax, [ded_j]
-    mov     [lines + rax*8], rcx
+    mov     r11, [lines_p]
+    mov     [r11 + rax*8], rcx
     inc     qword [ded_i]
     jmp     .dl
 .ddone:
@@ -436,26 +470,69 @@ output:
     mov     rax, [wl_i]
     cmp     rax, [linecount]
     jge     .wdone
-    mov     rdi, [lines + rax*8]
+    mov     r11, [lines_p]
+    mov     rdi, [r11 + rax*8]
     mov     [wl_ptr], rdi
     call    strlen_z
     mov     rdx, rax
-    mov     rax, SYS_WRITE
-    mov     rdi, [out_fd]
     mov     rsi, [wl_ptr]
-    syscall
+    call    out_put
     mov     byte [nlb], WHITESPACE_NL
-    mov     rax, SYS_WRITE
-    mov     rdi, [out_fd]
     mov     rsi, nlb
     mov     rdx, 1
-    syscall
+    call    out_put
     inc     qword [wl_i]
     jmp     .wl
 .wdone:
+    call    out_flush
     xor     rdi, rdi
     mov     rax, SYS_EXIT
     syscall
+
+; out_put: rsi = ptr, rdx = length -> buffered [out_fd].
+; Clobbers rax, rcx, rdx, rsi, rdi, r11.
+out_put:
+    test    rdx, rdx
+    jz      .done
+    mov     rax, OBUFCAP
+    sub     rax, [olen]
+    cmp     rdx, rax
+    jbe     .copy
+    push    rsi
+    push    rdx
+    call    out_flush
+    pop     rdx
+    pop     rsi
+    cmp     rdx, OBUFCAP
+jae     out_write                   ;too big to buffer: write it directly
+.copy:
+    lea     rdi, [obuf]
+    add     rdi, [olen]
+    mov     rcx, rdx
+    add     [olen], rdx
+    rep     movsb
+.done:
+    ret
+
+; out_flush: write out whatever obuf holds.
+out_flush:
+    mov     rdx, [olen]
+    mov     qword [olen], 0
+    lea     rsi, [obuf]
+; out_write: rsi = ptr, rdx = length -> [out_fd], resuming after short writes.
+out_write:
+    test    rdx, rdx
+    jz      .done
+    mov     rax, SYS_WRITE
+    mov     rdi, [out_fd]
+    syscall
+    test    rax, rax
+    jle     .done
+    add     rsi, rax
+    sub     rdx, rax
+    jmp     out_write
+.done:
+    ret
 
 do_check:
     mov     qword [chk_i], 1
@@ -465,9 +542,11 @@ do_check:
     jge     .ok
     mov     rax, [chk_i]
     dec     rax
-    mov     rdi, [lines + rax*8]
+    mov     r11, [lines_p]
+    mov     rdi, [r11 + rax*8]
     mov     rax, [chk_i]
-    mov     rsi, [lines + rax*8]
+    mov     r11, [lines_p]
+    mov     rsi, [r11 + rax*8]
     call    compare_keys
     cmp     byte [u_flag], 1
     je      .chku
@@ -507,21 +586,11 @@ exit2:
     mov     rax, SYS_EXIT
     syscall
 
-; read_fd: read [in_fd] appending into inbuf at offset r15; updates r15.
+; read_fd: read [in_fd] to EOF, appending to the input buffer; r15 = total.
 read_fd:
-.l:
-    mov     rdx, BUFCAP
-    sub     rdx, r15
-    jz      .done
-    mov     rax, SYS_READ
     mov     rdi, [in_fd]
-    lea     rsi, [inbuf + r15]
-    syscall
-    test    rax, rax
-    jle     .done
-    add     r15, rax
-    jmp     .l
-.done:
+    call    slurp_append                ;grows as needed; keeps r12-r15
+    mov     r15, rdx
     ret
 
 ; parse_key: rdi = key spec. Appends a key. Preserves r12/r13.
@@ -730,8 +799,10 @@ merge_run:
 .cp:
     cmp     rax, [ms_hi]
     jge     .cpd
-    mov     rcx, [lines + rax*8]
-    mov     [tmp + rax*8], rcx
+    mov     r11, [lines_p]
+    mov     rcx, [r11 + rax*8]
+    mov     r11, [tmp_p]
+    mov     [r11 + rax*8], rcx
     inc     rax
     jmp     .cp
 .cpd:
@@ -749,24 +820,30 @@ merge_run:
     cmp     rax, [ms_hi]
     jge     .rightdone
     mov     rax, [ms_i]
-    mov     rdi, [tmp + rax*8]
+    mov     r11, [tmp_p]
+    mov     rdi, [r11 + rax*8]
     mov     rax, [ms_j]
-    mov     rsi, [tmp + rax*8]
+    mov     r11, [tmp_p]
+    mov     rsi, [r11 + rax*8]
     call    compare_keys
     test    rax, rax
     jg      .takeright
     mov     rax, [ms_i]
-    mov     rcx, [tmp + rax*8]
+    mov     r11, [tmp_p]
+    mov     rcx, [r11 + rax*8]
     mov     rax, [ms_k]
-    mov     [lines + rax*8], rcx
+    mov     r11, [lines_p]
+    mov     [r11 + rax*8], rcx
     inc     qword [ms_i]
     inc     qword [ms_k]
     jmp     .ml
 .takeright:
     mov     rax, [ms_j]
-    mov     rcx, [tmp + rax*8]
+    mov     r11, [tmp_p]
+    mov     rcx, [r11 + rax*8]
     mov     rax, [ms_k]
-    mov     [lines + rax*8], rcx
+    mov     r11, [lines_p]
+    mov     [r11 + rax*8], rcx
     inc     qword [ms_j]
     inc     qword [ms_k]
     jmp     .ml
@@ -774,9 +851,11 @@ merge_run:
     mov     rax, [ms_j]
     cmp     rax, [ms_hi]
     jge     .done
-    mov     rcx, [tmp + rax*8]
+    mov     r11, [tmp_p]
+    mov     rcx, [r11 + rax*8]
     mov     rax, [ms_k]
-    mov     [lines + rax*8], rcx
+    mov     r11, [lines_p]
+    mov     [r11 + rax*8], rcx
     inc     qword [ms_j]
     inc     qword [ms_k]
     jmp     .leftdone
@@ -784,9 +863,11 @@ merge_run:
     mov     rax, [ms_i]
     cmp     rax, [ms_mid]
     jge     .done
-    mov     rcx, [tmp + rax*8]
+    mov     r11, [tmp_p]
+    mov     rcx, [r11 + rax*8]
     mov     rax, [ms_k]
-    mov     [lines + rax*8], rcx
+    mov     r11, [lines_p]
+    mov     [r11 + rax*8], rcx
     inc     qword [ms_i]
     inc     qword [ms_k]
     jmp     .rightdone
