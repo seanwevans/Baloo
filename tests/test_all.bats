@@ -920,7 +920,10 @@ bob\ttty1\t1234567891'
 }
 
 @test "cksum — CRC32 and byte count" {
-  skip "known bug: cksum segfaults (exit 139) after emitting output"
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/cksum" "$TMP/f"
+  assert_success
+  assert_output "$(cksum "$TMP/f")"
 }
 
 @test "command — executes a program" {
@@ -948,11 +951,21 @@ bob\ttty1\t1234567891'
 }
 
 @test "dd — copies a file" {
-  skip "known bug: dd segfaults (exit 139) on basic if=/of= copy"
+  printf 'hello world\n' >"$TMP/in"
+  run "$BIN/dd" if="$TMP/in" of="$TMP/out"
+  assert_success
+  cmp "$TMP/in" "$TMP/out"
 }
 
 @test "diff — compares files" {
-  skip "known bug: diff segfaults (exit 139) even on identical files"
+  printf 'hello world\n' >"$TMP/a"
+  printf 'hello there\n' >"$TMP/b"
+  run "$BIN/diff" "$TMP/a" "$TMP/a"
+  assert_success
+  assert_output ""
+  run "$BIN/diff" "$TMP/a" "$TMP/b"
+  assert_failure 1
+  assert_output "$(diff "$TMP/a" "$TMP/b")"
 }
 
 @test "dircolors — emits LS_COLORS" {
@@ -968,7 +981,14 @@ bob\ttty1\t1234567891'
 }
 
 @test "find — lists a directory tree" {
-  skip "known bug: find segfaults (exit 139) after printing the start dir"
+  mkdir -p "$TMP/d/e"
+  touch "$TMP/d/e/x" "$TMP/d/y"
+  run bash -c "'$BIN/find' '$TMP/d' | sort"
+  assert_success
+  assert_output "$(find "$TMP/d" | sort)"
+  run "$BIN/find" "$TMP/d" -name x
+  assert_success
+  assert_output "$TMP/d/e/x"
 }
 
 @test "fmt — reflows text" {
@@ -1044,7 +1064,9 @@ PO
 }
 
 @test "iconv — converts encodings" {
-  skip "known bug: iconv segfaults (exit 139)"
+  run bash -c "printf 'caf\xc3\xa9\n' | '$BIN/iconv' -f UTF-8 -t ISO-8859-1 | od -An -tx1"
+  assert_success
+  assert_output " 63 61 66 e9 0a"
 }
 
 @test "install — copies a file" {
@@ -1109,7 +1131,10 @@ PO
 }
 
 @test "md5sum — MD5 digest" {
-  skip "known bug: md5sum exits 1 without producing a digest"
+  printf 'hello world\n' >"$TMP/f"
+  run "$BIN/md5sum" "$TMP/f"
+  assert_success
+  assert_output "$(md5sum "$TMP/f")"
 }
 
 @test "mesg — reports messaging status" {
@@ -1119,11 +1144,20 @@ PO
 }
 
 @test "ngettext — selects plural form" {
-  skip "known bug: ngettext segfaults (exit 139)"
+  run "$BIN/ngettext" apple apples 2
+  assert_success
+  assert_output "apples"
+}
+
+@test "ngettext — selects singular form" {
+  skip "known bug: ngettext segfaults (exit 139) when N is 1"
 }
 
 @test "nl — numbers lines" {
-  skip "known bug: nl segfaults (exit 139)"
+  printf 'a\n\nb\n' >"$TMP/f"
+  run "$BIN/nl" "$TMP/f"
+  assert_success
+  assert_output "$(nl "$TMP/f")"
 }
 
 @test "nohup — runs a command, redirecting to nohup.out" {
@@ -1148,7 +1182,11 @@ PO
 }
 
 @test "split — splits a file" {
-  skip "known bug: split reports 'Error opening file' instead of splitting"
+  seq 1 25 >"$TMP/f"
+  run bash -c "cd '$TMP' && '$BIN/split' -l 10 f && ls x*"
+  assert_success
+  assert_output "$(printf 'xaa\nxab\nxac')"
+  cat "$TMP"/xa? | cmp - "$TMP/f"
 }
 
 @test "stdbuf — runs a command" {
@@ -1230,7 +1268,9 @@ sys.exit(r.returncode)
 }
 
 @test "tsort — topological sort" {
-  skip "known bug: tsort segfaults (exit 139)"
+  run bash -c "printf 'a b\nb c\n' | '$BIN/tsort'"
+  assert_success
+  assert_output "$(printf 'a\nb\nc')"
 }
 
 @test "unalias — removes an alias" {
@@ -1244,7 +1284,11 @@ sys.exit(r.returncode)
 }
 
 @test "uudecode — decodes a uuencoded stream" {
-  skip "known bug: uudecode reports 'Error opening file'"
+  printf 'hello world\n' >"$TMP/f"
+  "$BIN/uuencode" "$TMP/f" out.txt >"$TMP/f.uu"
+  run bash -c "cd '$TMP' && '$BIN/uudecode' f.uu"
+  assert_success
+  cmp "$TMP/f" "$TMP/out.txt"
 }
 
 @test "uuencode — emits a uuencoded stream" {
@@ -1469,4 +1513,82 @@ sys.exit(r.returncode)
   run "$BIN/sha256sum" "$TMP/f"
   assert_success
   assert_output "$(sha256sum "$TMP/f")"
+}
+
+
+# ----------  INPUT LARGER THAN THE OLD FIXED BUFFERS (8 MiB / 1 MiB) ---------- #
+# These utilities used to stop reading at a fixed buffer size and exit 0 with
+# truncated output. 3,000,000 lines of `seq` is ~23 MB.
+
+big_seq() { seq 1 3000000 >"$TMP/big"; }
+
+@test "wc — counts input larger than 8 MiB" {
+  big_seq
+  run "$BIN/wc" "$TMP/big"
+  assert_success
+  assert_output "3000000 3000000 22888896 $TMP/big"
+}
+
+@test "wc — counts a large pipe" {
+  big_seq
+  run bash -c "cat '$TMP/big' | '$BIN/wc' -l"
+  assert_success
+  assert_output "3000000"
+}
+
+@test "sort — sorts input larger than 8 MiB and 500k lines" {
+  big_seq
+  run bash -c "'$BIN/sort' -n '$TMP/big' | sha1sum"
+  assert_success
+  assert_output "$(sha1sum <"$TMP/big")"
+}
+
+@test "tail — finds the last line of a large file" {
+  big_seq
+  run "$BIN/tail" -n 2 "$TMP/big"
+  assert_success
+  assert_output "$(printf '2999999\n3000000')"
+}
+
+@test "tac — reverses a large file" {
+  big_seq
+  run bash -c "'$BIN/tac' '$TMP/big' | sha1sum"
+  assert_success
+  assert_output "$(tac "$TMP/big" | sha1sum)"
+}
+
+@test "nl — numbers every line of a large file" {
+  big_seq
+  run bash -c "'$BIN/nl' '$TMP/big' | tail -n 1"
+  assert_success
+  assert_output "$(printf '%6d\t%d' 3000000 3000000)"
+}
+
+@test "base64 — round-trips input larger than 1 MiB" {
+  head -c 3000000 /dev/urandom >"$TMP/rnd"
+  run bash -c "'$BIN/base64' '$TMP/rnd' | sha1sum"
+  assert_success
+  assert_output "$(base64 "$TMP/rnd" | sha1sum)"
+  run bash -c "base64 '$TMP/rnd' | '$BIN/base64' -d | cmp - '$TMP/rnd'"
+  assert_success
+}
+
+@test "shuf — keeps every line of a large file" {
+  big_seq
+  run bash -c "'$BIN/shuf' '$TMP/big' | sort -n | sha1sum"
+  assert_success
+  assert_output "$(sha1sum <"$TMP/big")"
+}
+
+@test "split — splits input larger than 8 MiB" {
+  big_seq
+  run bash -c "cd '$TMP' && '$BIN/split' -l 1000000 big && cat xaa xab xac | cmp - big"
+  assert_success
+}
+
+@test "fmt — reflows input larger than 8 MiB" {
+  big_seq
+  run bash -c "'$BIN/fmt' '$TMP/big' | wc -w"
+  assert_success
+  assert_output "3000000"
 }
