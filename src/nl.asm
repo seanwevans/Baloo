@@ -11,10 +11,13 @@
 
     %include "include/sysdefs.inc"
 
-    %define BUFCAP (8 * 1024 * 1024)
+    %define BUFCAP 65536                ;input is processed one chunk at a time
+    %define OBUFCAP 65536               ;output is buffered and flushed as it fills
 
 section .bss
     inbuf       resb BUFCAP
+    obuf        resb OBUFCAP
+    olen        resq 1
     files       resq 256
     numbuf      resb 32
     spacebuf    resb 1
@@ -34,6 +37,7 @@ section .bss
     tmpname     resq 1
     rap_fd      resq 1
     buflen      resq 1
+    in_long     resb 1                  ;inside a line longer than inbuf
     e_ptr       resq 1
     e_len       resq 1
     rn_digptr   resq 1
@@ -157,6 +161,7 @@ parsed:
     mov     byte [had_err], 1
     jmp     .fnext
 .done:
+    call    out_flush
     movzx   eax, byte [had_err]
     mov     rdi, rax
     mov     rax, SYS_EXIT
@@ -225,59 +230,108 @@ apply_flag:
 .ret:
     ret
 
-; read_and_process: rdi = fd. Reads the whole input into inbuf then numbers
-; its lines. Closes non-stdin descriptors. Keeps numbering state across calls.
+; read_and_process: rdi = fd. Streams the input through inbuf, numbering each
+; complete line; a partial line at the end of a chunk is slid to the front and
+; finished by the next read. A line longer than inbuf is emitted in pieces:
+; its number (and the -b p match) come from its first BUFCAP bytes. Closes
+; non-stdin descriptors. Keeps numbering state across calls.
 read_and_process:
     mov     [rap_fd], rdi
-    xor     r14, r14                    ;bytes read (survives syscalls)
-.rl:
+    mov     qword [buflen], 0
+    mov     byte [in_long], 0
+    xor     r12, r12                    ;scan position
+    xor     r13, r13                    ;start of the current line
+.fill:
     mov     rdx, BUFCAP
-    sub     rdx, r14
-    jz      .rdone
+    sub     rdx, [buflen]
+    jz      .full
     mov     rax, SYS_READ
     mov     rdi, [rap_fd]
-    lea     rsi, [inbuf + r14]
+    lea     rsi, [inbuf]
+    add     rsi, [buflen]
     syscall
     test    rax, rax
-    jle     .rdone
-    add     r14, rax
-    jmp     .rl
-.rdone:
-    mov     [buflen], r14
-    mov     rdi, [rap_fd]
-    cmp     rdi, STDIN_FILENO
-    je      .scan_init
-    mov     rax, SYS_CLOSE
-    syscall
-.scan_init:
-    xor     r12, r12                    ;pos
-    xor     r13, r13                    ;line start
+    jle     .eof
+    add     [buflen], rax
 .scan:
-    mov     rax, r12
-    cmp     rax, [buflen]
-    jge     .tail
+    cmp     r12, [buflen]
+    jge     .compact
     cmp     byte [inbuf + r12], WHITESPACE_NL
     jne     .adv
     lea     rdi, [inbuf + r13]
     mov     rsi, r12
     sub     rsi, r13
-    call    emit_line
+    call    finish_line
     lea     r13, [r12 + 1]
 .adv:
     inc     r12
     jmp     .scan
-.tail:
-    cmp     r13, [buflen]
-    jge     .filedone
-    lea     rdi, [inbuf + r13]
+.compact:
+;move the unfinished line [r13, buflen) to the front of inbuf
+    mov     rcx, [buflen]
+    sub     rcx, r13
+    mov     [buflen], rcx
+    lea     rsi, [inbuf + r13]
+    lea     rdi, [inbuf]
+    rep     movsb
+    sub     r12, r13
+    xor     r13, r13
+    jmp     .fill
+.full:
+;inbuf holds one unfinished line: emit what we have and keep going
+    lea     rdi, [inbuf]
+    mov     rsi, [buflen]
+    call    start_line
+    mov     qword [buflen], 0
+    xor     r12, r12
+    xor     r13, r13
+    jmp     .fill
+.eof:
     mov     rsi, [buflen]
     sub     rsi, r13
-    call    emit_line
-.filedone:
+    jnz     .last
+    cmp     byte [in_long], 0
+    je      .close
+.last:
+    lea     rdi, [inbuf + r13]
+    call    finish_line                 ;final line without a newline
+.close:
+    mov     rdi, [rap_fd]
+    cmp     rdi, STDIN_FILENO
+    je      .ret
+    mov     rax, SYS_CLOSE
+    syscall
+.ret:
     ret
+
+; finish_line: rdi = text ptr, rsi = length of the rest of a line. Numbers it
+; unless its start was already emitted, then ends it. Preserves r12/r13.
+finish_line:
+    cmp     byte [in_long], 0
+    je      emit_line
+    mov     byte [in_long], 0
+    jmp     emit_text_nl
+
+; start_line: rdi = text ptr, rsi = length of the first piece of a long line.
+; Preserves r12/r13.
+start_line:
+    cmp     byte [in_long], 0
+    jne     .more
+    mov     byte [in_long], 1
+    jmp     emit_head
+.more:
+    mov     [e_ptr], rdi
+    mov     [e_len], rsi
+    jmp     emit_text
 
 ; emit_line: rdi = text ptr, rsi = length. Preserves r12/r13.
 emit_line:
+    call    emit_head
+    jmp     emit_nl
+
+; emit_head: number (or blank-pad) a line and write its text, no newline.
+; rdi = text ptr, rsi = length. Preserves r12/r13.
+emit_head:
     mov     [e_ptr], rdi
     mov     [e_len], rsi
     xor     r8, r8                      ;empty flag
@@ -293,21 +347,29 @@ emit_line:
     mov     rdx, [sep_len]
     call    put_bytes
     inc     qword [counter]
-    jmp     .text
+    jmp     emit_text
 .unnumbered:
     mov     rdi, [width]
     call    put_spaces
     mov     rdi, [sep_len]
     call    put_spaces
-.text:
+; emit_text: write [e_ptr]/[e_len] to stdout.
+emit_text:
     mov     rsi, [e_ptr]
     mov     rdx, [e_len]
-    call    put_bytes
+    jmp     put_bytes
+
+; emit_text_nl: rdi = text ptr, rsi = length; write it plus a newline.
+emit_text_nl:
+    mov     [e_ptr], rdi
+    mov     [e_len], rsi
+    call    emit_text
+; emit_nl: write a newline.
+emit_nl:
     mov     byte [spacebuf], WHITESPACE_NL
     mov     rsi, spacebuf
     mov     rdx, 1
-    call    put_bytes
-    ret
+    jmp     put_bytes
 
 ; should_number: r8 = empty flag -> rax = 1 if this line gets a number.
 should_number:
@@ -445,46 +507,68 @@ put_sign:
 .done:
     ret
 
-; put_bytes: rsi = ptr, rdx = length -> stdout (nothing when length <= 0).
+; put_bytes: rsi = ptr, rdx = length -> buffered stdout (nothing when
+; length <= 0). Clobbers rax, rcx, rdx, rsi, rdi, r11.
 put_bytes:
+    test    rdx, rdx
+    jle     .done
+    mov     rax, OBUFCAP
+    sub     rax, [olen]
+    cmp     rdx, rax
+    jbe     .copy
+    push    rsi
+    push    rdx
+    call    out_flush
+    pop     rdx
+    pop     rsi
+    cmp     rdx, OBUFCAP
+jae     write_all                   ;too big to buffer: write it directly
+.copy:
+    lea     rdi, [obuf]
+    add     rdi, [olen]
+    mov     rcx, rdx
+    add     [olen], rdx
+    rep     movsb
+.done:
+    ret
+
+; out_flush: write out whatever obuf holds.
+out_flush:
+    mov     rdx, [olen]
+    mov     qword [olen], 0
+    lea     rsi, [obuf]
+; write_all: rsi = ptr, rdx = length -> stdout, resuming after short writes.
+write_all:
     test    rdx, rdx
     jle     .done
     mov     rax, SYS_WRITE
     mov     rdi, STDOUT_FILENO
     syscall
+    test    rax, rax
+    jle     .done
+    add     rsi, rax
+    sub     rdx, rax
+    jmp     write_all
 .done:
     ret
 
-; put_spaces: rdi = count spaces to stdout (preserves the counter across write).
+; put_spaces: rdi = count of spaces to stdout.
 put_spaces:
-    test    rdi, rdi
-    jle     .done
     mov     byte [spacebuf], ' '
-.l:
-    push    rdi
-    mov     rax, SYS_WRITE
-    mov     rdi, STDOUT_FILENO
-    mov     rsi, spacebuf
-    mov     rdx, 1
-    syscall
-    pop     rdi
-    dec     rdi
-    jnz     .l
-.done:
-    ret
+    jmp     put_fill
 
-; put_zeros: rdi = count '0' characters to stdout.
+; put_zeros: rdi = count of '0' characters to stdout.
 put_zeros:
+    mov     byte [spacebuf], '0'
+; put_fill: rdi = count copies of [spacebuf] to stdout.
+put_fill:
     test    rdi, rdi
     jle     .done
-    mov     byte [spacebuf], '0'
 .l:
     push    rdi
-    mov     rax, SYS_WRITE
-    mov     rdi, STDOUT_FILENO
     mov     rsi, spacebuf
     mov     rdx, 1
-    syscall
+    call    put_bytes
     pop     rdi
     dec     rdi
     jnz     .l

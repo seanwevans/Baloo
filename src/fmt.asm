@@ -7,12 +7,12 @@
 ; blank or whitespace-only lines are emitted as paragraph separators.
 
     %include "include/sysdefs.inc"
+    %include "include/slurp.inc"
 
-    %define BUFCAP (8 * 1024 * 1024)
+    %define OBUFCAP 65536               ;output is flushed as it fills
 
 section .bss
-    inbuf       resb BUFCAP
-    obuf        resb (BUFCAP + 4096)
+    obuf        resb OBUFCAP
     files       resq 256
     nfiles      resq 1
     inlen       resq 1
@@ -75,7 +75,7 @@ parse:
     jmp     parse
 
 after_parse:
-    xor     r15, r15                    ;bytes read into inbuf
+    xor     r15, r15                    ;bytes of input read
     cmp     qword [nfiles], 0
     jne     .files
     mov     qword [cur_fd], STDIN_FILENO
@@ -114,7 +114,14 @@ after_parse:
 
 .process:
     mov     [inlen], r15
-    xor     r12, r12                    ;position in inbuf
+    cmp     qword [slurp_ptr], 0
+    jne     .havebuf
+xor     rdi, rdi                    ;nothing was readable: empty input
+    call    xalloc
+    mov     [slurp_ptr], rax
+.havebuf:
+    mov     rbp, [slurp_ptr]            ;input base (stable from here on)
+    xor     r12, r12                    ;position in the input
 .lineloop:
     cmp     r12, [inlen]
     jge     .flush
@@ -122,12 +129,12 @@ after_parse:
 .findnl:
     cmp     r14, [inlen]
     jge     .gotline
-    cmp     byte [inbuf + r14], WHITESPACE_NL
+    cmp     byte [rbp + r14], WHITESPACE_NL
     je      .gotline
     inc     r14
     jmp     .findnl
 .gotline:
-    lea     rax, [inbuf + r12]
+    lea     rax, [rbp + r12]
     mov     [fl_ptr], rax
     mov     rax, r14
     sub     rax, r12
@@ -144,30 +151,16 @@ after_parse:
     mov     al, WHITESPACE_NL
     call    append_byte
 .write:
-    mov     rax, SYS_WRITE
-    mov     rdi, STDOUT_FILENO
-    mov     rsi, obuf
-    mov     rdx, [obuf_len]
-    syscall
+    call    obuf_flush
     xor     rdi, rdi
     mov     rax, SYS_EXIT
     syscall
 
-; read_into: append [cur_fd] to inbuf at offset r15; updates r15.
+; read_into: append [cur_fd] to the input buffer; r15 = total bytes read.
 read_into:
-.l:
-    mov     rdx, BUFCAP
-    sub     rdx, r15
-    jz      .done
-    mov     rax, SYS_READ
     mov     rdi, [cur_fd]
-    lea     rsi, [inbuf + r15]
-    syscall
-    test    rax, rax
-    jle     .done
-    add     r15, rax
-    jmp     .l
-.done:
+    call    slurp_append                ;grows as needed; keeps r12-r15
+    mov     r15, rdx
     ret
 
 ; fmt_line: reflow the line at [fl_ptr]/[fl_len]. Preserves r12/r14.
@@ -314,8 +307,12 @@ isws:
     mov     rax, 1
     ret
 
-; append_byte: al -> obuf.
+; append_byte: al -> obuf (flushing first when it is full).
 append_byte:
+    cmp     qword [obuf_len], OBUFCAP
+    jb      .store
+    call    obuf_flush
+.store:
     mov     rcx, [obuf_len]
     mov     [obuf + rcx], al
     inc     qword [obuf_len]
@@ -327,6 +324,10 @@ append_range:
 .l:
     cmp     rcx, rdx
     jge     .d
+    cmp     qword [obuf_len], OBUFCAP
+    jb      .store
+    call    obuf_flush
+.store:
     mov     al, [rsi + rcx]
     mov     r8, [obuf_len]
     mov     [obuf + r8], al
@@ -334,6 +335,38 @@ append_range:
     inc     rcx
     jmp     .l
 .d:
+    ret
+
+; obuf_flush: write obuf to stdout, resuming after short writes, and empty
+; it. Preserves every register its callers keep live.
+obuf_flush:
+    push    rax
+    push    rcx
+    push    rdx
+    push    rsi
+    push    rdi
+    push    r11
+    mov     rsi, obuf
+    mov     rdx, [obuf_len]
+.w:
+    test    rdx, rdx
+    jz      .done
+    mov     rax, SYS_WRITE
+    mov     rdi, STDOUT_FILENO
+    syscall
+    test    rax, rax
+    jle     .done
+    add     rsi, rax
+    sub     rdx, rax
+    jmp     .w
+.done:
+    mov     qword [obuf_len], 0
+    pop     r11
+    pop     rdi
+    pop     rsi
+    pop     rdx
+    pop     rcx
+    pop     rax
     ret
 
 ; atou: rdi -> unsigned decimal in rax.
